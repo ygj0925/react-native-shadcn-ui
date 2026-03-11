@@ -12,11 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import * as React from 'react';
-import { Pressable, type TextInput, View } from 'react-native';
+import { Pressable, TextInput, View, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export function SignInForm() {
+export function SignUpForm() {
   const passwordInputRef = React.useRef<TextInput>(null);
+
   const router = useRouter();
 
   function onEmailSubmitEditing() {
@@ -28,12 +29,12 @@ export function SignInForm() {
   }
 
   return (
-    <View className="gap-6">
+    <ScrollView className="flex-col flex-1 gap-6">
       <Card className="shadow-none border-border/0 sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-xl text-center sm:text-left">Sign in to your app</CardTitle>
+          <CardTitle className="text-xl text-center sm:text-left">Create your account</CardTitle>
           <CardDescription className="text-center sm:text-left">
-            Welcome back! Please sign in to continue
+            Welcome! Please fill in the details to get started.
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
@@ -54,15 +55,6 @@ export function SignInForm() {
             <View className="gap-1.5">
               <View className="flex-row items-center">
                 <Label htmlFor="password">Password</Label>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="h-4 px-1 py-0 ml-auto web:h-fit sm:h-4"
-                  onPress={() => {
-                    // TODO: Navigate to forgot password screen
-                  }}>
-                  <Text className="font-normal leading-4">Forgot your password?</Text>
-                </Button>
               </View>
               <Input
                 ref={passwordInputRef}
@@ -77,13 +69,13 @@ export function SignInForm() {
             </Button>
           </View>
           <Text className="text-sm text-center">
-            Don&apos;t have an account?{' '}
+            Already have an account?{' '}
             <Pressable
               onPress={() => {
-                router.push('/register');
-                // TODO: Navigate to sign up screen
+                router.push('/login');
+                // TODO: Navigate to sign in screen
               }}>
-              <Text className="text-sm underline underline-offset-4">Sign up</Text>
+              <Text className="text-sm underline underline-offset-4">Sign in</Text>
             </Pressable>
           </Text>
           <View className="flex-row items-center">
@@ -94,6 +86,6 @@ export function SignInForm() {
           <SocialConnections />
         </CardContent>
       </Card>
-    </View>
+    </ScrollView>
   );
 }

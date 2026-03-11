@@ -25,14 +25,14 @@ export function SocialConnections() {
   const { colorScheme } = useColorScheme();
 
   return (
-    <View className="gap-2 sm:flex-row sm:gap-3">
+    <View className="flex-row w-full gap-2">
       {SOCIAL_CONNECTION_STRATEGIES.map((strategy) => {
         return (
           <Button
             key={strategy.type}
             variant="outline"
             size="sm"
-            className="sm:flex-1"
+            className="flex-1"
             onPress={() => {
               // TODO: Authenticate with social provider and navigate to protected screen if successful
             }}>
