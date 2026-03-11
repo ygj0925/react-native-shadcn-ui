@@ -28,7 +28,7 @@ export function SignInForm() {
   }
 
   return (
-    <View className="gap-6">
+    <View className="flex-col flex-1 gap-6">
       <Card className="shadow-none border-border/0 sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
           <CardTitle className="text-xl text-center sm:text-left">Sign in to your app</CardTitle>
@@ -95,5 +95,6 @@ export function SignInForm() {
         </CardContent>
       </Card>
     </View>
+
   );
 }

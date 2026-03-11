@@ -29,7 +29,7 @@ export function SignUpForm() {
   }
 
   return (
-    <ScrollView className="flex-col flex-1 gap-6">
+    <View className="flex-col flex-1 gap-6">
       <Card className="shadow-none border-border/0 sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
           <CardTitle className="text-xl text-center sm:text-left">Create your account</CardTitle>
@@ -86,6 +86,7 @@ export function SignUpForm() {
           <SocialConnections />
         </CardContent>
       </Card>
-    </ScrollView>
+    </View>
+
   );
 }

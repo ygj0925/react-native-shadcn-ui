@@ -3,7 +3,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { ThemeToggle } from '@/components/themeToggle';
 import { Link, Stack, useRouter } from 'expo-router';
-import { MoonStarIcon, Navigation, StarIcon, SunIcon, MessageCircleMore  } from 'lucide-react-native';
+import { MoonStarIcon, Navigation, StarIcon, SunIcon, MessageCircleMore } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, type ImageStyle, View, Alert } from 'react-native';
@@ -32,9 +32,11 @@ export default function Screen() {
 
   return (
     <>
-      <Stack.Screen options={SCREEN_OPTIONS} />
-      <View className="items-center justify-center flex-1 gap-8 p-4">
-        <Image source={LOGO[colorScheme ?? 'light']} style={IMAGE_STYLE} resizeMode="contain" />
+      <View className="flex-col justify-start w-full h-full p-4">
+
+        <View className="items-center justify-center">
+          <Image source={LOGO[colorScheme ?? 'light']} style={IMAGE_STYLE} resizeMode="contain" />
+        </View>
         <View className="gap-2 p-4">
           <Text className="font-mono text-sm ios:text-foreground text-muted-foreground">
             1. Edit <Text variant="code">app/index.tsx</Text> to get started.

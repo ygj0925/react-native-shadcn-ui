@@ -7,6 +7,7 @@ import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, type ImageStyle, ScrollView, View } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements'
 
 const LOGO = {
   light: require('@/assets/images/react-native-reusables-light.png'),
@@ -14,7 +15,7 @@ const LOGO = {
 };
 
 const SCREEN_OPTIONS = {
-  title: 'Login',
+  title: '登录页面',
   headerTransparent: true,
   headerRight: () => <ThemeToggle />,
 };
@@ -26,13 +27,16 @@ const IMAGE_STYLE: ImageStyle = {
 
 export default function Screen() {
   const { colorScheme } = useColorScheme();
-
+  const headerHeight = useHeaderHeight()
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerClassName="sm:flex-1 items-center justify-center p-4 py-8 sm:py-4 sm:p-6 mt-safe"
+        contentContainerStyle={{
+          paddingTop: headerHeight,
+        }}
+        contentContainerClassName="flex-1 items-center justify-start  p-4 py-8 sm:py-4 sm:p-6  mt-safe"
         keyboardDismissMode="interactive">
         <View className="w-full max-w-sm">
           <SignInForm />

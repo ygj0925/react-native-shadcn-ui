@@ -8,7 +8,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
