@@ -1,12 +1,11 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { MoonStarIcon, SunIcon } from 'lucide-react-native';
+import Feather from '@expo/vector-icons/Feather';
 import { useColorScheme } from 'nativewind';
 
 const THEME_ICONS = {
-  light: SunIcon,
-  dark: MoonStarIcon,
+  light: <Feather name="sun" size={20} color="black" />,
+  dark: <Feather name="moon" size={20} color="white" />,
 };
 
 const ThemeToggle = () => {
@@ -18,7 +17,7 @@ const ThemeToggle = () => {
       size="icon"
       variant="ghost"
       className="rounded-full ios:size-9 web:mx-4">
-      <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-5" />
+      {THEME_ICONS[colorScheme ?? 'light']}
     </Button>
   );
 }

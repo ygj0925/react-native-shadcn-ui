@@ -30,7 +30,7 @@ export default function Screen() {
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <View className="items-center justify-center flex-1 gap-8 p-4">
+      <View className="items-center justify-center flex-1 gap-8 p-2">
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="sm:flex-1 items-center justify-center p-4 py-8 sm:py-4 sm:p-6 mt-safe"
