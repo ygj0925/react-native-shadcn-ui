@@ -20,7 +20,7 @@
       "supportsTablet": true
     },
     "android": {
-      "softwareKeyboardLayoutMode": "resize",
+      "softwareKeyboardLayoutMode": "adjustResize",
       "edgeToEdgeEnabled": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",

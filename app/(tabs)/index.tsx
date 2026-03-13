@@ -20,6 +20,9 @@ export default function Index() {
         <Link href="/about" className="font-mono text-sm ios:text-foreground text-muted-foreground">
           Go to About screen
         </Link>
+        <Link href="/chat" className="font-mono text-sm ios:text-foreground text-muted-foreground">
+          Go to chat screen
+        </Link>
       </View>
     </>
 
