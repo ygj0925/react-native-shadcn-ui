@@ -3,30 +3,31 @@ import { ScrollView, View } from 'react-native';
 import { useHeaderHeight } from '@react-navigation/elements'
 import { ThemeToggle } from '@/components/themeToggle';
 import { Stack } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SCREEN_OPTIONS = {
   title: '注册页面',
-  headerTransparent: true,
+  headerShown: true,
+  headerTransparent: false,
   headerRight: () => <ThemeToggle />,
 };
 export default function SignUpScreen() {
   const headerHeight = useHeaderHeight()
 
   return (
-    <>
+    <SafeAreaView edges={["left", "right", "bottom"]} className="flex-1">
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingTop: headerHeight,
-        }}
-        contentContainerClassName="sm:flex-1 items-center justify-start p-4 py-8 sm:py-4 sm:p-6 mt-safe"
-        keyboardDismissMode="interactive">
-        <View className="w-full max-w-sm">
-          <SignUpForm />
-        </View>
-      </ScrollView>
-    </>
+      <View className='flex-1'>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
 
+          contentContainerClassName="p-4 py-8"
+          keyboardDismissMode="interactive">
+          <View className="w-full max-w-sm">
+            <SignUpForm />
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }

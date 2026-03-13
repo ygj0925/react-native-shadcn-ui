@@ -29,7 +29,7 @@ export function SignUpForm() {
   }
 
   return (
-    <View className="flex-col flex-1 gap-6">
+    <View className="flex-col gap-6">
       <Card className="shadow-none border-border/0 sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
           <CardTitle className="text-xl text-center sm:text-left">Create your account</CardTitle>
@@ -70,13 +70,12 @@ export function SignUpForm() {
           </View>
           <Text className="text-sm text-center">
             Already have an account?{' '}
-            <Pressable
-              onPress={() => {
-                router.push('/login');
-                // TODO: Navigate to sign in screen
-              }}>
-              <Text className="text-sm underline underline-offset-4">Sign in</Text>
-            </Pressable>
+            <Text
+              className="text-sm font-medium underline"
+              onPress={() => router.push("/login")}
+            >
+              Sign in
+            </Text>
           </Text>
           <View className="flex-row items-center">
             <Separator className="flex-1" />

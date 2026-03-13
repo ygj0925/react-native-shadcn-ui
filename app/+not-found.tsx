@@ -16,7 +16,7 @@ export default function NotFound() {
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <ScrollView className="flex-col items-center justify-center min-h-screen px-6 py-16 font-sans bg-background">
+      <View className="flex-col items-center justify-center min-h-screen px-6 py-16 font-sans">
         <View className="relative z-10 flex-col items-center w-full max-w-md gap-6 text-center">
           {/* 404 数字 */}
           <View className="flex-row items-center gap-1 select-none" aria-label="404">
@@ -42,24 +42,26 @@ export default function NotFound() {
           </View>
 
           {/* 标题与描述 */}
-          <View className="flex-col gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
+          <View className="flex-col gap-2 justify-center items-center">
+            <Text className="text-2xl font-bold tracking-tight text-foreground text-balance">
               页面未找到
-            </h1>
-            <p className="text-sm leading-relaxed text-muted-foreground text-pretty">
-              你访问的页面不存在，可能已被移动或删除。<br />
+            </Text>
+            <Text className="text-sm leading-relaxed text-muted-foreground text-pretty">
+              你访问的页面不存在，可能已被移动或删除。
+            </Text>
+            <Text className="text-sm leading-relaxed text-muted-foreground text-pretty">
               请检查链接是否正确，或返回主页。
-            </p>
+            </Text>
           </View>
 
           {/* 操作按钮 */}
           <View className="flex-col items-center w-full gap-3 sm:flex-row sm:w-auto">
             <Button onPress={() => { router.push('/') }}>
-              <Text>返回主页</Text>
+              <Text className="text-base leading-relaxed text-white dark:text-black text-pretty">返回主页</Text>
             </Button>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </>
 
   );
