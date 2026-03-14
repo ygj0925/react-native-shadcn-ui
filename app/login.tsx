@@ -22,15 +22,8 @@ export default function LoginScreen() {
         extraKeyboardSpace={32}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 32 }}>
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingVertical: 32 }}>
         <View className="mx-auto w-full max-w-sm gap-6">
-          <View className="gap-2 px-1">
-            <Text className="text-3xl font-semibold tracking-tight">Welcome back</Text>
-            <Text className="text-muted-foreground">
-              The form now uses keyboard-aware scrolling so the focused field stays above the
-              keyboard.
-            </Text>
-          </View>
           <SignInForm />
         </View>
       </KeyboardAwareScrollView>
