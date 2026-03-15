@@ -113,10 +113,19 @@ export default function ChatScreen() {
   const [activeHistoryId, setActiveHistoryId] = React.useState('current');
   const flatListRef = React.useRef<FlatList<Message>>(null);
   const isCompact = width < 390;
+  const isLargeScreen = width >= 768;
   const contentPadding = isCompact ? 12 : 16;
   const bubbleMaxWidth = Math.min(width - contentPadding * 2 - 12, width * 0.88);
   const suggestionWidth = Math.min(Math.max(width * 0.62, 160), 220);
-  const drawerWidth = Math.min(Math.max(width * 0.78, 260), 340);
+  const sidebarWidth = isLargeScreen
+    ? Math.min(Math.max(width * 0.28, 280), 340)
+    : Math.min(Math.max(width * 0.78, 260), 340);
+
+  React.useEffect(() => {
+    if (isLargeScreen && drawerOpen) {
+      setDrawerOpen(false);
+    }
+  }, [drawerOpen, isLargeScreen]);
 
   React.useEffect(() => {
     if (!messages.length && !isGenerating) {
@@ -165,248 +174,268 @@ export default function ChatScreen() {
     sendMessage(input);
   }
 
+  function renderHistorySidebar() {
+    return (
+      <View style={{ width: sidebarWidth }}>
+        <Card className="h-full rounded-none border-r border-border bg-card py-0 shadow-2xl shadow-black/10">
+          <CardHeader className="gap-3 px-4 pb-3 pt-5">
+            <View className="flex-row items-center justify-between">
+              <View className="gap-1">
+                <CardTitle className="text-lg">Chat History</CardTitle>
+                <Text className="text-sm text-muted-foreground">
+                  Resume a recent conversation
+                </Text>
+              </View>
+
+              {!isLargeScreen ? (
+                <Button variant="ghost" size="icon" onPress={() => setDrawerOpen(false)}>
+                  <Menu size={18} color="currentColor" strokeWidth={2} />
+                </Button>
+              ) : null}
+            </View>
+
+            <Button
+              className="justify-start"
+              onPress={() => {
+                setMessages([]);
+                setActiveHistoryId('current');
+                if (!isLargeScreen) {
+                  setDrawerOpen(false);
+                }
+              }}>
+              <Plus size={16} color="currentColor" strokeWidth={2.3} />
+              <Text>New chat</Text>
+            </Button>
+          </CardHeader>
+
+          <Separator />
+
+          <ScrollView className="flex-1" contentContainerStyle={{ padding: 12 }}>
+            <View className="gap-2">
+              {HISTORY_ITEMS.map((item) => {
+                const active = item.id === activeHistoryId;
+
+                return (
+                  <Pressable
+                    key={item.id}
+                    className={cn(
+                      'rounded-xl border px-3 py-3',
+                      active
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border bg-background active:bg-accent'
+                    )}
+                    onPress={() => {
+                      setActiveHistoryId(item.id);
+                      if (!isLargeScreen) {
+                        setDrawerOpen(false);
+                      }
+                    }}>
+                    <View className="flex-row items-start gap-3">
+                      <View
+                        className={cn(
+                          'mt-0.5 h-8 w-8 items-center justify-center rounded-lg',
+                          active ? 'bg-primary' : 'bg-muted'
+                        )}>
+                        <Clock3
+                          size={15}
+                          color={active ? '#ffffff' : 'currentColor'}
+                          strokeWidth={2}
+                        />
+                      </View>
+
+                      <View className="flex-1 gap-1">
+                        <Text className="text-sm font-medium" numberOfLines={1}>
+                          {item.title}
+                        </Text>
+                        <Text className="text-xs leading-4 text-muted-foreground" numberOfLines={2}>
+                          {item.preview}
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </Card>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
       <Stack.Screen options={SCREEN_OPTIONS} />
 
-      <View className="flex-1 bg-background">
-        <View
-          className="flex-row items-center justify-between pb-3 pt-2"
-          style={{ paddingHorizontal: contentPadding }}>
-          <Button variant="ghost" size="icon" onPress={() => setDrawerOpen(true)}>
-            <Menu size={18} color="currentColor" strokeWidth={2} />
-          </Button>
+      <View className="flex-1 flex-row bg-background">
+        {isLargeScreen ? renderHistorySidebar() : null}
 
-          <View className="items-center gap-0.5">
-            <Text className="text-xs font-medium text-muted-foreground">Workspace</Text>
-            <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-base' : 'text-lg')}>
-              Chat
-            </Text>
+        <View className="flex-1 bg-background">
+          <View
+            className="flex-row items-center justify-between pb-3 pt-2"
+            style={{ paddingHorizontal: isLargeScreen ? 20 : contentPadding }}>
+            {isLargeScreen ? (
+              <View className="w-10" />
+            ) : (
+              <Button variant="ghost" size="icon" onPress={() => setDrawerOpen(true)}>
+                <Menu size={18} color="currentColor" strokeWidth={2} />
+              </Button>
+            )}
+
+            <View className="items-center gap-0.5">
+              <Text className="text-xs font-medium text-muted-foreground">Workspace</Text>
+              <Text
+                className={cn(
+                  'font-semibold tracking-tight',
+                  isCompact ? 'text-base' : 'text-lg'
+                )}>
+                Chat
+              </Text>
+            </View>
+
+            <Button variant="ghost" size="icon">
+              <Pencil size={18} color="currentColor" strokeWidth={2} />
+            </Button>
           </View>
 
-          <Button variant="ghost" size="icon">
-            <Pencil size={18} color="currentColor" strokeWidth={2} />
-          </Button>
-        </View>
-
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          className="flex-1"
-          contentContainerClassName={cn(
-            messages.length ? 'gap-4 pt-2' : 'flex-grow items-center justify-center py-12'
-          )}
-          contentContainerStyle={{ paddingHorizontal: contentPadding }}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => <ChatBubble item={item} maxWidth={bubbleMaxWidth} />}
-          ListEmptyComponent={
-            <View className="w-full max-w-sm items-center gap-5">
-              <View className="h-16 w-16 items-center justify-center rounded-full bg-primary">
-                <Sparkles size={24} color="#ffffff" strokeWidth={2.3} />
-              </View>
-              <View className="items-center gap-2">
-                <Text className="text-2xl font-semibold tracking-tight">Start a conversation</Text>
-                <Text className="px-6 text-center text-muted-foreground">
-                  Ask for product copy, code review, summaries, or quick brainstorming.
-                </Text>
-              </View>
-            </View>
-          }
-          ListFooterComponent={
-            <View className="pt-1">
-              {isGenerating ? (
-                <Card
-                  style={{ maxWidth: bubbleMaxWidth }}
-                  className="border-border bg-card py-0 shadow-sm shadow-black/5">
-                  <CardContent className="gap-2 px-4 py-3">
-                    <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
-                      Assistant
-                    </Text>
-                    <View className="flex-row items-center gap-2">
-                      <View className="h-2.5 w-2.5 rounded-full bg-foreground" />
-                      <View className="h-2.5 w-2.5 rounded-full bg-foreground/45" />
-                      <View className="h-2.5 w-2.5 rounded-full bg-foreground/20" />
-                    </View>
-                  </CardContent>
-                </Card>
-              ) : null}
-            </View>
-          }
-          ListFooterComponentStyle={{
-            paddingBottom: 224 + Math.max(insets.bottom, 10),
-          }}
-        />
-
-        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-          <View className="bg-background" style={{ paddingHorizontal: contentPadding }}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingTop: 8, paddingBottom: 12 }}>
-              {SUGGESTIONS.map((suggestion) => (
-                <Pressable
-                  key={suggestion.id}
-                  className="mr-3"
-                  onPress={() => setInput(suggestion.title)}>
-                  <Card
-                    style={{ width: suggestionWidth }}
-                    className="border-border bg-card py-0 shadow-sm shadow-black/5">
-                    <CardContent className="gap-1 px-4 py-3">
-                      <Text className="text-sm font-semibold leading-5">{suggestion.title}</Text>
-                      <Text className="text-xs leading-4 text-muted-foreground">
-                        {suggestion.subtitle}
-                      </Text>
-                    </CardContent>
-                  </Card>
-                </Pressable>
-              ))}
-            </ScrollView>
-
-            <Card className="border-border bg-card py-0 shadow-lg shadow-black/5">
-              <CardHeader className="flex-row items-center justify-between px-4 pb-2 pt-4">
-                <CardTitle className={cn(isCompact ? 'text-sm' : 'text-base')}>
-                  Message Composer
-                </CardTitle>
-                <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-                  {isGenerating ? 'Generating...' : 'Ready'}
-                </Text>
-              </CardHeader>
-
-              <Separator />
-
-              <CardContent className="gap-3 px-4 py-3">
-                <View className="flex-row items-center gap-2">
-                  <Button variant="outline" size="icon">
-                    <Plus size={16} color="currentColor" strokeWidth={2.3} />
-                  </Button>
-
-                  <Input
-                    className="h-11 flex-1"
-                    placeholder="Message"
-                    returnKeyType="send"
-                    submitBehavior="submit"
-                    value={input}
-                    onChangeText={setInput}
-                    onSubmitEditing={onSend}
-                  />
-
-                  <Button variant="ghost" size="icon">
-                    <Mic size={16} color="currentColor" strokeWidth={2.1} />
-                  </Button>
-
-                  <Button size="icon" onPress={onSend} disabled={!input.trim() || isGenerating}>
-                    <ArrowUp size={16} color="currentColor" strokeWidth={2.6} />
-                  </Button>
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            className="flex-1"
+            contentContainerClassName={cn(
+              messages.length ? 'gap-4 pt-2' : 'flex-grow items-center justify-center py-12'
+            )}
+            contentContainerStyle={{ paddingHorizontal: isLargeScreen ? 20 : contentPadding }}
+            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => <ChatBubble item={item} maxWidth={bubbleMaxWidth} />}
+            ListEmptyComponent={
+              <View className="w-full max-w-sm items-center gap-5">
+                <View className="h-16 w-16 items-center justify-center rounded-full bg-primary">
+                  <Sparkles size={24} color="#ffffff" strokeWidth={2.3} />
                 </View>
-
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                      <ImageIcon size={16} color="currentColor" strokeWidth={2} />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Folder size={16} color="currentColor" strokeWidth={2} />
-                    </Button>
-                  </View>
-
-                  <Text className="flex-1 pl-3 text-right text-xs text-muted-foreground" numberOfLines={1}>
-                    Press enter or tap send
+                <View className="items-center gap-2">
+                  <Text className="text-2xl font-semibold tracking-tight">Start a conversation</Text>
+                  <Text className="px-6 text-center text-muted-foreground">
+                    Ask for product copy, code review, summaries, or quick brainstorming.
                   </Text>
                 </View>
-              </CardContent>
-            </Card>
-
-            <View style={{ height: Math.max(insets.bottom, 10) }} />
-          </View>
-        </KeyboardStickyView>
-
-        {drawerOpen ? (
-          <View className="absolute inset-0 z-50 flex-row">
-            <View style={{ width: drawerWidth }}>
-              <Card className="h-full rounded-none border-r border-border bg-card py-0 shadow-2xl shadow-black/10">
-                <CardHeader className="gap-3 px-4 pb-3 pt-5">
-                  <View className="flex-row items-center justify-between">
-                    <View className="gap-1">
-                      <CardTitle className="text-lg">Chat History</CardTitle>
-                      <Text className="text-sm text-muted-foreground">
-                        Resume a recent conversation
+              </View>
+            }
+            ListFooterComponent={
+              <View className="pt-1">
+                {isGenerating ? (
+                  <Card
+                    style={{ maxWidth: bubbleMaxWidth }}
+                    className="border-border bg-card py-0 shadow-sm shadow-black/5">
+                    <CardContent className="gap-2 px-4 py-3">
+                      <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
+                        Assistant
                       </Text>
-                    </View>
+                      <View className="flex-row items-center gap-2">
+                        <View className="h-2.5 w-2.5 rounded-full bg-foreground" />
+                        <View className="h-2.5 w-2.5 rounded-full bg-foreground/45" />
+                        <View className="h-2.5 w-2.5 rounded-full bg-foreground/20" />
+                      </View>
+                    </CardContent>
+                  </Card>
+                ) : null}
+              </View>
+            }
+            ListFooterComponentStyle={{
+              paddingBottom: 224 + Math.max(insets.bottom, 10),
+            }}
+          />
 
-                    <Button variant="ghost" size="icon" onPress={() => setDrawerOpen(false)}>
-                      <Menu size={18} color="currentColor" strokeWidth={2} />
-                    </Button>
-                  </View>
+          <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+            <View
+              className="bg-background"
+              style={{ paddingHorizontal: isLargeScreen ? 20 : contentPadding }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingTop: 8, paddingBottom: 12 }}>
+                {SUGGESTIONS.map((suggestion) => (
+                  <Pressable
+                    key={suggestion.id}
+                    className="mr-3"
+                    onPress={() => setInput(suggestion.title)}>
+                    <Card
+                      style={{ width: suggestionWidth }}
+                      className="border-border bg-card py-0 shadow-sm shadow-black/5">
+                      <CardContent className="gap-1 px-4 py-3">
+                        <Text className="text-sm font-semibold leading-5">{suggestion.title}</Text>
+                        <Text className="text-xs leading-4 text-muted-foreground">
+                          {suggestion.subtitle}
+                        </Text>
+                      </CardContent>
+                    </Card>
+                  </Pressable>
+                ))}
+              </ScrollView>
 
-                  <Button
-                    className="justify-start"
-                    onPress={() => {
-                      setMessages([]);
-                      setActiveHistoryId('current');
-                      setDrawerOpen(false);
-                    }}>
-                    <Plus size={16} color="currentColor" strokeWidth={2.3} />
-                    <Text>New chat</Text>
-                  </Button>
+              <Card className="border-border bg-card py-0 shadow-lg shadow-black/5">
+                <CardHeader className="flex-row items-center justify-between px-4 pb-2 pt-4">
+                  <CardTitle className={cn(isCompact ? 'text-sm' : 'text-base')}>
+                    Message Composer
+                  </CardTitle>
+                  <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+                    {isGenerating ? 'Generating...' : 'Ready'}
+                  </Text>
                 </CardHeader>
 
                 <Separator />
 
-                <ScrollView className="flex-1" contentContainerStyle={{ padding: 12 }}>
-                  <View className="gap-2">
-                    {HISTORY_ITEMS.map((item) => {
-                      const active = item.id === activeHistoryId;
+                <CardContent className="gap-3 px-4 py-3">
+                  <View className="flex-row items-center gap-2">
+                    <Button variant="outline" size="icon">
+                      <Plus size={16} color="currentColor" strokeWidth={2.3} />
+                    </Button>
 
-                      return (
-                        <Pressable
-                          key={item.id}
-                          className={cn(
-                            'rounded-xl border px-3 py-3',
-                            active
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border bg-background active:bg-accent'
-                          )}
-                          onPress={() => {
-                            setActiveHistoryId(item.id);
-                            setDrawerOpen(false);
-                          }}>
-                          <View className="flex-row items-start gap-3">
-                            <View
-                              className={cn(
-                                'mt-0.5 h-8 w-8 items-center justify-center rounded-lg',
-                                active ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                              )}>
-                              <Clock3
-                                size={15}
-                                color={active ? '#ffffff' : 'currentColor'}
-                                strokeWidth={2}
-                              />
-                            </View>
+                    <Input
+                      className="h-11 flex-1"
+                      placeholder="Message"
+                      returnKeyType="send"
+                      submitBehavior="submit"
+                      value={input}
+                      onChangeText={setInput}
+                      onSubmitEditing={onSend}
+                    />
 
-                            <View className="flex-1 gap-1">
-                              <Text
-                                className={cn(
-                                  'text-sm font-medium',
-                                  active ? 'text-foreground' : 'text-foreground'
-                                )}
-                                numberOfLines={1}>
-                                {item.title}
-                              </Text>
-                              <Text className="text-xs leading-4 text-muted-foreground" numberOfLines={2}>
-                                {item.preview}
-                              </Text>
-                            </View>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
+                    <Button variant="ghost" size="icon">
+                      <Mic size={16} color="currentColor" strokeWidth={2.1} />
+                    </Button>
+
+                    <Button size="icon" onPress={onSend} disabled={!input.trim() || isGenerating}>
+                      <ArrowUp size={16} color="currentColor" strokeWidth={2.6} />
+                    </Button>
                   </View>
-                </ScrollView>
-              </Card>
-            </View>
 
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
+                      <Button variant="ghost" size="icon">
+                        <ImageIcon size={16} color="currentColor" strokeWidth={2} />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <Folder size={16} color="currentColor" strokeWidth={2} />
+                      </Button>
+                    </View>
+
+                    <Text className="flex-1 pl-3 text-right text-xs text-muted-foreground" numberOfLines={1}>
+                      Press enter or tap send
+                    </Text>
+                  </View>
+                </CardContent>
+              </Card>
+
+              <View style={{ height: Math.max(insets.bottom, 10) }} />
+            </View>
+          </KeyboardStickyView>
+        </View>
+
+        {!isLargeScreen && drawerOpen ? (
+          <View className="absolute inset-0 z-50 flex-row">
+            {renderHistorySidebar()}
             <Pressable className="flex-1 bg-black/35" onPress={() => setDrawerOpen(false)} />
           </View>
         ) : null}
