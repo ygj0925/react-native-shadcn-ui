@@ -12,7 +12,7 @@ import { Slot, Tabs, usePathname, useRouter } from 'expo-router';
 import { Menu, X } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type NavItem = {
@@ -38,14 +38,14 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     name: 'about',
-    title: 'Explore',
+    title: 'Schedule',
     href: '/about',
-    description: 'Search and discover useful content',
+    description: 'Plan, inspect, and manage your agenda',
     icon: (focused, color) =>
       focused ? (
-        <FontAwesome name="search" size={20} color={color} />
+        <FontAwesome5 name="calendar-alt" size={18} color={color} />
       ) : (
-        <Feather name="search" size={20} color={color} />
+        <Feather name="calendar" size={20} color={color} />
       ),
   },
   {
@@ -88,7 +88,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Chats',
-  '/about': 'Explore',
+  '/about': 'Schedule',
   '/home': 'Create',
   '/love': 'Favorites',
   '/my': 'My',
@@ -111,10 +111,10 @@ function SidebarContent({
 }) {
   return (
     <Card className="h-full rounded-none border-r border-border bg-card py-0 shadow-2xl shadow-black/10">
-      <CardHeader className="gap-3 px-4 pb-3" style={{ paddingTop: topInset + 12 }}>
+      <CardHeader className="gap-3 px-4 pb-3" style={{ paddingTop: topInset + 10 }}>
         <View className="flex-row items-center justify-between">
           <View className="gap-1">
-            <CardTitle className="text-xl">Navigation</CardTitle>
+            <CardTitle className="text-lg">Navigation</CardTitle>
             <Text className="text-sm text-muted-foreground">
               Move across your core pages
             </Text>
@@ -139,7 +139,7 @@ function SidebarContent({
               <Pressable
                 key={item.name}
                 className={cn(
-                  'rounded-xl border px-3 py-3',
+                  'rounded-xl border px-3 py-2.5',
                   active
                     ? 'border-primary bg-primary/10'
                     : 'border-border bg-background active:bg-accent'
@@ -148,10 +148,10 @@ function SidebarContent({
                 <View className="flex-row items-start gap-3">
                   <View
                     className={cn(
-                      'mt-0.5 h-9 w-9 items-center justify-center rounded-lg',
+                      'mt-0.5 h-8 w-8 items-center justify-center rounded-lg',
                       active ? 'bg-primary' : 'bg-muted'
                     )}>
-                    {item.icon(true, active ? '#ffffff' : iconColor)}
+                    {item.icon(active, active ? '#ffffff' : iconColor)}
                   </View>
 
                   <View className="flex-1 gap-1">
@@ -171,7 +171,7 @@ function SidebarContent({
 
       <Separator />
 
-      <CardContent className="px-4 py-4">
+      <CardContent className="px-4 py-3">
         <Text className="text-xs text-muted-foreground">
           iPad keeps this navigation pinned by default, and you can collapse it from the header.
         </Text>
@@ -228,9 +228,34 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
+  const progress = React.useRef(new Animated.Value(1)).current;
   const currentPath = pathname === '/index' ? '/' : pathname;
   const currentTitle = PAGE_TITLES[currentPath] ?? 'Workspace';
-  const sidebarWidth = Math.min(Math.max(width * 0.28, 280), 340);
+  const sidebarWidth = Math.min(Math.max(width * 0.22, 220), 260);
+
+  React.useEffect(() => {
+    Animated.timing(progress, {
+      toValue: sidebarVisible ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [progress, sidebarVisible]);
+
+  const animatedSidebarWidth = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, sidebarWidth],
+  });
+
+  const animatedSidebarOpacity = progress.interpolate({
+    inputRange: [0, 0.55, 1],
+    outputRange: [0, 0.65, 1],
+  });
+
+  const animatedSidebarTranslate = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-18, 0],
+  });
 
   function navigate(href: string) {
     router.push(href as never);
@@ -242,8 +267,16 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
 
   return (
     <View className="flex-1 flex-row bg-background">
-      {sidebarVisible ? (
-        <View style={{ width: sidebarWidth }}>
+      <Animated.View
+        style={{ width: animatedSidebarWidth, overflow: 'hidden' }}
+        pointerEvents={sidebarVisible ? 'auto' : 'none'}>
+        <Animated.View
+          style={{
+            width: sidebarWidth,
+            flex: 1,
+            opacity: animatedSidebarOpacity,
+            transform: [{ translateX: animatedSidebarTranslate }],
+          }}>
           <SidebarContent
             currentPath={currentPath}
             iconColor={iconColor}
@@ -251,8 +284,8 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
             onNavigate={navigate}
             largeScreen
           />
-        </View>
-      ) : null}
+        </Animated.View>
+      </Animated.View>
 
       <View className="flex-1 bg-background">
         <View
@@ -260,7 +293,11 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
           style={{ height: 64 + insets.top, paddingTop: insets.top }}>
           <View className="flex-row items-center gap-3">
             <Button variant="ghost" size="icon" onPress={onMenuPress}>
-              <Menu size={18} color="currentColor" strokeWidth={2} />
+              {sidebarVisible ? (
+                <X size={18} color="currentColor" strokeWidth={2} />
+              ) : (
+                <Menu size={18} color="currentColor" strokeWidth={2} />
+              )}
             </Button>
             <View className="gap-0.5">
               <Text className="text-xs font-medium text-muted-foreground">Workspace</Text>
