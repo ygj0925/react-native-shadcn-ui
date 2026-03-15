@@ -13,7 +13,7 @@ export default function Index() {
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View style={styles.container}>
-        <Link href="/Login" className="font-mono text-sm ios:text-foreground text-muted-foreground">
+        <Link href="/login" className="font-mono text-sm ios:text-foreground text-muted-foreground">
           Go to 404 screen
         </Link>
         <Text className="font-mono text-sm ios:text-foreground text-muted-foreground">Home screen</Text>
