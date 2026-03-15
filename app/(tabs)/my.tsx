@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import {
   Archive,
+  ChevronRight,
   CircleHelp,
   FileText,
   Globe,
@@ -92,15 +93,15 @@ function SettingsRow({
   const showValueBelowLabel = compact && !!item.value && !item.withToggle;
 
   return (
-    <Pressable className="flex-row items-center px-4 py-3 active:bg-accent/50">
-      <View className="mr-3 h-9 w-9 items-center justify-center rounded-lg bg-muted">
-        <Icon size={16} color="currentColor" strokeWidth={2} />
+    <Pressable className="flex-row items-center px-4 py-2.5 active:bg-accent/50">
+      <View className="mr-3 h-8 w-8 items-center justify-center rounded-md bg-muted">
+        <Icon size={15} color="currentColor" strokeWidth={2} />
       </View>
 
       <View className="flex-1 gap-0.5">
-        <Text className="text-base">{item.label}</Text>
+        <Text className="text-[15px]">{item.label}</Text>
         {showValueBelowLabel ? (
-          <Text className="text-sm text-muted-foreground" numberOfLines={1}>
+          <Text className="text-xs text-muted-foreground" numberOfLines={1}>
             {item.value}
           </Text>
         ) : null}
@@ -117,11 +118,13 @@ function SettingsRow({
       ) : (
         <View className="flex-row items-center gap-2">
           {!showValueBelowLabel && item.value ? (
-            <Text className="max-w-[140px] text-right text-sm text-muted-foreground" numberOfLines={1}>
+            <Text className="max-w-[140px] text-right text-xs text-muted-foreground" numberOfLines={1}>
               {item.value}
             </Text>
           ) : null}
-          {item.withChevron ? <Text className="text-lg text-muted-foreground">{'>'}</Text> : null}
+          {item.withChevron ? (
+            <ChevronRight size={16} color="currentColor" strokeWidth={2} />
+          ) : null}
         </View>
       )}
     </Pressable>
@@ -140,26 +143,67 @@ export default function MyScreen() {
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: horizontalPadding,
-          paddingTop: 12,
-          paddingBottom: 28,
+          paddingTop: 10,
+          paddingBottom: 20,
         }}
         showsVerticalScrollIndicator={false}>
-        <View className="mb-6 gap-2 px-1">
-          <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-[28px]' : 'text-3xl')}>
+        <View className="mb-4 gap-1 px-1">
+          <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-[24px]' : 'text-[28px]')}>
             Settings
           </Text>
-          <Text className="text-sm text-muted-foreground">
+          <Text className="text-xs text-muted-foreground">
             Manage your account, app preferences, and voice experience.
           </Text>
         </View>
 
+        <Card className="mb-3.5 overflow-hidden border-border bg-card py-0 shadow-sm shadow-black/5">
+          <View className="bg-primary/10 px-4 pb-4 pt-5">
+            <Pressable className="active:opacity-90">
+              <View className="flex-row items-center">
+                <View className="h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-primary shadow-sm shadow-black/5">
+                  <Text className="text-lg font-semibold text-primary-foreground">RE</Text>
+                </View>
+
+                <View className="ml-3 flex-1 gap-1">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-lg font-semibold tracking-tight">Rey Zhang</Text>
+                    <View className="rounded-full border border-primary/15 bg-primary px-2 py-0.5">
+                      <Text className="text-[10px] font-medium text-primary-foreground">PLUS</Text>
+                    </View>
+                  </View>
+                  <Text className="text-xs text-muted-foreground">Member ID: 20240318</Text>
+                  <Text className="text-xs leading-4 text-muted-foreground">
+                    AI points 1,286 | Growth value 92
+                  </Text>
+                </View>
+
+                <View className="h-8 w-8 items-center justify-center rounded-full bg-background/70">
+                  <ChevronRight size={16} color="currentColor" strokeWidth={2} />
+                </View>
+              </View>
+            </Pressable>
+
+            <View className="mt-4 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5">
+              <View className="flex-row items-center justify-between">
+                <View className="gap-1">
+                  <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
+                    Membership
+                  </Text>
+                  <Text className="text-sm font-medium">ChatGPT Plus Annual Plan</Text>
+                </View>
+                <Text className="text-xs text-muted-foreground">Renews in 28 days</Text>
+              </View>
+            </View>
+          </View>
+        </Card>
+
         {sections.map((section) => (
-          <View key={section.title} className="mb-5">
+          <View key={section.title} className="mb-3.5">
             <Card className="border-border bg-card py-0 shadow-sm shadow-black/5">
-              <CardHeader className="px-5 pb-3 pt-5">
-                <CardTitle className="text-lg">{section.title}</CardTitle>
+              <CardHeader className="px-4 pb-2 pt-4">
+                <CardTitle className="text-base">{section.title}</CardTitle>
                 {section.description ? (
-                  <Text className="text-sm leading-5 text-muted-foreground">
+                  <Text className="text-xs leading-4 text-muted-foreground">
                     {section.description}
                   </Text>
                 ) : null}
@@ -176,7 +220,9 @@ export default function MyScreen() {
                       toggleValue={hapticsEnabled}
                       onToggleChange={setHapticsEnabled}
                     />
-                    {index < section.items.length - 1 ? <Separator className="ml-16" /> : null}
+                    {index < section.items.length - 1 ? (
+                      <Separator className="mx-4 ml-[60px] w-auto" />
+                    ) : null}
                   </View>
                 ))}
               </CardContent>
@@ -185,7 +231,7 @@ export default function MyScreen() {
         ))}
 
         <Card className="border-border bg-card py-0 shadow-sm shadow-black/5">
-          <CardContent className="px-4 py-4">
+          <CardContent className="px-4 py-3">
             <Button variant="outline" className="w-full justify-start">
               <LogOut size={16} color="currentColor" strokeWidth={2} />
               <Text>Logout</Text>

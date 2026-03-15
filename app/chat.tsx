@@ -110,6 +110,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [sidebarVisible, setSidebarVisible] = React.useState(true);
   const [activeHistoryId, setActiveHistoryId] = React.useState('current');
   const flatListRef = React.useRef<FlatList<Message>>(null);
   const isCompact = width < 390;
@@ -122,10 +123,11 @@ export default function ChatScreen() {
     : Math.min(Math.max(width * 0.78, 260), 340);
 
   React.useEffect(() => {
-    if (isLargeScreen && drawerOpen) {
+    if (!isLargeScreen) {
+      setSidebarVisible(true);
       setDrawerOpen(false);
     }
-  }, [drawerOpen, isLargeScreen]);
+  }, [isLargeScreen]);
 
   React.useEffect(() => {
     if (!messages.length && !isGenerating) {
@@ -174,6 +176,15 @@ export default function ChatScreen() {
     sendMessage(input);
   }
 
+  function onMenuPress() {
+    if (!isLargeScreen) {
+      setDrawerOpen(true);
+      return;
+    }
+
+    setSidebarVisible((current) => !current);
+  }
+
   function renderHistorySidebar() {
     return (
       <View style={{ width: sidebarWidth }}>
@@ -189,7 +200,7 @@ export default function ChatScreen() {
 
               {!isLargeScreen ? (
                 <Button variant="ghost" size="icon" onPress={() => setDrawerOpen(false)}>
-                  <Menu size={18} color="currentColor" strokeWidth={2} />
+                  <Pencil size={18} color="currentColor" strokeWidth={2} />
                 </Button>
               ) : null}
             </View>
@@ -264,38 +275,48 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
-      <Stack.Screen options={SCREEN_OPTIONS} />
+      <Stack.Screen
+        options={{
+          ...SCREEN_OPTIONS,
+          headerShown: isLargeScreen,
+          title: 'Chat',
+          headerShadowVisible: true,
+          headerLeft: () => (
+            <Button variant="ghost" size="icon" onPress={onMenuPress}>
+              <Menu size={18} color="currentColor" strokeWidth={2} />
+            </Button>
+          ),
+        }}
+      />
 
       <View className="flex-1 flex-row bg-background">
-        {isLargeScreen ? renderHistorySidebar() : null}
+        {isLargeScreen && sidebarVisible ? renderHistorySidebar() : null}
 
         <View className="flex-1 bg-background">
-          <View
-            className="flex-row items-center justify-between pb-3 pt-2"
-            style={{ paddingHorizontal: isLargeScreen ? 20 : contentPadding }}>
-            {isLargeScreen ? (
-              <View className="w-10" />
-            ) : (
-              <Button variant="ghost" size="icon" onPress={() => setDrawerOpen(true)}>
+          {!isLargeScreen ? (
+            <View
+              className="flex-row items-center justify-between pb-3 pt-2"
+              style={{ paddingHorizontal: contentPadding }}>
+              <Button variant="ghost" size="icon" onPress={onMenuPress}>
                 <Menu size={18} color="currentColor" strokeWidth={2} />
               </Button>
-            )}
 
-            <View className="items-center gap-0.5">
-              <Text className="text-xs font-medium text-muted-foreground">Workspace</Text>
-              <Text
-                className={cn(
-                  'font-semibold tracking-tight',
-                  isCompact ? 'text-base' : 'text-lg'
-                )}>
-                Chat
-              </Text>
+              <View className="items-center gap-0.5">
+                <Text className="text-xs font-medium text-muted-foreground">Workspace</Text>
+                <Text
+                  className={cn(
+                    'font-semibold tracking-tight',
+                    isCompact ? 'text-base' : 'text-lg'
+                  )}>
+                  Chat
+                </Text>
+              </View>
+
+              <Button variant="ghost" size="icon">
+                <Pencil size={18} color="currentColor" strokeWidth={2} />
+              </Button>
             </View>
-
-            <Button variant="ghost" size="icon">
-              <Pencil size={18} color="currentColor" strokeWidth={2} />
-            </Button>
-          </View>
+          ) : null}
 
           <FlatList
             ref={flatListRef}
@@ -436,7 +457,10 @@ export default function ChatScreen() {
         {!isLargeScreen && drawerOpen ? (
           <View className="absolute inset-0 z-50 flex-row">
             {renderHistorySidebar()}
-            <Pressable className="flex-1 bg-black/35" onPress={() => setDrawerOpen(false)} />
+            <Pressable
+              className="flex-1 bg-black/35"
+              onPress={() => setDrawerOpen(false)}
+            />
           </View>
         ) : null}
       </View>

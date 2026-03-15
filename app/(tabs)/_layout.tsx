@@ -1,11 +1,283 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Text } from '@/components/ui/text';
+import { cn } from '@/lib/utils';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Feather from '@expo/vector-icons/Feather';
-import { Tabs } from 'expo-router';
+import { Slot, Tabs, usePathname, useRouter } from 'expo-router';
+import { Menu, X } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
-import { useWindowDimensions } from 'react-native';
+import * as React from 'react';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+type NavItem = {
+  name: 'index' | 'about' | 'home' | 'love' | 'my';
+  title: string;
+  href: string;
+  description: string;
+  icon: (focused: boolean, color: string) => React.ReactNode;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  {
+    name: 'index',
+    title: 'Chats',
+    href: '/',
+    description: 'Recent conversations and prompts',
+    icon: (focused, color) =>
+      focused ? (
+        <Ionicons name="chatbox-ellipses" size={20} color={color} />
+      ) : (
+        <Ionicons name="chatbox-ellipses-outline" size={20} color={color} />
+      ),
+  },
+  {
+    name: 'about',
+    title: 'Explore',
+    href: '/about',
+    description: 'Search and discover useful content',
+    icon: (focused, color) =>
+      focused ? (
+        <FontAwesome name="search" size={20} color={color} />
+      ) : (
+        <Feather name="search" size={20} color={color} />
+      ),
+  },
+  {
+    name: 'home',
+    title: 'Create',
+    href: '/home',
+    description: 'Draft ideas and structured outputs',
+    icon: (focused, color) =>
+      focused ? (
+        <MaterialCommunityIcons name="creation" size={20} color={color} />
+      ) : (
+        <MaterialCommunityIcons name="creation-outline" size={20} color={color} />
+      ),
+  },
+  {
+    name: 'love',
+    title: 'Favorites',
+    href: '/love',
+    description: 'Saved chats and highlights',
+    icon: (focused, color) =>
+      focused ? (
+        <MaterialCommunityIcons name="clover" size={20} color={color} />
+      ) : (
+        <MaterialCommunityIcons name="clover-outline" size={20} color={color} />
+      ),
+  },
+  {
+    name: 'my',
+    title: 'My',
+    href: '/my',
+    description: 'Profile, settings, and account',
+    icon: (focused, color) =>
+      focused ? (
+        <FontAwesome5 name="user-alt" size={20} color={color} />
+      ) : (
+        <FontAwesome5 name="user" size={20} color={color} />
+      ),
+  },
+];
+
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Chats',
+  '/about': 'Explore',
+  '/home': 'Create',
+  '/love': 'Favorites',
+  '/my': 'My',
+};
+
+function SidebarContent({
+  currentPath,
+  iconColor,
+  topInset,
+  onNavigate,
+  onClose,
+  largeScreen,
+}: {
+  currentPath: string;
+  iconColor: string;
+  topInset: number;
+  onNavigate: (href: string) => void;
+  onClose?: () => void;
+  largeScreen: boolean;
+}) {
+  return (
+    <Card className="h-full rounded-none border-r border-border bg-card py-0 shadow-2xl shadow-black/10">
+      <CardHeader className="gap-3 px-4 pb-3" style={{ paddingTop: topInset + 12 }}>
+        <View className="flex-row items-center justify-between">
+          <View className="gap-1">
+            <CardTitle className="text-xl">Navigation</CardTitle>
+            <Text className="text-sm text-muted-foreground">
+              Move across your core pages
+            </Text>
+          </View>
+
+          {!largeScreen ? (
+            <Button variant="ghost" size="icon" onPress={onClose}>
+              <X size={18} color="currentColor" strokeWidth={2} />
+            </Button>
+          ) : null}
+        </View>
+      </CardHeader>
+
+      <Separator />
+
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 12 }}>
+        <View className="gap-2">
+          {NAV_ITEMS.map((item) => {
+            const active = currentPath === item.href;
+
+            return (
+              <Pressable
+                key={item.name}
+                className={cn(
+                  'rounded-xl border px-3 py-3',
+                  active
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border bg-background active:bg-accent'
+                )}
+                onPress={() => onNavigate(item.href)}>
+                <View className="flex-row items-start gap-3">
+                  <View
+                    className={cn(
+                      'mt-0.5 h-9 w-9 items-center justify-center rounded-lg',
+                      active ? 'bg-primary' : 'bg-muted'
+                    )}>
+                    {item.icon(true, active ? '#ffffff' : iconColor)}
+                  </View>
+
+                  <View className="flex-1 gap-1">
+                    <Text className="text-sm font-medium" numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                    <Text className="text-xs leading-4 text-muted-foreground" numberOfLines={2}>
+                      {item.description}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+
+      <Separator />
+
+      <CardContent className="px-4 py-4">
+        <Text className="text-xs text-muted-foreground">
+          iPad keeps this navigation pinned by default, and you can collapse it from the header.
+        </Text>
+      </CardContent>
+    </Card>
+  );
+}
+
+function MobileTabs({ iconColor }: { iconColor: string }) {
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        headerShadowVisible: false,
+        tabBarPosition: 'bottom',
+        tabBarVariant: 'uikit',
+        tabBarLabelPosition: 'below-icon',
+        tabBarItemStyle: {
+          paddingVertical: 4,
+        },
+        tabBarStyle: {
+          height: 64,
+          paddingTop: 6,
+          paddingBottom: 6,
+          borderTopWidth: 1,
+          borderTopColor: '#e5e7eb',
+          elevation: 0,
+          shadowOpacity: 0,
+          shadowColor: 'transparent',
+          shadowOffset: { width: 0, height: 0 },
+          shadowRadius: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+        },
+      }}>
+      {NAV_ITEMS.map((item) => (
+        <Tabs.Screen
+          key={item.name}
+          name={item.name}
+          options={{
+            title: item.title,
+            tabBarIcon: ({ focused }) => item.icon(focused, iconColor),
+          }}
+        />
+      ))}
+    </Tabs>
+  );
+}
+
+function LargeScreenShell({ iconColor }: { iconColor: string }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const [sidebarVisible, setSidebarVisible] = React.useState(true);
+  const currentPath = pathname === '/index' ? '/' : pathname;
+  const currentTitle = PAGE_TITLES[currentPath] ?? 'Workspace';
+  const sidebarWidth = Math.min(Math.max(width * 0.28, 280), 340);
+
+  function navigate(href: string) {
+    router.push(href as never);
+  }
+
+  function onMenuPress() {
+    setSidebarVisible((current) => !current);
+  }
+
+  return (
+    <View className="flex-1 flex-row bg-background">
+      {sidebarVisible ? (
+        <View style={{ width: sidebarWidth }}>
+          <SidebarContent
+            currentPath={currentPath}
+            iconColor={iconColor}
+            topInset={insets.top}
+            onNavigate={navigate}
+            largeScreen
+          />
+        </View>
+      ) : null}
+
+      <View className="flex-1 bg-background">
+        <View
+          className="flex-row items-center justify-between border-b border-border bg-background px-4"
+          style={{ height: 64 + insets.top, paddingTop: insets.top }}>
+          <View className="flex-row items-center gap-3">
+            <Button variant="ghost" size="icon" onPress={onMenuPress}>
+              <Menu size={18} color="currentColor" strokeWidth={2} />
+            </Button>
+            <View className="gap-0.5">
+              <Text className="text-xs font-medium text-muted-foreground">Workspace</Text>
+              <Text className="text-lg font-semibold tracking-tight">{currentTitle}</Text>
+            </View>
+          </View>
+
+          <Text className="text-sm text-muted-foreground">iPad Layout</Text>
+        </View>
+
+        <View className="flex-1">
+          <Slot />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
@@ -14,85 +286,8 @@ export default function TabLayout() {
   const iconColor = colorScheme === 'dark' ? 'white' : 'black';
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        headerShadowVisible: true,
-        tabBarPosition: isLargeScreen ? 'left' : 'bottom',
-        tabBarVariant: isLargeScreen ? 'material' : 'uikit',
-        tabBarLabelPosition: isLargeScreen ? 'below-icon' : 'beside-icon',
-        tabBarStyle: isLargeScreen
-          ? {
-              width: 108,
-              paddingTop: 12,
-              paddingBottom: 12,
-            }
-          : {
-              height: 64,
-              paddingTop: 6,
-              paddingBottom: 6,
-            },
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Chats',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <Ionicons name="chatbox-ellipses" size={20} color={iconColor} />
-            ) : (
-              <Ionicons name="chatbox-ellipses-outline" size={20} color={iconColor} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="about"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <FontAwesome name="search" size={20} color={iconColor} />
-            ) : (
-              <Feather name="search" size={20} color={iconColor} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Create',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <MaterialCommunityIcons name="creation" size={20} color={iconColor} />
-            ) : (
-              <MaterialCommunityIcons name="creation-outline" size={20} color={iconColor} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="love"
-        options={{
-          title: 'Favorites',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <MaterialCommunityIcons name="clover" size={20} color={iconColor} />
-            ) : (
-              <MaterialCommunityIcons name="clover-outline" size={20} color={iconColor} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="my"
-        options={{
-          title: 'My',
-          tabBarIcon: ({ focused }) =>
-            focused ? (
-              <FontAwesome5 name="user-alt" size={20} color={iconColor} />
-            ) : (
-              <FontAwesome5 name="user" size={20} color={iconColor} />
-            ),
-        }}
-      />
-    </Tabs>
+    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1 bg-background">
+      {isLargeScreen ? <LargeScreenShell iconColor={iconColor} /> : <MobileTabs iconColor={iconColor} />}
+    </SafeAreaView>
   );
 }
