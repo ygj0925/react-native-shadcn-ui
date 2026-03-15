@@ -38,9 +38,9 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     name: 'about',
-    title: 'Schedule',
+    title: '日程',
     href: '/about',
-    description: 'Plan, inspect, and manage your agenda',
+    description: 'Manage schedules and calendar sync',
     icon: (focused, color) =>
       focused ? (
         <FontAwesome5 name="calendar-alt" size={18} color={color} />
@@ -88,7 +88,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Chats',
-  '/about': 'Schedule',
+  '/about': '日程',
   '/home': 'Create',
   '/love': 'Favorites',
   '/my': 'My',
@@ -187,10 +187,10 @@ function MobileTabs({ iconColor }: { iconColor: string }) {
         headerShown: false,
         headerShadowVisible: false,
         tabBarPosition: 'bottom',
-        tabBarVariant: 'uikit',
         tabBarLabelPosition: 'below-icon',
         tabBarItemStyle: {
           paddingVertical: 4,
+          flex: 1,
         },
         tabBarStyle: {
           height: 64,

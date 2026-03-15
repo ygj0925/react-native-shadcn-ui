@@ -13,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -38,7 +36,7 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "允许应用访问你的系统日历，用于同步和管理你创建的日程。"
+          "calendarPermission": "Allow calendar access to sync and manage scheduled events."
         }
       ]
     ],

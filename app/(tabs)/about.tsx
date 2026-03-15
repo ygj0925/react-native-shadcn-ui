@@ -7,13 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { getItem, setItem } from '@/lib/storage';
 import { cn } from '@/lib/utils';
 import * as DeviceCalendar from 'expo-calendar';
-import { Calendar } from 'react-native-calendars';
 import {
+  BellRing,
   CalendarDays,
   CheckCircle2,
   Clock3,
   ExternalLink,
-  Link2,
+  LoaderCircle,
   MapPin,
   Pencil,
   Plus,
@@ -23,6 +23,15 @@ import {
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Alert, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+type SystemCalendarOption = {
+  id: string;
+  title: string;
+  color?: string;
+  isPrimary?: boolean;
+};
 
 type ScheduleItem = {
   id: string;
@@ -33,6 +42,9 @@ type ScheduleItem = {
   endTime: string;
   location: string;
   createdAt: string;
+  calendarId?: string | null;
+  calendarTitle?: string | null;
+  reminderMinutesBefore?: number | null;
   systemCalendarEventId?: string | null;
   lastSyncedAt?: string | null;
 };
@@ -43,9 +55,19 @@ type ScheduleForm = {
   startTime: string;
   endTime: string;
   location: string;
+  calendarId: string | null;
+  calendarTitle: string | null;
+  reminderMinutesBefore: number | null;
 };
 
 const STORAGE_KEY = 'about-schedules';
+
+const REMINDER_OPTIONS: Array<{ label: string; value: number | null }> = [
+  { label: '不提醒', value: null },
+  { label: '提前15分钟', value: 15 },
+  { label: '提前30分钟', value: 30 },
+  { label: '提前1小时', value: 60 },
+];
 
 function createEmptyForm(): ScheduleForm {
   return {
@@ -54,6 +76,9 @@ function createEmptyForm(): ScheduleForm {
     startTime: '',
     endTime: '',
     location: '',
+    calendarId: null,
+    calendarTitle: null,
+    reminderMinutesBefore: 15,
   };
 }
 
@@ -67,15 +92,14 @@ function sortSchedules(items: ScheduleItem[]) {
 }
 
 function formatDateLabel(date: string) {
-  const parsed = new Date(`${date}T00:00:00`);
   return new Intl.DateTimeFormat('zh-CN', {
     month: 'long',
     day: 'numeric',
     weekday: 'long',
-  }).format(parsed);
+  }).format(new Date(`${date}T00:00:00`));
 }
 
-function formatDateTimeLabel(value?: string | null) {
+function formatSyncLabel(value?: string | null) {
   if (!value) {
     return '未同步';
   }
@@ -89,21 +113,21 @@ function formatDateTimeLabel(value?: string | null) {
 }
 
 function buildMarkedDates(schedules: ScheduleItem[], selectedDate: string) {
-  const dotsByDate = schedules.reduce<
-    Record<string, { marked?: boolean; dotColor?: string; selected?: boolean; selectedColor?: string }>
-  >((accumulator, item) => {
-    accumulator[item.date] = {
-      ...(accumulator[item.date] ?? {}),
-      marked: true,
-      dotColor: item.systemCalendarEventId ? '#0f766e' : '#f59e0b',
-    };
-    return accumulator;
-  }, {});
+  const dates = schedules.reduce<Record<string, { marked?: boolean; dotColor?: string }>>(
+    (accumulator, item) => {
+      accumulator[item.date] = {
+        marked: true,
+        dotColor: item.systemCalendarEventId ? '#0f766e' : '#f59e0b',
+      };
+      return accumulator;
+    },
+    {}
+  );
 
   return {
-    ...dotsByDate,
+    ...dates,
     [selectedDate]: {
-      ...(dotsByDate[selectedDate] ?? {}),
+      ...(dates[selectedDate] ?? {}),
       selected: true,
       selectedColor: '#0f766e',
     },
@@ -111,16 +135,13 @@ function buildMarkedDates(schedules: ScheduleItem[], selectedDate: string) {
 }
 
 function normalizeTimeValue(value: string, fallback: string) {
-  const trimmed = value.trim();
-  const match = /^(\d{1,2}):(\d{2})$/.exec(trimmed);
-
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
   if (!match) {
     return fallback;
   }
 
   const hours = Number(match[1]);
   const minutes = Number(match[2]);
-
   if (hours > 23 || minutes > 59) {
     return fallback;
   }
@@ -136,11 +157,14 @@ function timeToMinutes(time: string) {
 function combineDateAndTime(date: string, time: string) {
   const [year, month, day] = date.split('-').map(Number);
   const [hours, minutes] = time.split(':').map(Number);
-
   return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }
 
-function buildSystemEventDetails(item: ScheduleItem) {
+function pickDefaultCalendar(calendars: SystemCalendarOption[]) {
+  return calendars.find((item) => item.isPrimary) ?? calendars[0] ?? null;
+}
+
+function buildEventDetails(item: ScheduleItem) {
   return {
     title: item.title,
     notes: item.notes || undefined,
@@ -148,6 +172,10 @@ function buildSystemEventDetails(item: ScheduleItem) {
     startDate: combineDateAndTime(item.date, item.startTime),
     endDate: combineDateAndTime(item.date, item.endTime),
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    alarms:
+      item.reminderMinutesBefore != null
+        ? [{ relativeOffset: -item.reminderMinutesBefore }]
+        : undefined,
   };
 }
 
@@ -162,52 +190,40 @@ export default function AboutScreen() {
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [schedules, setSchedules] = React.useState<ScheduleItem[]>([]);
   const [pendingActionId, setPendingActionId] = React.useState<string | null>(null);
+  const [deviceCalendars, setDeviceCalendars] = React.useState<SystemCalendarOption[]>([]);
+  const [loadingCalendars, setLoadingCalendars] = React.useState(false);
 
   React.useEffect(() => {
-    const storedSchedules = getItem<ScheduleItem[]>(STORAGE_KEY) ?? [];
-    setSchedules(sortSchedules(storedSchedules));
+    setSchedules(sortSchedules(getItem<ScheduleItem[]>(STORAGE_KEY) ?? []));
   }, []);
 
   React.useEffect(() => {
     void setItem(STORAGE_KEY, schedules);
   }, [schedules]);
 
-  const selectedSchedules = React.useMemo(
-    () =>
-      schedules
-        .filter((item) => item.date === selectedDate)
-        .sort((left, right) => left.startTime.localeCompare(right.startTime)),
-    [schedules, selectedDate]
-  );
-
-  const upcomingSchedules = React.useMemo(
-    () =>
-      schedules
-        .filter((item) => item.date >= today)
-        .sort((left, right) => {
-          if (left.date === right.date) {
-            return left.startTime.localeCompare(right.startTime);
-          }
-          return left.date.localeCompare(right.date);
-        })
-        .slice(0, 6),
-    [schedules, today]
-  );
-
-  const markedDates = React.useMemo(
-    () => buildMarkedDates(schedules, selectedDate),
-    [schedules, selectedDate]
-  );
-
   const editingSchedule = React.useMemo(
     () => schedules.find((item) => item.id === editingId) ?? null,
     [editingId, schedules]
   );
 
+  const selectedSchedules = React.useMemo(
+    () => schedules.filter((item) => item.date === selectedDate),
+    [schedules, selectedDate]
+  );
+
+  const upcomingSchedules = React.useMemo(
+    () => schedules.filter((item) => item.date >= today).slice(0, 6),
+    [schedules, today]
+  );
+
   function resetForm(nextDate = selectedDate) {
     setEditingId(null);
     setSelectedDate(nextDate);
-    setForm(createEmptyForm());
+    setForm((current) => ({
+      ...createEmptyForm(),
+      calendarId: current.calendarId,
+      calendarTitle: current.calendarTitle,
+    }));
   }
 
   function updateForm<K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K]) {
@@ -217,7 +233,9 @@ export default function AboutScreen() {
   function upsertSchedule(item: ScheduleItem) {
     setSchedules((current) => {
       const exists = current.some((entry) => entry.id === item.id);
-      return sortSchedules(exists ? current.map((entry) => (entry.id === item.id ? item : entry)) : [...current, item]);
+      return sortSchedules(
+        exists ? current.map((entry) => (entry.id === item.id ? item : entry)) : [...current, item]
+      );
     });
   }
 
@@ -227,47 +245,13 @@ export default function AboutScreen() {
     );
   }
 
-  function removeSchedule(id: string) {
-    setSchedules((current) => current.filter((item) => item.id !== id));
-  }
-
-  function buildPayload() {
-    const existing = editingSchedule;
-    const normalizedStartTime = normalizeTimeValue(form.startTime, existing?.startTime ?? '09:00');
-    const normalizedEndTime = normalizeTimeValue(form.endTime, existing?.endTime ?? '10:00');
-
-    if (!form.title.trim()) {
-      Alert.alert('请填写日程标题');
-      return null;
-    }
-
-    if (timeToMinutes(normalizedEndTime) <= timeToMinutes(normalizedStartTime)) {
-      Alert.alert('结束时间需要晚于开始时间');
-      return null;
-    }
-
-    return {
-      id: editingId ?? `${Date.now()}`,
-      title: form.title.trim(),
-      notes: form.notes.trim(),
-      date: selectedDate,
-      startTime: normalizedStartTime,
-      endTime: normalizedEndTime,
-      location: form.location.trim(),
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
-      systemCalendarEventId: existing?.systemCalendarEventId ?? null,
-      lastSyncedAt: existing?.lastSyncedAt ?? null,
-    } satisfies ScheduleItem;
-  }
-
   async function ensureCalendarReady() {
     if (Platform.OS === 'web') {
-      Alert.alert('当前平台不支持系统日历同步', '请在 iPhone 或 iPad 真机上使用这个功能。');
+      Alert.alert('当前平台不支持系统日历同步');
       return false;
     }
 
-    const available = await DeviceCalendar.isAvailableAsync();
-    if (!available) {
+    if (!(await DeviceCalendar.isAvailableAsync())) {
       Alert.alert('系统日历不可用');
       return false;
     }
@@ -279,54 +263,159 @@ export default function AboutScreen() {
 
     const requested = await DeviceCalendar.requestCalendarPermissionsAsync();
     if (requested.status !== 'granted') {
-      Alert.alert('没有获得日历权限', '请在系统设置里允许访问日历后再试。');
+      Alert.alert('没有获得日历权限', '请先在系统设置中允许访问日历。');
       return false;
     }
 
     return true;
   }
 
-  async function syncWithSystemDialog(item: ScheduleItem) {
+  async function loadCalendars() {
     const ready = await ensureCalendarReady();
     if (!ready) {
-      return;
+      return [];
+    }
+
+    setLoadingCalendars(true);
+
+    try {
+      const calendars = await DeviceCalendar.getCalendarsAsync(DeviceCalendar.EntityTypes.EVENT);
+      const writable = calendars
+        .filter((item) => item.allowsModifications)
+        .map((item) => ({
+          id: item.id,
+          title: item.title,
+          color: item.color,
+          isPrimary: item.isPrimary ?? false,
+        }));
+
+      setDeviceCalendars(writable);
+
+      if (!form.calendarId) {
+        const fallback = pickDefaultCalendar(writable);
+        if (fallback) {
+          setForm((current) => ({
+            ...current,
+            calendarId: fallback.id,
+            calendarTitle: fallback.title,
+          }));
+        }
+      }
+
+      return writable;
+    } catch (error) {
+      Alert.alert('读取系统日历失败', error instanceof Error ? error.message : '请稍后再试。');
+      return [];
+    } finally {
+      setLoadingCalendars(false);
+    }
+  }
+
+  function buildPayload() {
+    const existing = editingSchedule;
+    const startTime = normalizeTimeValue(form.startTime, existing?.startTime ?? '09:00');
+    const endTime = normalizeTimeValue(form.endTime, existing?.endTime ?? '10:00');
+
+    if (!form.title.trim()) {
+      Alert.alert('请填写日程标题');
+      return null;
+    }
+
+    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+      Alert.alert('结束时间需要晚于开始时间');
+      return null;
+    }
+
+    return {
+      id: editingId ?? `${Date.now()}`,
+      title: form.title.trim(),
+      notes: form.notes.trim(),
+      date: selectedDate,
+      startTime,
+      endTime,
+      location: form.location.trim(),
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+      calendarId: form.calendarId,
+      calendarTitle: form.calendarTitle,
+      reminderMinutesBefore: form.reminderMinutesBefore,
+      systemCalendarEventId: existing?.systemCalendarEventId ?? null,
+      lastSyncedAt: existing?.lastSyncedAt ?? null,
+    } satisfies ScheduleItem;
+  }
+
+  async function syncSchedule(item: ScheduleItem, previous?: ScheduleItem | null) {
+    const ready = await ensureCalendarReady();
+    if (!ready) {
+      return false;
     }
 
     setPendingActionId(item.id);
 
     try {
-      if (item.systemCalendarEventId) {
-        await DeviceCalendar.updateEventAsync(item.systemCalendarEventId, buildSystemEventDetails(item));
-        patchSchedule(item.id, { lastSyncedAt: new Date().toISOString() });
-        Alert.alert('系统日历已更新');
-        return;
+      const calendars = deviceCalendars.length ? deviceCalendars : await loadCalendars();
+      const target =
+        calendars.find((entry) => entry.id === item.calendarId) ?? pickDefaultCalendar(calendars);
+
+      if (!target) {
+        Alert.alert('没有可写的系统日历');
+        return false;
       }
 
-      const result = await DeviceCalendar.createEventInCalendarAsync(buildSystemEventDetails(item));
+      let eventId = item.systemCalendarEventId ?? null;
+      const calendarChanged =
+        !!previous?.systemCalendarEventId &&
+        !!previous.calendarId &&
+        previous.calendarId !== target.id;
 
-      if ((result.action === 'saved' || result.action === 'done') && result.id) {
-        patchSchedule(item.id, {
-          systemCalendarEventId: result.id,
-          lastSyncedAt: new Date().toISOString(),
-        });
-        Alert.alert('已同步到系统日历');
-        return;
+      if (calendarChanged && previous?.systemCalendarEventId) {
+        await DeviceCalendar.deleteEventAsync(previous.systemCalendarEventId);
+        eventId = null;
       }
 
-      if (result.action === 'done' && Platform.OS === 'android') {
-        patchSchedule(item.id, { lastSyncedAt: new Date().toISOString() });
-        Alert.alert('系统日历页面已打开', 'Android 无法返回事件 ID，如已保存请在系统日历中确认。');
+      if (eventId) {
+        await DeviceCalendar.updateEventAsync(eventId, buildEventDetails(item));
+      } else {
+        eventId = await DeviceCalendar.createEventAsync(target.id, buildEventDetails(item));
       }
+
+      patchSchedule(item.id, {
+        calendarId: target.id,
+        calendarTitle: target.title,
+        systemCalendarEventId: eventId,
+        lastSyncedAt: new Date().toISOString(),
+      });
+
+      return true;
     } catch (error) {
       Alert.alert('同步失败', error instanceof Error ? error.message : '系统日历操作没有成功完成。');
+      return false;
     } finally {
       setPendingActionId(null);
     }
   }
 
+  async function handleSubmit(syncAfterSave: boolean) {
+    const payload = buildPayload();
+    if (!payload) {
+      return;
+    }
+
+    const previous = editingSchedule;
+    upsertSchedule(payload);
+
+    if (payload.systemCalendarEventId || syncAfterSave) {
+      const synced = await syncSchedule(payload, previous);
+      if (!synced && syncAfterSave) {
+        return;
+      }
+    }
+
+    resetForm(selectedDate);
+  }
+
   async function openInSystemCalendar(item: ScheduleItem) {
     if (!item.systemCalendarEventId) {
-      await syncWithSystemDialog(item);
+      await syncSchedule(item, editingSchedule);
       return;
     }
 
@@ -343,54 +432,13 @@ export default function AboutScreen() {
         { allowsEditing: true }
       );
     } catch (error) {
-      Alert.alert('打开失败', error instanceof Error ? error.message : '无法打开系统日历中的这条事件。');
+      Alert.alert('打开失败', error instanceof Error ? error.message : '无法打开系统日历事件。');
     } finally {
       setPendingActionId(null);
     }
   }
 
-  async function deleteScheduleAndSystemEvent(item: ScheduleItem) {
-    setPendingActionId(item.id);
-
-    try {
-      if (item.systemCalendarEventId) {
-        const ready = await ensureCalendarReady();
-        if (ready) {
-          await DeviceCalendar.deleteEventAsync(item.systemCalendarEventId);
-        }
-      }
-    } catch (error) {
-      Alert.alert(
-        '系统日历删除失败',
-        error instanceof Error ? error.message : '本地日程仍会删除，你可以稍后去系统日历手动确认。'
-      );
-    } finally {
-      removeSchedule(item.id);
-      if (editingId === item.id) {
-        resetForm(selectedDate);
-      }
-      setPendingActionId(null);
-    }
-  }
-
-  async function handleSubmit(syncAfterSave: boolean) {
-    const payload = buildPayload();
-    if (!payload) {
-      return;
-    }
-
-    upsertSchedule(payload);
-
-    if (payload.systemCalendarEventId) {
-      await syncWithSystemDialog(payload);
-    } else if (syncAfterSave) {
-      await syncWithSystemDialog(payload);
-    }
-
-    resetForm(selectedDate);
-  }
-
-  function onEdit(item: ScheduleItem) {
+  function editSchedule(item: ScheduleItem) {
     setEditingId(item.id);
     setSelectedDate(item.date);
     setForm({
@@ -399,126 +447,119 @@ export default function AboutScreen() {
       startTime: item.startTime,
       endTime: item.endTime,
       location: item.location,
+      calendarId: item.calendarId ?? form.calendarId,
+      calendarTitle: item.calendarTitle ?? form.calendarTitle,
+      reminderMinutesBefore: item.reminderMinutesBefore ?? 15,
     });
   }
 
-  function onDelete(item: ScheduleItem) {
-    Alert.alert(
-      '删除日程',
-      item.systemCalendarEventId ? '这条日程已经同步到系统日历，确认本地和系统一起删除吗？' : '确认删除这条日程吗？',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '删除',
-          style: 'destructive',
-          onPress: () => {
-            void deleteScheduleAndSystemEvent(item);
-          },
+  function deleteSchedule(item: ScheduleItem) {
+    Alert.alert('删除日程', '确认删除这条日程吗？', [
+      { text: '取消', style: 'cancel' },
+      {
+        text: '删除',
+        style: 'destructive',
+        onPress: async () => {
+          setPendingActionId(item.id);
+          try {
+            if (item.systemCalendarEventId) {
+              const ready = await ensureCalendarReady();
+              if (ready) {
+                await DeviceCalendar.deleteEventAsync(item.systemCalendarEventId);
+              }
+            }
+          } finally {
+            setSchedules((current) => current.filter((entry) => entry.id !== item.id));
+            setPendingActionId(null);
+            if (editingId === item.id) {
+              resetForm(selectedDate);
+            }
+          }
         },
-      ]
-    );
+      },
+    ]);
   }
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ padding: 16 }}>
-      <View className="mx-auto w-full max-w-7xl gap-4">
-        <Card className="overflow-hidden border-0 bg-teal-950 py-0 shadow-xl shadow-teal-950/20">
-          <CardContent className="px-5 py-5">
-            <View className="gap-2">
-              <Text className="text-sm font-medium text-teal-100/80">日程管理</Text>
-              <Text className="text-3xl font-semibold text-white">把勘察、拜访和待办集中到一个页面</Text>
-              <Text className="text-sm leading-6 text-teal-50/85">
-                页面里继续用日历管理本地日程，同时支持同步到 iPad 系统日历，方便提醒和跨设备查看。
-              </Text>
-            </View>
-          </CardContent>
-        </Card>
+    <SafeAreaView edges={['top']} className="flex-1 bg-background">
+      <ScrollView className="flex-1 bg-background" contentContainerStyle={{ padding: 16 }}>
+        <View className="mx-auto w-full max-w-7xl gap-4">
+          <Card className="overflow-hidden border-0 bg-teal-950 py-0 shadow-xl shadow-teal-950/20">
+            <CardContent className="px-5 py-5">
+              <View className="gap-2">
+                <Text className="text-sm font-medium text-teal-100/80">日程管理</Text>
+                <Text className="text-3xl font-semibold text-white">把勘察、拜访和待办集中到一个页面</Text>
+                <Text className="text-sm leading-6 text-teal-50/85">
+                  支持本地日程、系统日历同步、提前提醒和日历选择。
+                </Text>
+              </View>
+            </CardContent>
+          </Card>
 
-        <View className={cn('gap-4', isWideLayout ? 'flex-row items-start' : '')}>
-          <View className={cn('gap-4', isWideLayout ? 'w-[42%]' : 'w-full')}>
-            <Card className="py-0">
-              <CardHeader className="px-4 pb-3 pt-4">
-                <View className="flex-row items-center gap-2">
-                  <CalendarDays size={18} color="#0f766e" />
-                  <View className="flex-1 gap-1">
-                    <CardTitle className="text-lg">日历选择</CardTitle>
-                    <CardDescription>点选日期后查看、安排或同步当天日程</CardDescription>
-                  </View>
-                </View>
-              </CardHeader>
-              <CardContent className="px-2 pb-3">
-                <Calendar
-                  current={selectedDate}
-                  markedDates={markedDates}
-                  onDayPress={(day) => setSelectedDate(day.dateString)}
-                  theme={{
-                    calendarBackground: colorScheme === 'dark' ? '#09090b' : '#ffffff',
-                    monthTextColor: colorScheme === 'dark' ? '#fafafa' : '#111827',
-                    dayTextColor: colorScheme === 'dark' ? '#f4f4f5' : '#111827',
-                    textDisabledColor: colorScheme === 'dark' ? '#52525b' : '#9ca3af',
-                    arrowColor: '#0f766e',
-                    todayTextColor: '#0f766e',
-                    selectedDayTextColor: '#ffffff',
-                    textMonthFontWeight: '700',
-                    textDayHeaderFontWeight: '600',
-                  }}
-                  enableSwipeMonths
-                  style={{ borderRadius: 18 }}
-                />
-              </CardContent>
-            </Card>
+          <View className={cn('gap-4', isWideLayout ? 'flex-row items-start' : '')}>
+            <View className={cn('gap-4', isWideLayout ? 'w-[42%]' : 'w-full')}>
+              <Card className="py-0">
+                <CardHeader className="px-4 pb-3 pt-4">
+                  <CardTitle className="text-lg">日历选择</CardTitle>
+                  <CardDescription>点日期查看或安排当天日程</CardDescription>
+                </CardHeader>
+                <CardContent className="px-2 pb-3">
+                  <Calendar
+                    current={selectedDate}
+                    markedDates={buildMarkedDates(schedules, selectedDate)}
+                    onDayPress={(day) => setSelectedDate(day.dateString)}
+                    theme={{
+                      calendarBackground: colorScheme === 'dark' ? '#09090b' : '#ffffff',
+                      monthTextColor: colorScheme === 'dark' ? '#fafafa' : '#111827',
+                      dayTextColor: colorScheme === 'dark' ? '#f4f4f5' : '#111827',
+                      textDisabledColor: colorScheme === 'dark' ? '#52525b' : '#9ca3af',
+                      arrowColor: '#0f766e',
+                      todayTextColor: '#0f766e',
+                      selectedDayTextColor: '#ffffff',
+                    }}
+                    enableSwipeMonths
+                    style={{ borderRadius: 18 }}
+                  />
+                </CardContent>
+              </Card>
 
             <Card className="py-0">
               <CardHeader className="px-4 pb-3 pt-4">
                 <CardTitle className="text-lg">近期日程</CardTitle>
-                <CardDescription>优先处理接下来要安排的事项</CardDescription>
+                <CardDescription>快速处理下一步安排</CardDescription>
               </CardHeader>
               <CardContent className="gap-3 px-4 pb-4">
                 {upcomingSchedules.length ? (
-                  upcomingSchedules.map((item) => {
-                    const busy = pendingActionId === item.id;
-
-                    return (
-                      <Pressable
-                        key={item.id}
-                        className="rounded-2xl border border-border bg-muted/40 px-4 py-3 active:bg-muted"
-                        onPress={() => onEdit(item)}>
-                        <View className="flex-row items-start justify-between gap-3">
-                          <View className="flex-1 gap-1">
-                            <Text className="text-sm font-semibold">{item.title}</Text>
-                            <Text className="text-xs text-muted-foreground">
-                              {formatDateLabel(item.date)} · {item.startTime} - {item.endTime}
-                            </Text>
-                            <Text className="text-xs text-muted-foreground">
-                              {item.systemCalendarEventId ? '已同步系统日历' : '仅本地保存'}
-                            </Text>
-                          </View>
-                          <View className="flex-row gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={busy}
-                              onPress={() => {
-                                void openInSystemCalendar(item);
-                              }}>
-                              <ExternalLink size={16} color="#0f766e" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={busy}
-                              onPress={() => onDelete(item)}>
-                              <Trash2 size={16} color="#ef4444" />
-                            </Button>
-                          </View>
+                  upcomingSchedules.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      className="rounded-2xl border border-border bg-muted/40 px-4 py-3 active:bg-muted"
+                      onPress={() => editSchedule(item)}>
+                      <View className="flex-row items-start justify-between gap-3">
+                        <View className="flex-1 gap-1">
+                          <Text className="text-sm font-semibold">{item.title}</Text>
+                          <Text className="text-xs text-muted-foreground">
+                            {formatDateLabel(item.date)} · {item.startTime} - {item.endTime}
+                          </Text>
+                          <Text className="text-xs text-muted-foreground">
+                            {item.calendarTitle
+                              ? `${item.calendarTitle} · 提前 ${item.reminderMinutesBefore ?? 0} 分钟`
+                              : '仅本地保存'}
+                          </Text>
                         </View>
-                      </Pressable>
-                    );
-                  })
+                        <View className="flex-row gap-1">
+                          <Button variant="ghost" size="icon" onPress={() => void openInSystemCalendar(item)}>
+                            <ExternalLink size={16} color="#0f766e" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onPress={() => deleteSchedule(item)}>
+                            <Trash2 size={16} color="#ef4444" />
+                          </Button>
+                        </View>
+                      </View>
+                    </Pressable>
+                  ))
                 ) : (
-                  <Text className="text-sm text-muted-foreground">
-                    还没有未来日程，先从右侧表单创建第一条吧。
-                  </Text>
+                  <Text className="text-sm text-muted-foreground">还没有未来日程，先创建第一条吧。</Text>
                 )}
               </CardContent>
             </Card>
@@ -528,7 +569,7 @@ export default function AboutScreen() {
             <Card className="py-0">
               <CardHeader className="px-4 pb-3 pt-4">
                 <View className="flex-row items-center justify-between gap-3">
-                  <View className="gap-1">
+                  <View>
                     <CardTitle className="text-lg">{editingId ? '修改日程' : '新建日程'}</CardTitle>
                     <CardDescription>{formatDateLabel(selectedDate)}</CardDescription>
                   </View>
@@ -541,18 +582,25 @@ export default function AboutScreen() {
               </CardHeader>
               <CardContent className="gap-3 px-4 pb-4">
                 <View className="gap-2 rounded-2xl bg-muted/40 px-4 py-3">
-                  <View className="flex-row items-center gap-2">
-                    <Link2 size={16} color="#0f766e" />
-                    <Text className="text-sm font-medium text-foreground">系统日历同步</Text>
-                  </View>
-                  <Text className="text-xs leading-5 text-muted-foreground">
-                    添加并同步会直接调用系统日历创建或更新事件。已经同步过的日程，保存后也会自动更新系统日历。
+                  <Text className="text-sm font-medium">系统日历同步</Text>
+                  <Text className="text-xs text-muted-foreground">
+                    先加载系统日历，再选择同步目标和提醒时间。
                   </Text>
-                  {editingSchedule?.systemCalendarEventId ? (
-                    <Text className="text-xs text-muted-foreground">
-                      最近同步：{formatDateTimeLabel(editingSchedule.lastSyncedAt)}
-                    </Text>
-                  ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={loadingCalendars}
+                    onPress={() => void loadCalendars()}>
+                    {loadingCalendars ? (
+                      <LoaderCircle size={14} color={isDark ? '#f4f4f5' : '#0f172a'} />
+                    ) : (
+                      <CalendarDays size={14} color={isDark ? '#f4f4f5' : '#0f172a'} />
+                    )}
+                    <Text>{deviceCalendars.length ? '刷新系统日历' : '加载系统日历'}</Text>
+                  </Button>
+                  <Text className="text-xs text-muted-foreground">
+                    当前：{form.calendarTitle ?? '未选择系统日历'}
+                  </Text>
                 </View>
 
                 <View className="gap-2">
@@ -560,7 +608,7 @@ export default function AboutScreen() {
                   <Input
                     value={form.title}
                     onChangeText={(value) => updateForm('title', value)}
-                    placeholder="例如：现场勘察、客户拜访、方案复盘"
+                    placeholder="例如：现场勘察"
                   />
                 </View>
 
@@ -588,7 +636,7 @@ export default function AboutScreen() {
                   <Input
                     value={form.location}
                     onChangeText={(value) => updateForm('location', value)}
-                    placeholder="项目现场 / 会议室 / 线上会议"
+                    placeholder="项目现场 / 会议室"
                   />
                 </View>
 
@@ -597,35 +645,84 @@ export default function AboutScreen() {
                   <Textarea
                     value={form.notes}
                     onChangeText={(value) => updateForm('notes', value)}
-                    placeholder="记录目标、准备事项、参与人员或现场情况"
                     className="min-h-28"
                   />
                 </View>
 
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <BellRing size={16} color="#0f766e" />
+                    <Text className="text-sm font-medium">提醒时间</Text>
+                  </View>
+                  <View className="flex-row flex-wrap gap-2">
+                    {REMINDER_OPTIONS.map((option) => (
+                      <Pressable
+                        key={option.label}
+                        className={cn(
+                          'rounded-full border px-3 py-2',
+                          form.reminderMinutesBefore === option.value
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border bg-background'
+                        )}
+                        onPress={() => updateForm('reminderMinutesBefore', option.value)}>
+                        <Text className="text-xs">{option.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <CalendarDays size={16} color="#0f766e" />
+                    <Text className="text-sm font-medium">同步到哪个系统日历</Text>
+                  </View>
+                  <View className="flex-row flex-wrap gap-2">
+                    {deviceCalendars.length ? (
+                      deviceCalendars.map((calendar) => (
+                        <Pressable
+                          key={calendar.id}
+                          className={cn(
+                            'rounded-full border px-3 py-2',
+                            form.calendarId === calendar.id
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border bg-background'
+                          )}
+                          onPress={() =>
+                            setForm((current) => ({
+                              ...current,
+                              calendarId: calendar.id,
+                              calendarTitle: calendar.title,
+                            }))
+                          }>
+                          <View className="flex-row items-center gap-2">
+                            <View
+                              className="h-2.5 w-2.5 rounded-full"
+                              style={{ backgroundColor: calendar.color || '#0f766e' }}
+                            />
+                            <Text className="text-xs">{calendar.title}</Text>
+                          </View>
+                        </Pressable>
+                      ))
+                    ) : (
+                      <Text className="text-xs text-muted-foreground">
+                        先点击“加载系统日历”再选择。
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
                 <View className="flex-row flex-wrap gap-3">
-                  <Button
-                    onPress={() => {
-                      void handleSubmit(false);
-                    }}>
+                  <Button onPress={() => void handleSubmit(false)}>
                     <Plus size={16} color="#ffffff" />
                     <Text>{editingSchedule?.systemCalendarEventId ? '保存并更新同步' : '添加日程'}</Text>
                   </Button>
-
-                  <Button
-                    variant="outline"
-                    onPress={() => {
-                      void handleSubmit(true);
-                    }}>
+                  <Button variant="outline" onPress={() => void handleSubmit(true)}>
                     {editingSchedule?.systemCalendarEventId ? (
                       <RefreshCw size={16} color={isDark ? '#f4f4f5' : '#0f172a'} />
                     ) : (
                       <CheckCircle2 size={16} color={isDark ? '#f4f4f5' : '#0f172a'} />
                     )}
                     <Text>{editingSchedule?.systemCalendarEventId ? '重新同步系统日历' : '添加并同步'}</Text>
-                  </Button>
-
-                  <Button variant="outline" onPress={() => resetForm(today)}>
-                    <Text>清空表单</Text>
                   </Button>
                 </View>
               </CardContent>
@@ -638,84 +735,62 @@ export default function AboutScreen() {
               </CardHeader>
               <CardContent className="gap-3 px-4 pb-4">
                 {selectedSchedules.length ? (
-                  selectedSchedules.map((item, index) => {
-                    const busy = pendingActionId === item.id;
-
-                    return (
-                      <View key={item.id}>
-                        {index ? <Separator className="mb-3" /> : null}
-                        <View className="rounded-2xl bg-muted/35 px-4 py-4">
-                          <View className="flex-row items-start justify-between gap-3">
-                            <View className="flex-1 gap-2">
-                              <View className="flex-row flex-wrap items-center gap-2">
-                                <Text className="text-base font-semibold">{item.title}</Text>
-                                <View
-                                  className={cn(
-                                    'rounded-full px-2.5 py-1',
-                                    item.systemCalendarEventId ? 'bg-teal-600/15' : 'bg-amber-500/15'
-                                  )}>
-                                  <Text
-                                    className={cn(
-                                      'text-[11px] font-medium',
-                                      item.systemCalendarEventId ? 'text-teal-700 dark:text-teal-300' : 'text-amber-700 dark:text-amber-300'
-                                    )}>
-                                    {item.systemCalendarEventId ? '系统已同步' : '仅本地'}
-                                  </Text>
-                                </View>
+                  selectedSchedules.map((item, index) => (
+                    <View key={item.id}>
+                      {index ? <Separator className="mb-3" /> : null}
+                      <View className="rounded-2xl bg-muted/35 px-4 py-4">
+                        <View className="flex-row items-start justify-between gap-3">
+                          <View className="flex-1 gap-2">
+                            <Text className="text-base font-semibold">{item.title}</Text>
+                            <View className="flex-row flex-wrap gap-3">
+                              <View className="flex-row items-center gap-1.5">
+                                <Clock3 size={14} color="#0f766e" />
+                                <Text className="text-xs text-muted-foreground">
+                                  {item.startTime} - {item.endTime}
+                                </Text>
                               </View>
-
-                              <View className="flex-row flex-wrap gap-3">
+                              {item.location ? (
                                 <View className="flex-row items-center gap-1.5">
-                                  <Clock3 size={14} color="#0f766e" />
-                                  <Text className="text-xs text-muted-foreground">
-                                    {item.startTime} - {item.endTime}
-                                  </Text>
+                                  <MapPin size={14} color="#0f766e" />
+                                  <Text className="text-xs text-muted-foreground">{item.location}</Text>
                                 </View>
-                                {item.location ? (
-                                  <View className="flex-row items-center gap-1.5">
-                                    <MapPin size={14} color="#0f766e" />
-                                    <Text className="text-xs text-muted-foreground">{item.location}</Text>
-                                  </View>
-                                ) : null}
-                              </View>
-
-                              {item.notes ? (
-                                <Text className="text-sm leading-6 text-muted-foreground">{item.notes}</Text>
-                              ) : (
-                                <Text className="text-sm text-muted-foreground">暂无备注</Text>
-                              )}
-
-                              <Text className="text-xs text-muted-foreground">
-                                最近同步：{formatDateTimeLabel(item.lastSyncedAt)}
-                              </Text>
+                              ) : null}
                             </View>
-
-                            <View className="flex-row gap-2">
-                              <Button variant="outline" size="icon" onPress={() => onEdit(item)}>
-                                <Pencil size={16} color={isDark ? '#f4f4f5' : '#0f172a'} />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                disabled={busy}
-                                onPress={() => {
-                                  void openInSystemCalendar(item);
-                                }}>
-                                <ExternalLink size={16} color="#0f766e" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                disabled={busy}
-                                onPress={() => onDelete(item)}>
-                                <Trash2 size={16} color="#ef4444" />
-                              </Button>
-                            </View>
+                            <Text className="text-xs text-muted-foreground">
+                              {item.calendarTitle
+                                ? `同步日历：${item.calendarTitle} · 提前 ${item.reminderMinutesBefore ?? 0} 分钟`
+                                : '还没有同步到系统日历'}
+                            </Text>
+                            <Text className="text-xs text-muted-foreground">
+                              最近同步：{formatSyncLabel(item.lastSyncedAt)}
+                            </Text>
+                            {item.notes ? (
+                              <Text className="text-sm text-muted-foreground">{item.notes}</Text>
+                            ) : null}
+                          </View>
+                          <View className="flex-row gap-2">
+                            <Button variant="outline" size="icon" onPress={() => editSchedule(item)}>
+                              <Pencil size={16} color={isDark ? '#f4f4f5' : '#0f172a'} />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              disabled={pendingActionId === item.id}
+                              onPress={() => void openInSystemCalendar(item)}>
+                              <ExternalLink size={16} color="#0f766e" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={pendingActionId === item.id}
+                              onPress={() => deleteSchedule(item)}>
+                              <Trash2 size={16} color="#ef4444" />
+                            </Button>
                           </View>
                         </View>
                       </View>
-                    );
-                  })
+                    </View>
+                  ))
                 ) : (
                   <View className="rounded-2xl border border-dashed border-border px-4 py-10">
                     <Text className="text-center text-sm text-muted-foreground">
@@ -726,8 +801,9 @@ export default function AboutScreen() {
               </CardContent>
             </Card>
           </View>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
