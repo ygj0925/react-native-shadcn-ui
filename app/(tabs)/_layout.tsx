@@ -50,9 +50,9 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     name: 'home',
-    title: 'Create',
+    title: 'Workspace',
     href: '/home',
-    description: 'Draft ideas and structured outputs',
+    description: 'Employee homepage and company services',
     icon: (focused, color) =>
       focused ? (
         <MaterialCommunityIcons name="creation" size={20} color={color} />
@@ -86,12 +86,20 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+const NAV_TITLE_OVERRIDES: Partial<Record<NavItem['name'], string>> = {
+  about: 'Schedule',
+};
+
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Chats',
   '/about': '日程',
-  '/home': 'Create',
+  '/home': 'Workspace',
   '/love': 'Favorites',
   '/my': 'My',
+};
+
+const PAGE_TITLE_OVERRIDES: Record<string, string> = {
+  '/about': 'Schedule',
 };
 
 function SidebarContent({
@@ -115,9 +123,7 @@ function SidebarContent({
         <View className="flex-row items-center justify-between">
           <View className="gap-1">
             <CardTitle className="text-lg">Navigation</CardTitle>
-            <Text className="text-sm text-muted-foreground">
-              Move across your core pages
-            </Text>
+            <Text className="text-sm text-muted-foreground">Move across your core pages</Text>
           </View>
 
           {!largeScreen ? (
@@ -156,7 +162,7 @@ function SidebarContent({
 
                   <View className="flex-1 gap-1">
                     <Text className="text-sm font-medium" numberOfLines={1}>
-                      {item.title}
+                      {NAV_TITLE_OVERRIDES[item.name] ?? item.title}
                     </Text>
                     <Text className="text-xs leading-4 text-muted-foreground" numberOfLines={2}>
                       {item.description}
@@ -213,7 +219,7 @@ function MobileTabs({ iconColor }: { iconColor: string }) {
           key={item.name}
           name={item.name}
           options={{
-            title: item.title,
+            title: NAV_TITLE_OVERRIDES[item.name] ?? item.title,
             tabBarIcon: ({ focused }) => item.icon(focused, iconColor),
           }}
         />
@@ -230,7 +236,7 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
   const progress = React.useRef(new Animated.Value(1)).current;
   const currentPath = pathname === '/index' ? '/' : pathname;
-  const currentTitle = PAGE_TITLES[currentPath] ?? 'Workspace';
+  const currentTitle = PAGE_TITLE_OVERRIDES[currentPath] ?? PAGE_TITLES[currentPath] ?? 'Workspace';
   const sidebarWidth = Math.min(Math.max(width * 0.22, 220), 260);
 
   React.useEffect(() => {
@@ -324,7 +330,11 @@ export default function TabLayout() {
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1 bg-background">
-      {isLargeScreen ? <LargeScreenShell iconColor={iconColor} /> : <MobileTabs iconColor={iconColor} />}
+      {isLargeScreen ? (
+        <LargeScreenShell iconColor={iconColor} />
+      ) : (
+        <MobileTabs iconColor={iconColor} />
+      )}
     </SafeAreaView>
   );
 }

@@ -1,10 +1,9 @@
-
 import { Stack } from 'expo-router';
 import { View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AuthShell } from '@/components/auth-shell';
 import { ThemeToggle } from '@/components/themeToggle';
-import { Text } from '@/components/ui/text';
 import { SignInForm } from '@/components/sign-in-form';
 
 const SCREEN_OPTIONS = {
@@ -25,7 +24,13 @@ export default function LoginScreen() {
         keyboardDismissMode="interactive"
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingVertical: 32 }}>
         <View className="mx-auto w-full max-w-sm gap-6">
-          <SignInForm />
+          <AuthShell
+            eyebrow="Welcome back"
+            title="Continue your workspace"
+            description="Pick up your chats, drafts, and saved prompts with a calmer sign-in flow."
+            footer="By continuing, you agree to the app terms and privacy policy.">
+            <SignInForm />
+          </AuthShell>
         </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>

@@ -1,6 +1,6 @@
 import { SignUpForm } from '@/components/sign-up-form';
-import { ScrollView, View } from 'react-native';
-import { useHeaderHeight } from '@react-navigation/elements'
+import { AuthShell } from '@/components/auth-shell';
+import { View } from 'react-native';
 import { ThemeToggle } from '@/components/themeToggle';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,12 +12,14 @@ const SCREEN_OPTIONS = {
   headerTransparent: false,
   headerRight: () => <ThemeToggle />,
 };
+const REGISTER_SCREEN_OPTIONS = {
+  ...SCREEN_OPTIONS,
+  title: 'Register',
+};
 export default function SignUpScreen() {
-  const headerHeight = useHeaderHeight()
-
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1 bg-background">
-      <Stack.Screen options={SCREEN_OPTIONS} />
+      <Stack.Screen options={REGISTER_SCREEN_OPTIONS} />
       <KeyboardAwareScrollView
         bottomOffset={24}
         extraKeyboardSpace={32}
@@ -25,7 +27,13 @@ export default function SignUpScreen() {
         keyboardDismissMode="interactive"
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingVertical: 32 }}>
         <View className="mx-auto w-full max-w-sm gap-6">
-          <SignUpForm />
+          <AuthShell
+            eyebrow="New here"
+            title="Create your account"
+            description="Set up your profile once, then move between chat, schedules, and favorites without friction."
+            footer="This stays as a polished demo flow for now, so we can improve the visuals before wiring real authentication.">
+            <SignUpForm />
+          </AuthShell>
         </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>

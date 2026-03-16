@@ -1,12 +1,6 @@
 import { SocialConnections } from '@/components/social-connections';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -31,20 +25,33 @@ export function SignInForm() {
 
   return (
     <View className="flex-col gap-6">
-      <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
-        <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Welcome back</CardTitle>
-          <CardDescription className="text-center sm:text-left">
-            Sign in to continue to your conversations.
-          </CardDescription>
+      <Card className="border-border bg-card/95 py-0 shadow-lg shadow-black/5">
+        <CardHeader className="gap-3 px-5 pb-3 pt-5">
+          <View className="gap-1">
+            <CardTitle className="text-center text-2xl tracking-tight sm:text-left">
+              Sign in
+            </CardTitle>
+            <CardDescription className="text-center sm:text-left">
+              Use your email to access recent conversations and workspace shortcuts.
+            </CardDescription>
+          </View>
+
+          <View className="flex-row flex-wrap gap-2">
+            <View className="rounded-full bg-muted px-3 py-1.5">
+              <Text className="text-xs text-muted-foreground">Fast access</Text>
+            </View>
+            <View className="rounded-full bg-muted px-3 py-1.5">
+              <Text className="text-xs text-muted-foreground">Cleaner hierarchy</Text>
+            </View>
+          </View>
         </CardHeader>
-        <CardContent className="gap-6">
-          <View className="gap-6">
-            <View className="gap-1.5">
+        <CardContent className="gap-6 px-5 pb-5">
+          <View className="gap-5">
+            <View className="gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                placeholder="m@example.com"
+                placeholder="name@company.com"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -56,13 +63,13 @@ export function SignInForm() {
               />
             </View>
 
-            <View className="gap-1.5">
+            <View className="gap-2">
               <View className="flex-row items-center">
                 <Label htmlFor="password">Password</Label>
                 <Button
                   variant="link"
                   size="sm"
-                  className="ml-auto h-4 px-1 py-0 sm:h-4 web:h-fit"
+                  className="ml-auto h-4 px-1 py-0 web:h-fit sm:h-4"
                   onPress={() => {}}>
                   <Text className="font-normal leading-4">Forgot password?</Text>
                 </Button>
@@ -72,6 +79,7 @@ export function SignInForm() {
                 id="password"
                 value={password}
                 onChangeText={setPassword}
+                placeholder="Enter your password"
                 secureTextEntry
                 returnKeyType="send"
                 onSubmitEditing={onSubmit}
@@ -79,7 +87,7 @@ export function SignInForm() {
             </View>
 
             <Button
-              className="w-full"
+              className="h-11 w-full"
               onPress={onSubmit}
               disabled={!email.trim() || !password.trim()}>
               <Text>Sign in</Text>
@@ -88,7 +96,9 @@ export function SignInForm() {
 
           <Text className="text-center text-sm">
             Don't have an account?{' '}
-            <Text className="text-sm font-medium underline" onPress={() => router.push('/register')}>
+            <Text
+              className="text-sm font-medium underline"
+              onPress={() => router.push('/register')}>
               Create one
             </Text>
           </Text>
@@ -100,6 +110,15 @@ export function SignInForm() {
           </View>
 
           <SocialConnections />
+        </CardContent>
+      </Card>
+
+      <Card className="border-border bg-muted/35 py-0 shadow-none">
+        <CardContent className="px-5 py-4">
+          <Text className="text-sm leading-6 text-muted-foreground">
+            This screen already routes into the chat workspace, so you can preview the signed-in
+            experience immediately.
+          </Text>
         </CardContent>
       </Card>
     </View>
