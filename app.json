@@ -13,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
@@ -34,7 +32,13 @@
     },
     "plugins": [
       "expo-router",
-      "react-native-localize"
+      "react-native-localize",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Allow calendar access to sync and manage scheduled events."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
