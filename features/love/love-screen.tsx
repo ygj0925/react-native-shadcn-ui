@@ -7,6 +7,7 @@ import { MoonStarIcon, Navigation, StarIcon, SunIcon, MessageCircleMore  } from 
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, type ImageStyle, View, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 const LOGO = {
   light: require('@/assets/images/react-native-reusables-light.png'),
   dark: require('@/assets/images/react-native-reusables-dark.png'),
@@ -31,7 +32,7 @@ export default function Screen() {
   };
 
   return (
-    <>
+    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View className="items-center justify-center flex-1 gap-8 p-4">
         <Image source={LOGO[colorScheme ?? 'light']} style={IMAGE_STYLE} resizeMode="contain" />
@@ -55,6 +56,6 @@ export default function Screen() {
           </Button>
         </View>
       </View>
-    </>
+    </SafeAreaView>
   );
 }

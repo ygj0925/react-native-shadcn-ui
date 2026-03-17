@@ -510,14 +510,14 @@ export default function AboutScreen() {
   }
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-background">
+    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
       <ScrollView className="flex-1 bg-background" contentContainerStyle={{ padding: 16 }}>
-        <View className="mx-auto w-full max-w-7xl gap-4">
-          <Card className="overflow-hidden border-0 bg-teal-950 py-0 shadow-xl shadow-teal-950/20">
+        <View className="w-full gap-4 mx-auto max-w-7xl">
+          <Card className="py-0 overflow-hidden border-0 shadow-xl bg-teal-950 shadow-teal-950/20">
             <CardContent className="gap-5 px-5 py-5">
               <View className="flex-row items-start justify-between gap-4">
                 <View className="max-w-3xl gap-2">
-                  <View className="self-start rounded-full border border-white/15 bg-white/10 px-3 py-1">
+                  <View className="self-start px-3 py-1 border rounded-full border-white/15 bg-white/10">
                     <Text className="text-xs font-medium uppercase tracking-[1.2px] text-teal-50/80">
                       Schedule hub
                     </Text>
@@ -530,7 +530,7 @@ export default function AboutScreen() {
                   </Text>
                 </View>
 
-                <View className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-white/10 lg:flex">
+                <View className="items-center justify-center hidden w-12 h-12 rounded-2xl bg-white/10 lg:flex">
                   <Sparkles size={20} color="#ffffff" strokeWidth={2.2} />
                 </View>
               </View>
@@ -558,7 +558,7 @@ export default function AboutScreen() {
           <View className={cn('gap-4', isWideLayout ? 'flex-row items-start' : '')}>
             <View className={cn('gap-4', isWideLayout ? 'w-[42%]' : 'w-full')}>
               <Card className="py-0">
-                <CardHeader className="px-4 pb-3 pt-4">
+                <CardHeader className="px-4 pt-4 pb-3">
                   <CardTitle className="text-lg">日期选择</CardTitle>
                   <CardDescription>点选日期，查看当天安排或直接开始创建新日程。</CardDescription>
                 </CardHeader>
@@ -583,7 +583,7 @@ export default function AboutScreen() {
               </Card>
 
               <Card className="py-0">
-                <CardHeader className="px-4 pb-3 pt-4">
+                <CardHeader className="px-4 pt-4 pb-3">
                   <CardTitle className="text-lg">近期日程</CardTitle>
                   <CardDescription>优先处理接下来几条最重要的安排。</CardDescription>
                 </CardHeader>
@@ -592,7 +592,7 @@ export default function AboutScreen() {
                     upcomingSchedules.map((item) => (
                       <Pressable
                         key={item.id}
-                        className="rounded-2xl border border-border bg-muted/40 px-4 py-3 active:bg-muted"
+                        className="px-4 py-3 border rounded-2xl border-border bg-muted/40 active:bg-muted"
                         onPress={() => editSchedule(item)}>
                         <View className="flex-row items-start justify-between gap-3">
                           <View className="flex-1 gap-1.5">
@@ -624,8 +624,8 @@ export default function AboutScreen() {
                       </Pressable>
                     ))
                   ) : (
-                    <View className="rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-8">
-                      <Text className="text-center text-sm text-muted-foreground">
+                    <View className="px-4 py-8 border border-dashed rounded-2xl border-border bg-muted/20">
+                      <Text className="text-sm text-center text-muted-foreground">
                         还没有未来日程。先创建第一条安排，让页面开始真正有内容。
                       </Text>
                     </View>
@@ -636,7 +636,7 @@ export default function AboutScreen() {
 
             <View className={cn('gap-4', isWideLayout ? 'flex-1' : 'w-full')}>
               <Card className="py-0">
-                <CardHeader className="px-4 pb-3 pt-4">
+                <CardHeader className="px-4 pt-4 pb-3">
                   <View className="flex-row items-center justify-between gap-3">
                     <View>
                       <CardTitle className="text-lg">
@@ -653,7 +653,7 @@ export default function AboutScreen() {
                 </CardHeader>
 
                 <CardContent className="gap-4 px-4 pb-4">
-                  <View className="gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-4">
+                  <View className="gap-3 px-4 py-4 border rounded-2xl border-border bg-muted/40">
                     <View className="flex-row items-center gap-2">
                       <CalendarDays size={16} color="#0f766e" />
                       <Text className="text-sm font-medium">系统日历同步</Text>
@@ -811,7 +811,7 @@ export default function AboutScreen() {
               </Card>
 
               <Card className="py-0">
-                <CardHeader className="px-4 pb-3 pt-4">
+                <CardHeader className="px-4 pt-4 pb-3">
                   <CardTitle className="text-lg">当天日程</CardTitle>
                   <CardDescription>{formatDateLabel(selectedDate)} 的安排概览</CardDescription>
                 </CardHeader>
@@ -820,7 +820,7 @@ export default function AboutScreen() {
                     selectedSchedules.map((item, index) => (
                       <View key={item.id}>
                         {index ? <Separator className="mb-3" /> : null}
-                        <View className="rounded-2xl bg-muted/35 px-4 py-4">
+                        <View className="px-4 py-4 rounded-2xl bg-muted/35">
                           <View className="flex-row items-start justify-between gap-3">
                             <View className="flex-1 gap-2">
                               <Text className="text-base font-semibold">{item.title}</Text>
@@ -881,8 +881,8 @@ export default function AboutScreen() {
                       </View>
                     ))
                   ) : (
-                    <View className="rounded-2xl border border-dashed border-border px-4 py-10">
-                      <Text className="text-center text-sm text-muted-foreground">
+                    <View className="px-4 py-10 border border-dashed rounded-2xl border-border">
+                      <Text className="text-sm text-center text-muted-foreground">
                         这一天还没有安排。先在上方填写内容，再点击“添加日程”或“添加并同步”即可。
                       </Text>
                     </View>

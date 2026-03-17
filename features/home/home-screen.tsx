@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { SafeAreaView } from 'react-safe-area-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
@@ -109,168 +110,171 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
 
 export default function HomeScreen() {
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28 }}>
-      <Stack.Screen options={SCREEN_OPTIONS} />
+    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28 }}>
+        <Stack.Screen options={SCREEN_OPTIONS} />
 
-      <View className="w-full max-w-6xl gap-4 mx-auto">
-        <Card className="py-0 overflow-hidden border-0 shadow-xl bg-emerald-950 shadow-emerald-950/20">
-          <CardContent className="gap-5 px-5 py-6">
-            <View className="flex-row items-start justify-between gap-4">
-              <View className="max-w-3xl gap-2">
-                <View className="self-start px-3 py-1 border rounded-full border-white/15 bg-white/10">
-                  <Text className="text-xs font-medium uppercase tracking-[1.2px] text-emerald-50/80">
-                    Employee workspace
+        <View className="w-full max-w-6xl gap-4 mx-auto">
+          <Card className="py-0 overflow-hidden border-0 shadow-xl bg-emerald-950 shadow-emerald-950/20">
+            <CardContent className="gap-5 px-5 py-6">
+              <View className="flex-row items-start justify-between gap-4">
+                <View className="max-w-3xl gap-2">
+                  <View className="self-start px-3 py-1 border rounded-full border-white/15 bg-white/10">
+                    <Text className="text-xs font-medium uppercase tracking-[1.2px] text-emerald-50/80">
+                      Employee workspace
+                    </Text>
+                  </View>
+                  <Text className="text-3xl font-semibold leading-tight text-white">
+                    让员工少找入口，多完成工作
+                  </Text>
+                  <Text className="leading-6 text-emerald-50/80">
+                    首页聚合审批、公告、会议、报销、服务台和 AI
+                    问答，让企业内部常用功能都能在两步内到达。
                   </Text>
                 </View>
-                <Text className="text-3xl font-semibold leading-tight text-white">
-                  让员工少找入口，多完成工作
-                </Text>
-                <Text className="leading-6 text-emerald-50/80">
-                  首页聚合审批、公告、会议、报销、服务台和 AI
-                  问答，让企业内部常用功能都能在两步内到达。
-                </Text>
+
+                <View className="items-center justify-center hidden w-12 h-12 rounded-2xl bg-white/10 lg:flex">
+                  <Sparkles size={20} color="#ffffff" strokeWidth={2.2} />
+                </View>
               </View>
 
-              <View className="items-center justify-center hidden w-12 h-12 rounded-2xl bg-white/10 lg:flex">
-                <Sparkles size={20} color="#ffffff" strokeWidth={2.2} />
+              <View className="flex-row flex-wrap gap-3">
+                <MetricCard label="待处理事项" value="6" detail="审批、学习、会议材料" />
+                <MetricCard label="今日会议" value="3" detail="下次会议 10:30 开始" />
+                <MetricCard label="可用服务" value="12" detail="人事、IT、行政、法务等" />
               </View>
+            </CardContent>
+          </Card>
+
+          <View className="gap-4">
+            <View className="px-1">
+              <Text className="text-lg font-semibold tracking-tight">高频入口</Text>
+              <Text className="text-sm text-muted-foreground">
+                先放员工每天最常点击的四类能力，减少层级跳转。
+              </Text>
             </View>
 
-            <View className="flex-row flex-wrap gap-3">
-              <MetricCard label="待处理事项" value="6" detail="审批、学习、会议材料" />
-              <MetricCard label="今日会议" value="3" detail="下次会议 10:30 开始" />
-              <MetricCard label="可用服务" value="12" detail="人事、IT、行政、法务等" />
-            </View>
-          </CardContent>
-        </Card>
+            <View className="flex-row flex-wrap gap-4">
+              {PRIMARY_ACTIONS.map((item) => {
+                const Icon = item.icon;
 
-        <View className="gap-4">
-          <View className="px-1">
-            <Text className="text-lg font-semibold tracking-tight">高频入口</Text>
-            <Text className="text-sm text-muted-foreground">
-              先放员工每天最常点击的四类能力，减少层级跳转。
-            </Text>
+                return (
+                  <Link key={item.title} href={item.href as never} asChild>
+                    <Button
+                      variant="ghost"
+                      className="min-w-[260px] flex-1 justify-start rounded-2xl border border-border bg-card px-0 py-0">
+                      <Card className="w-full py-0 border-0 shadow-none">
+                        <CardHeader className="gap-3 px-5 pt-5 pb-3">
+                          <View className="items-center justify-center w-12 h-12 rounded-2xl bg-emerald-500/10">
+                            <Icon size={22} color="currentColor" strokeWidth={2} />
+                          </View>
+                          <View className="gap-1">
+                            <CardTitle>{item.title}</CardTitle>
+                            <CardDescription>{item.description}</CardDescription>
+                          </View>
+                        </CardHeader>
+                        <CardContent className="flex-row items-center justify-between px-5 pb-5">
+                          <Text className="text-xs text-muted-foreground">一键进入常用流程</Text>
+                          <ArrowRight size={18} color="currentColor" strokeWidth={2} />
+                        </CardContent>
+                      </Card>
+                    </Button>
+                  </Link>
+                );
+              })}
+            </View>
           </View>
 
           <View className="flex-row flex-wrap gap-4">
-            {PRIMARY_ACTIONS.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <Link key={item.title} href={item.href as never} asChild>
-                  <Button
-                    variant="ghost"
-                    className="min-w-[260px] flex-1 justify-start rounded-2xl border border-border bg-card px-0 py-0">
-                    <Card className="w-full py-0 border-0 shadow-none">
-                      <CardHeader className="gap-3 px-5 pt-5 pb-3">
-                        <View className="items-center justify-center w-12 h-12 rounded-2xl bg-emerald-500/10">
-                          <Icon size={22} color="currentColor" strokeWidth={2} />
-                        </View>
-                        <View className="gap-1">
-                          <CardTitle>{item.title}</CardTitle>
-                          <CardDescription>{item.description}</CardDescription>
-                        </View>
-                      </CardHeader>
-                      <CardContent className="flex-row items-center justify-between px-5 pb-5">
-                        <Text className="text-xs text-muted-foreground">一键进入常用流程</Text>
-                        <ArrowRight size={18} color="currentColor" strokeWidth={2} />
-                      </CardContent>
-                    </Card>
-                  </Button>
-                </Link>
-              );
-            })}
-          </View>
-        </View>
-
-        <View className="flex-row flex-wrap gap-4">
-          <Card className="min-w-[280px] flex-1 py-0">
-            <CardHeader className="px-5 pt-5 pb-2">
-              <CardTitle>我的待办</CardTitle>
-              <CardDescription>把员工最关心的个人动作放在首页第一屏。</CardDescription>
-            </CardHeader>
-            <CardContent className="gap-3 px-5 pb-5">
-              {TODO_ITEMS.map((item, index) => (
-                <View key={item.title}>
-                  {index ? <Separator className="mb-3" /> : null}
-                  <View className="flex-row items-start justify-between gap-3">
-                    <View className="flex-1 gap-1">
-                      <Text className="font-medium">{item.title}</Text>
-                      <Text className="text-xs text-muted-foreground">{item.meta}</Text>
-                    </View>
-                    <View className="rounded-full bg-muted px-3 py-1.5">
-                      <Text className="text-xs text-muted-foreground">{item.tag}</Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="min-w-[280px] flex-1 py-0">
-            <CardHeader className="px-5 pt-5 pb-2">
-              <CardTitle>快捷服务</CardTitle>
-              <CardDescription>把员工经常“找不到”的支持能力做成平铺入口。</CardDescription>
-            </CardHeader>
-            <CardContent className="gap-3 px-5 pb-5">
-              {QUICK_SERVICES.map((item, index) => {
-                const Icon = item.icon;
-
-                return (
+            <Card className="min-w-[280px] flex-1 py-0">
+              <CardHeader className="px-5 pt-5 pb-2">
+                <CardTitle>我的待办</CardTitle>
+                <CardDescription>把员工最关心的个人动作放在首页第一屏。</CardDescription>
+              </CardHeader>
+              <CardContent className="gap-3 px-5 pb-5">
+                {TODO_ITEMS.map((item, index) => (
                   <View key={item.title}>
                     {index ? <Separator className="mb-3" /> : null}
-                    <View className="flex-row items-center gap-3">
-                      <View className="items-center justify-center w-10 h-10 rounded-xl bg-muted">
-                        <Icon size={18} color="currentColor" strokeWidth={2} />
-                      </View>
-                      <View className="flex-1 gap-0.5">
+                    <View className="flex-row items-start justify-between gap-3">
+                      <View className="flex-1 gap-1">
                         <Text className="font-medium">{item.title}</Text>
-                        <Text className="text-xs text-muted-foreground">{item.subtitle}</Text>
+                        <Text className="text-xs text-muted-foreground">{item.meta}</Text>
+                      </View>
+                      <View className="rounded-full bg-muted px-3 py-1.5">
+                        <Text className="text-xs text-muted-foreground">{item.tag}</Text>
                       </View>
                     </View>
                   </View>
-                );
-              })}
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-[280px] flex-1 py-0">
+              <CardHeader className="px-5 pt-5 pb-2">
+                <CardTitle>快捷服务</CardTitle>
+                <CardDescription>把员工经常“找不到”的支持能力做成平铺入口。</CardDescription>
+              </CardHeader>
+              <CardContent className="gap-3 px-5 pb-5">
+                {QUICK_SERVICES.map((item, index) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <View key={item.title}>
+                      {index ? <Separator className="mb-3" /> : null}
+                      <View className="flex-row items-center gap-3">
+                        <View className="items-center justify-center w-10 h-10 rounded-xl bg-muted">
+                          <Icon size={18} color="currentColor" strokeWidth={2} />
+                        </View>
+                        <View className="flex-1 gap-0.5">
+                          <Text className="font-medium">{item.title}</Text>
+                          <Text className="text-xs text-muted-foreground">{item.subtitle}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </View>
+
+          <Card className="py-0">
+            <CardHeader className="px-5 pt-5 pb-3">
+              <CardTitle>建议加入的企业首页功能</CardTitle>
+              <CardDescription>
+                这些模块适合后续继续接入真实公司系统，会显著提升员工使用效率。
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="gap-4 px-5 pb-5">
+              <View className="flex-row flex-wrap gap-4">
+                {COMPANY_MODULES.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <View
+                      key={item.title}
+                      className="min-w-[220px] flex-1 rounded-2xl border border-border bg-muted/25 px-4 py-4">
+                      <View className="gap-3">
+                        <View className="items-center justify-center h-11 w-11 rounded-2xl bg-background">
+                          <Icon size={20} color="currentColor" strokeWidth={2} />
+                        </View>
+                        <View className="gap-1">
+                          <Text className="font-medium">{item.title}</Text>
+                          <Text className="text-sm leading-6 text-muted-foreground">
+                            {item.description}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
             </CardContent>
           </Card>
         </View>
+      </ScrollView>
+    </SafeAreaView>
 
-        <Card className="py-0">
-          <CardHeader className="px-5 pt-5 pb-3">
-            <CardTitle>建议加入的企业首页功能</CardTitle>
-            <CardDescription>
-              这些模块适合后续继续接入真实公司系统，会显著提升员工使用效率。
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="gap-4 px-5 pb-5">
-            <View className="flex-row flex-wrap gap-4">
-              {COMPANY_MODULES.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <View
-                    key={item.title}
-                    className="min-w-[220px] flex-1 rounded-2xl border border-border bg-muted/25 px-4 py-4">
-                    <View className="gap-3">
-                      <View className="items-center justify-center h-11 w-11 rounded-2xl bg-background">
-                        <Icon size={20} color="currentColor" strokeWidth={2} />
-                      </View>
-                      <View className="gap-1">
-                        <Text className="font-medium">{item.title}</Text>
-                        <Text className="text-sm leading-6 text-muted-foreground">
-                          {item.description}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </CardContent>
-        </Card>
-      </View>
-    </ScrollView>
   );
 }
