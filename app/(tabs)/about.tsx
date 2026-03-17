@@ -1,1 +1,1 @@
-﻿export { default } from './about-screen';
+﻿export { default } from '@/features/about/about-screen'
