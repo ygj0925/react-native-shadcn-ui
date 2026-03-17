@@ -23,14 +23,8 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingVertical: 32 }}>
-        <View className="mx-auto w-full max-w-sm gap-6">
-          <AuthShell
-            eyebrow="Welcome back"
-            title="Continue your workspace"
-            description="Pick up your chats, drafts, and saved prompts with a calmer sign-in flow."
-            footer="By continuing, you agree to the app terms and privacy policy.">
-            <SignInForm />
-          </AuthShell>
+        <View className="w-full max-w-sm gap-6 mx-auto">
+          <SignInForm />
         </View>
       </KeyboardAwareScrollView>
     </SafeAreaView>

@@ -25,94 +25,79 @@ export function SignInForm() {
 
   return (
     <View className="flex-col gap-6">
-      <Card className="py-0 shadow-lg border-border bg-card/95 shadow-black/5">
-        <CardHeader className="gap-3 px-5 pt-5 pb-3">
-          <View className="gap-1">
-            <CardTitle className="text-2xl tracking-tight text-center sm:text-left">
-              Sign in
-            </CardTitle>
-            <CardDescription className="text-center sm:text-left">
-              Use your email to access recent conversations and workspace shortcuts.
-            </CardDescription>
-          </View>
+      <View className="gap-1">
+        <CardTitle className="text-2xl tracking-tight text-center sm:text-left">
+          Sign in
+        </CardTitle>
+        <CardDescription className="text-center sm:text-left">
+          Use your email to access recent conversations and workspace shortcuts.
+        </CardDescription>
+      </View>
+      <View className="gap-5">
+        <View className="gap-2">
+          <Label htmlFor="email">AD账号</Label>
+          <Input
+            id="email"
+            placeholder="请输入AD账号"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoComplete="email"
+            autoCapitalize="none"
+            onSubmitEditing={onEmailSubmitEditing}
+            returnKeyType="next"
+            submitBehavior="submit"
+          />
+        </View>
 
-        </CardHeader>
-        <CardContent className="gap-6 px-5 pb-5">
-          <View className="gap-5">
-            <View className="gap-2">
-              <Label htmlFor="email">AD账号</Label>
-              <Input
-                id="email"
-                placeholder="请输入AD账号"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                onSubmitEditing={onEmailSubmitEditing}
-                returnKeyType="next"
-                submitBehavior="submit"
-              />
-            </View>
-
-            <View className="gap-2">
-              <View className="flex-row items-center">
-                <Label htmlFor="password">Password</Label>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="h-4 px-1 py-0 ml-auto web:h-fit sm:h-4"
-                  onPress={() => { }}>
-                  <Text className="font-normal leading-4">Forgot password?</Text>
-                </Button>
-              </View>
-              <Input
-                ref={passwordInputRef}
-                id="password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="请输入密码"
-                secureTextEntry
-                returnKeyType="send"
-                onSubmitEditing={onSubmit}
-              />
-            </View>
-
+        <View className="gap-2">
+          <View className="flex-row items-center">
+            <Label htmlFor="password">Password</Label>
             <Button
-              className="w-full h-11"
-              onPress={onSubmit}
-              disabled={!email.trim() || !password.trim()}>
-              <Text>Sign in</Text>
+              variant="link"
+              size="sm"
+              className="h-4 px-1 py-0 ml-auto web:h-fit sm:h-4"
+              onPress={() => { }}>
+              <Text className="font-normal leading-4">Forgot password?</Text>
             </Button>
           </View>
+          <Input
+            ref={passwordInputRef}
+            id="password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="请输入密码"
+            secureTextEntry
+            returnKeyType="send"
+            onSubmitEditing={onSubmit}
+          />
+        </View>
 
-          <Text className="text-sm text-center">
-            Don't have an account?{' '}
-            <Text
-              className="text-sm font-medium underline"
-              onPress={() => router.push('/register')}>
-              Create one
-            </Text>
-          </Text>
+        <Button
+          className="w-full h-11"
+          onPress={onSubmit}
+          disabled={!email.trim() || !password.trim()}>
+          <Text>Sign in</Text>
+        </Button>
+      </View>
 
-          <View className="flex-row items-center">
-            <Separator className="flex-1" />
-            <Text className="px-4 text-sm text-muted-foreground">or continue with</Text>
-            <Separator className="flex-1" />
-          </View>
+      <Text className="text-sm text-center">
+        Don't have an account?{' '}
+        <Text
+          className="text-sm font-medium underline"
+          onPress={() => router.push('/register')}>
+          Create one
+        </Text>
+      </Text>
 
-          <SocialConnections />
-        </CardContent>
-      </Card>
+      <View className="flex-row items-center">
+        <Separator className="flex-1" />
+        <Text className="px-4 text-sm text-muted-foreground">or continue with</Text>
+        <Separator className="flex-1" />
+      </View>
 
-      <Card className="py-0 shadow-none border-border bg-muted/35">
-        <CardContent className="px-5 py-4">
-          <Text className="text-sm leading-6 text-muted-foreground">
-            This screen already routes into the chat workspace, so you can preview the signed-in
-            experience immediately.
-          </Text>
-        </CardContent>
-      </Card>
+      <SocialConnections />
+
     </View>
   );
 }
