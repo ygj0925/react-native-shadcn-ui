@@ -7,6 +7,13 @@
     "android": "expo start -c --android",
     "ios": "expo start -c --ios",
     "web": "expo start -c --web",
+    "build:android:dev": "npx eas build --platform android --profile development",
+    "build:ios:dev": "npx eas build --platform ios --profile development",
+    "build:ios:simulator": "npx eas build --platform ios --profile ios-simulator",
+    "build:android:preview": "npx eas build --platform android --profile preview",
+    "build:ios:preview": "npx eas build --platform ios --profile preview",
+    "build:android:prod": "npx eas build --platform android --profile production",
+    "build:ios:prod": "npx eas build --platform ios --profile production",
     "clean": "rm -rf .expo node_modules"
   },
   "dependencies": {
