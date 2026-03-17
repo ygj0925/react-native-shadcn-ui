@@ -8,6 +8,15 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
+// Set the animation options. This is optional.
+SplashScreen.setOptions({
+  duration: 500,
+  fade: true,
+});
+
 
 export {
   ErrorBoundary,

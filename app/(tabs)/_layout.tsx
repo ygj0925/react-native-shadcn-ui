@@ -14,6 +14,7 @@ import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as SplashScreen from 'expo-splash-screen';
 
 type NavItem = {
   name: 'index' | 'about' | 'home' | 'love' | 'my';
@@ -118,7 +119,7 @@ function SidebarContent({
   largeScreen: boolean;
 }) {
   return (
-    <Card className="h-full rounded-none border-r border-border bg-card py-0 shadow-2xl shadow-black/10">
+    <Card className="h-full py-0 border-r rounded-none shadow-2xl border-border bg-card shadow-black/10">
       <CardHeader className="gap-3 px-4 pb-3" style={{ paddingTop: topInset + 10 }}>
         <View className="flex-row items-center justify-between">
           <View className="gap-1">
@@ -239,6 +240,10 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
   const currentTitle = PAGE_TITLE_OVERRIDES[currentPath] ?? PAGE_TITLES[currentPath] ?? 'Workspace';
   const sidebarWidth = Math.min(Math.max(width * 0.22, 220), 260);
 
+  const hideSplash = React.useCallback(async () => {
+    await SplashScreen.hideAsync();
+  }, []);
+
   React.useEffect(() => {
     Animated.timing(progress, {
       toValue: sidebarVisible ? 1 : 0,
@@ -272,7 +277,7 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
   }
 
   return (
-    <View className="flex-1 flex-row bg-background">
+    <View className="flex-row flex-1 bg-background">
       <Animated.View
         style={{ width: animatedSidebarWidth, overflow: 'hidden' }}
         pointerEvents={sidebarVisible ? 'auto' : 'none'}>
@@ -295,7 +300,7 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
 
       <View className="flex-1 bg-background">
         <View
-          className="flex-row items-center justify-between border-b border-border bg-background px-4"
+          className="flex-row items-center justify-between px-4 border-b border-border bg-background"
           style={{ height: 64 + insets.top, paddingTop: insets.top }}>
           <View className="flex-row items-center gap-3">
             <Button variant="ghost" size="icon" onPress={onMenuPress}>

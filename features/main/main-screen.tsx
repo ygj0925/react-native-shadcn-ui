@@ -101,24 +101,20 @@ export default function IndexScreen() {
 
               return (
                 <Link key={item.href} href={item.href as never} asChild>
-                  <Button
-                    variant="ghost"
-                    className="justify-start h-auto px-0 py-0 border rounded-2xl border-border bg-card">
-                    <Card className="w-full py-0 border-0 shadow-none">
-                      <CardHeader className="flex-row items-center justify-between px-5 pt-5 pb-2">
-                        <View className="flex-row items-center gap-3">
-                          <View className="items-center justify-center h-11 w-11 rounded-2xl bg-primary/10">
-                            <Icon size={20} color="currentColor" strokeWidth={2} />
-                          </View>
-                          <View className="gap-1">
-                            <CardTitle>{item.title}</CardTitle>
-                            <CardDescription>{item.description}</CardDescription>
-                          </View>
+                  <Card className="w-full py-0 border-0 shadow-none">
+                    <CardHeader className="flex-row items-center justify-between px-5 pt-5 pb-2">
+                      <View className="flex-row items-center gap-3">
+                        <View className="items-center justify-center h-11 w-11 rounded-2xl bg-primary/10">
+                          <Icon size={20} color="currentColor" strokeWidth={2} />
                         </View>
-                        <ArrowRight size={18} color="currentColor" strokeWidth={2} />
-                      </CardHeader>
-                    </Card>
-                  </Button>
+                        <View className="gap-1">
+                          <CardTitle>{item.title}</CardTitle>
+                          <CardDescription>{item.description}</CardDescription>
+                        </View>
+                      </View>
+                      <ArrowRight size={18} color="currentColor" strokeWidth={2} />
+                    </CardHeader>
+                  </Card>
                 </Link>
               );
             })}

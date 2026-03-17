@@ -9,8 +9,6 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
@@ -43,6 +41,19 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "resizeMode": "contain",
+          "backgroundColor": "#232323",
+          "image": "./assets/images/react-native-reusables-light.png",
+          "dark": {
+            "image": "./assets/images/react-native-reusables-dark.png",
+            "backgroundColor": "#000000"
+          },
+          "imageWidth": 150
+        }
+      ],
       "react-native-localize",
       [
         "expo-calendar",
