@@ -103,7 +103,7 @@ const PAGE_TITLE_OVERRIDES: Record<string, string> = {
   '/about': 'Schedule',
 };
 
-function SidebarContent({
+const SidebarContent = React.memo(function SidebarContent({
   currentPath,
   iconColor,
   topInset,
@@ -268,13 +268,13 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
     outputRange: [-18, 0],
   });
 
-  function navigate(href: string) {
+  const navigate = React.useCallback((href: string) => {
     router.push(href as never);
-  }
+  }, [router]);
 
-  function onMenuPress() {
+  const onMenuPress = React.useCallback(() => {
     setSidebarVisible((current) => !current);
-  }
+  }, []);
 
   return (
     <View className="flex-row flex-1 bg-background">

@@ -52,6 +52,11 @@ type Message = {
 const INITIAL_ASSISTANT_REPLY =
   "Sure! Imagine you're in a car, smoothly cruising down the highway. Turbulence is like the road getting a little bumpy for a moment, but the plane is still safely moving forward.";
 
+let messageIdCounter = 0;
+function nextMessageId(role: string) {
+  return `${++messageIdCounter}-${role}`;
+}
+
 const HISTORY_ITEMS = [
   {
     id: 'current',
@@ -151,7 +156,7 @@ export default function ChatScreen() {
     setMessages((current) => [
       ...current,
       {
-        id: `${Date.now()}-user`,
+        id: nextMessageId('user'),
         role: 'user',
         content: trimmed,
       },
@@ -163,7 +168,7 @@ export default function ChatScreen() {
       setMessages((current) => [
         ...current,
         {
-          id: `${Date.now()}-assistant`,
+          id: nextMessageId('assistant'),
           role: 'assistant',
           content: INITIAL_ASSISTANT_REPLY,
         },

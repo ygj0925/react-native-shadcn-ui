@@ -5,7 +5,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { ThemeToggle } from '@/components/themeToggle';
 
 const SCREEN_OPTIONS = {
-  title: '登录页面',
+  title: 'Not Found',
   headerTransparent: true,
   headerShown: false,
   headerRight: () => <ThemeToggle />,

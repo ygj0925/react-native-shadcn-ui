@@ -57,13 +57,13 @@ export const storage = createStorage();
 
 export function getItem<T>(key: string): T | null {
   const value = storage.getString(key);
-  return value ? JSON.parse(value) || null : null;
+  return value ? (JSON.parse(value) as T) ?? null : null;
 }
 
-export async function setItem<T>(key: string, value: T) {
+export function setItem<T>(key: string, value: T) {
   storage.set(key, JSON.stringify(value));
 }
 
-export async function removeItem(key: string) {
+export function removeItem(key: string) {
   storage.remove(key);
 }

@@ -400,6 +400,7 @@ export default function AboutScreen() {
   const [loadingCalendars, setLoadingCalendars] = React.useState(false);
   const [loadingSystemEvents, setLoadingSystemEvents] = React.useState(false);
   const [pendingActionId, setPendingActionId] = React.useState<string | null>(null);
+  const loadGenRef = React.useRef(0);
 
   React.useEffect(() => {
     setSchedules(sortSchedules(getItem<ScheduleItem[]>(STORAGE_KEY) ?? []));
@@ -558,6 +559,7 @@ export default function AboutScreen() {
       return;
     }
 
+    const gen = ++loadGenRef.current;
     setLoadingSystemEvents(true);
 
     try {
@@ -567,15 +569,24 @@ export default function AboutScreen() {
         endOfMonth(anchorDate)
       );
 
+      if (gen !== loadGenRef.current) {
+        return;
+      }
+
       setSystemEvents(
         events
           .map((item) => toDeviceEventItem(item, calendarsParam))
           .filter((item): item is DeviceEventItem => !!item)
       );
     } catch (error) {
+      if (gen !== loadGenRef.current) {
+        return;
+      }
       Alert.alert('获取系统日程失败', error instanceof Error ? error.message : '请稍后再试。');
     } finally {
-      setLoadingSystemEvents(false);
+      if (gen === loadGenRef.current) {
+        setLoadingSystemEvents(false);
+      }
     }
   }
 
@@ -595,7 +606,7 @@ export default function AboutScreen() {
     }
 
     return {
-      id: editingId ?? `${Date.now()}`,
+      id: editingId ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       title: form.title.trim(),
       notes: form.notes.trim(),
       date: selectedDate,
@@ -785,6 +796,7 @@ export default function AboutScreen() {
                       variant="outline"
                       size="icon"
                       className="rounded-2xl border-slate-200 bg-white"
+                      disabled={loadingSystemEvents}
                       onPress={() => {
                         const anchor = new Date(`${monthAnchor}T00:00:00`);
                         anchor.setMonth(anchor.getMonth() - 1);
@@ -798,6 +810,7 @@ export default function AboutScreen() {
                       variant="outline"
                       size="icon"
                       className="rounded-2xl border-slate-200 bg-white"
+                      disabled={loadingSystemEvents}
                       onPress={() => {
                         const anchor = new Date(`${monthAnchor}T00:00:00`);
                         anchor.setMonth(anchor.getMonth() + 1);

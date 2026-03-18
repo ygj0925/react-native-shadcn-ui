@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useColorScheme } from 'nativewind';
-import { Image, Platform, View } from 'react-native';
+import { Alert, Image, Platform, View } from 'react-native';
 
 const SOCIAL_CONNECTION_STRATEGIES = [
   {
@@ -34,7 +34,7 @@ export function SocialConnections() {
             size="sm"
             className="flex-1"
             onPress={() => {
-              // TODO: Authenticate with social provider and navigate to protected screen if successful
+              Alert.alert('Coming Soon', `Sign in with ${strategy.type.replace('oauth_', '')} is not yet available.`);
             }}>
             <Image
               className={cn('size-4', strategy.useTint && Platform.select({ web: 'dark:invert' }))}

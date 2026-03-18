@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 const SCREEN_OPTIONS = {
-  title: '注册页面',
+  title: 'Register',
   headerShown: true,
   headerTransparent: false,
   headerRight: () => <ThemeToggle />,
