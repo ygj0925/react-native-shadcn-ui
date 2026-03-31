@@ -94,7 +94,7 @@ function SettingsRow({
 
   return (
     <Pressable className="flex-row items-center px-4 py-2.5 active:bg-accent/50">
-      <View className="mr-3 h-8 w-8 items-center justify-center rounded-md bg-muted">
+      <View className="items-center justify-center w-8 h-8 mr-3 rounded-md bg-muted">
         <Icon size={15} color="currentColor" strokeWidth={2} />
       </View>
 
@@ -147,7 +147,7 @@ export default function MyScreen() {
           paddingBottom: 20,
         }}
         showsVerticalScrollIndicator={false}>
-        <View className="mb-4 gap-1 px-1">
+        <View className="gap-1 px-1 mb-4">
           <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-[24px]' : 'text-[28px]')}>
             Settings
           </Text>
@@ -157,14 +157,14 @@ export default function MyScreen() {
         </View>
 
         <Card className="mb-3.5 overflow-hidden border-border bg-card py-0 shadow-sm shadow-black/5">
-          <View className="bg-primary/10 px-4 pb-4 pt-5">
+          <View className="px-4 pt-5 pb-4 bg-primary/10">
             <Pressable className="active:opacity-90">
               <View className="flex-row items-center">
-                <View className="h-14 w-14 items-center justify-center rounded-full border border-primary/20 bg-primary shadow-sm shadow-black/5">
+                <View className="items-center justify-center border rounded-full shadow-sm h-14 w-14 border-primary/20 bg-primary shadow-black/5">
                   <Text className="text-lg font-semibold text-primary-foreground">RE</Text>
                 </View>
 
-                <View className="ml-3 flex-1 gap-1">
+                <View className="flex-1 gap-1 ml-3">
                   <View className="flex-row items-center gap-2">
                     <Text className="text-lg font-semibold tracking-tight">Rey Zhang</Text>
                     <View className="rounded-full border border-primary/15 bg-primary px-2 py-0.5">
@@ -177,7 +177,7 @@ export default function MyScreen() {
                   </Text>
                 </View>
 
-                <View className="h-8 w-8 items-center justify-center rounded-full bg-background/70">
+                <View className="items-center justify-center w-8 h-8 rounded-full bg-background/70">
                   <ChevronRight size={16} color="currentColor" strokeWidth={2} />
                 </View>
               </View>
@@ -199,8 +199,8 @@ export default function MyScreen() {
 
         {sections.map((section) => (
           <View key={section.title} className="mb-3.5">
-            <Card className="border-border bg-card py-0 shadow-sm shadow-black/5">
-              <CardHeader className="px-4 pb-2 pt-4">
+            <Card className="py-0 shadow-sm border-border bg-card shadow-black/5">
+              <CardHeader className="px-4 pt-4 pb-2">
                 <CardTitle className="text-base">{section.title}</CardTitle>
                 {section.description ? (
                   <Text className="text-xs leading-4 text-muted-foreground">
@@ -230,9 +230,9 @@ export default function MyScreen() {
           </View>
         ))}
 
-        <Card className="border-border bg-card py-0 shadow-sm shadow-black/5">
+        <Card className="py-0 shadow-sm border-border bg-card shadow-black/5">
           <CardContent className="px-4 py-3">
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="justify-start w-full">
               <LogOut size={16} color="currentColor" strokeWidth={2} />
               <Text>Logout</Text>
             </Button>

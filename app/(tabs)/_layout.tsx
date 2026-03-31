@@ -12,7 +12,7 @@ import { Slot, Tabs, usePathname, useRouter } from 'expo-router';
 import { Menu, X } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -185,7 +185,7 @@ const SidebarContent = React.memo(function SidebarContent({
       </CardContent>
     </Card>
   );
-}
+});
 
 function MobileTabs({ iconColor }: { iconColor: string }) {
   return (
@@ -200,9 +200,9 @@ function MobileTabs({ iconColor }: { iconColor: string }) {
           flex: 1,
         },
         tabBarStyle: {
-          height: 64,
-          paddingTop: 6,
-          paddingBottom: 6,
+          minHeight: 64,
+          paddingTop: 2,
+          paddingBottom: 2,
           borderTopWidth: 1,
           borderTopColor: '#e5e7eb',
           elevation: 0,
@@ -210,6 +210,7 @@ function MobileTabs({ iconColor }: { iconColor: string }) {
           shadowColor: 'transparent',
           shadowOffset: { width: 0, height: 0 },
           shadowRadius: 0,
+          ...(Platform.OS === 'web' ? { overflow: 'visible' as const } : {}),
         },
         tabBarLabelStyle: {
           fontSize: 11,

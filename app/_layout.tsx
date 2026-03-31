@@ -6,6 +6,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as SplashScreen from 'expo-splash-screen';
@@ -26,14 +27,15 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   return (
-
     <KeyboardProvider statusBarTranslucent navigationBarTranslucent preserveEdgeToEdge>
       <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <PortalHost />
+        <SafeAreaProvider>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <PortalHost />
+        </SafeAreaProvider>
       </ThemeProvider>
     </KeyboardProvider>
   );
