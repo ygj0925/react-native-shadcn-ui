@@ -4,7 +4,8 @@
       "Bash(git push:*)",
       "mcp__ide__getDiagnostics",
       "Bash(npx expo:*)",
-      "Bash(node -e \"const pkg = require\\('@expo-google-fonts/noto-sans-sc/package.json'\\); const exports = Object.keys\\(require\\('@expo-google-fonts/noto-sans-sc'\\)\\); console.log\\(exports.filter\\(e => e.startsWith\\('NotoSans'\\)\\).join\\('\\\\n'\\)\\)\")"
+      "Bash(node -e \"const pkg = require\\('@expo-google-fonts/noto-sans-sc/package.json'\\); const exports = Object.keys\\(require\\('@expo-google-fonts/noto-sans-sc'\\)\\); console.log\\(exports.filter\\(e => e.startsWith\\('NotoSans'\\)\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npm install:*)"
     ]
   }
 }

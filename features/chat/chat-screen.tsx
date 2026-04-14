@@ -11,7 +11,8 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppRuntime } from "@/hooks/use-app-runtime";
 
 function MessageBubble({ message }: { message: ThreadMessage }) {
@@ -89,19 +90,22 @@ function ChatScreen() {
   const messages = useAuiState(
     (s) => s.thread.messages,
   ) as ThreadMessage[];
+  const insets = useSafeAreaInsets();
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior="padding"
-    >
+    <View style={{ flex: 1 }}>
       <FlatList
         data={messages}
         keyExtractor={(m) => m.id}
         renderItem={({ item }) => <MessageBubble message={item} />}
+        contentContainerStyle={{ paddingBottom: 72 }}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
       />
-      <Composer />
-    </KeyboardAvoidingView>
+      <KeyboardStickyView offset={{ closed: insets.bottom }}>
+        <Composer />
+      </KeyboardStickyView>
+    </View>
   );
 }
 
