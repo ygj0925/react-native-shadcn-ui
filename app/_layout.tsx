@@ -52,8 +52,13 @@ export default function RootLayout() {
       <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
         <SafeAreaProvider>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="+not-found" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="register" />
+            <Stack.Screen name="chat" />
+            <Stack.Screen name="assisant" />
           </Stack>
           <PortalHost />
         </SafeAreaProvider>
