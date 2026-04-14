@@ -138,7 +138,7 @@ export default function MyScreen() {
   const horizontalPadding = isCompact ? 12 : 16;
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{

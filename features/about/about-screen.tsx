@@ -772,7 +772,7 @@ export default function AboutScreen() {
 
   const markedDates = buildMarkedDates(schedules, systemEvents, selectedDate);
   return (
-    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-[#f5f3ff]">
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-[#f5f3ff]">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 18, paddingBottom: 28 }}>

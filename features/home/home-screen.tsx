@@ -110,7 +110,7 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
 
 export default function HomeScreen() {
   return (
-    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView
         className="flex-1 bg-background"
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28 }}>

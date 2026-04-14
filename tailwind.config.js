@@ -53,14 +53,9 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        xiaowei: ['ZCOOLXiaoWei_400Regular'],
-        huangyou: ['ZCOOLQingKeHuangYou_400Regular'],
-        thin: ['NotoSansSC_100Thin'],
-        light: ['NotoSansSC_300Light'],
         sans: ['NotoSansSC_400Regular'],
         medium: ['NotoSansSC_500Medium'],
         bold: ['NotoSansSC_700Bold'],
-        black: ['NotoSansSC_900Black'],
       },
       borderWidth: {
         hairline: hairlineWidth(),

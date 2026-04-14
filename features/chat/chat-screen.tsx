@@ -10,9 +10,8 @@ import {
   TextInput,
   FlatList,
   Pressable,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useAppRuntime } from "@/hooks/use-app-runtime";
 
 function MessageBubble({ message }: { message: ThreadMessage }) {
@@ -94,7 +93,7 @@ function ChatScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior="padding"
     >
       <FlatList
         data={messages}

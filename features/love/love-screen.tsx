@@ -32,7 +32,7 @@ export default function Screen() {
   };
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <Stack.Screen options={SCREEN_OPTIONS} />
       <View className="items-center justify-center flex-1 gap-8 p-4">
         <Image source={LOGO[colorScheme ?? 'light']} style={IMAGE_STYLE} resizeMode="contain" />

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
+import { THEME } from '@/lib/theme';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -14,6 +15,8 @@ import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Animated, Easing, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import ReanimatedAnimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as SplashScreen from 'expo-splash-screen';
 
 type NavItem = {
@@ -187,34 +190,138 @@ const SidebarContent = React.memo(function SidebarContent({
   );
 });
 
+function AnimatedTabItem({
+  focused,
+  onPress,
+  onLongPress,
+  icon,
+  label,
+  colors,
+}: {
+  focused: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
+  icon: React.ReactNode;
+  label: string;
+  colors: (typeof THEME)['light'];
+}) {
+  const scale = useSharedValue(1);
+
+  React.useEffect(() => {
+    if (focused) {
+      scale.value = 0.85;
+      scale.value = withSpring(1.12, {
+        damping: 12,
+        stiffness: 300,
+        mass: 0.4,
+      });
+    } else {
+      scale.value = withSpring(1, {
+        damping: 15,
+        stiffness: 250,
+      });
+    }
+  }, [focused]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: focused }}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 }}
+    >
+      <ReanimatedAnimated.View style={[{ alignItems: 'center', gap: 2 }, animatedStyle]}>
+        {icon}
+        <Text
+          className="text-xs leading-none"
+          style={{
+            color: focused ? colors.primary : colors.mutedForeground,
+            fontWeight: focused ? '600' : '400',
+          }}
+        >
+          {label}
+        </Text>
+      </ReanimatedAnimated.View>
+    </Pressable>
+  );
+}
+
+function CustomTabBar({ state, descriptors, navigation, iconColor }: BottomTabBarProps & { iconColor: string }) {
+  const { colorScheme } = useColorScheme();
+  const insets = useSafeAreaInsets();
+  const colors = THEME[colorScheme ?? 'light'];
+  return (
+    <View
+      style={{
+        paddingBottom: insets.bottom,
+        backgroundColor: colors.card,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          height: 56,
+          alignItems: 'center',
+          elevation: 10,
+        }}
+      >
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const focused = state.index === index;
+          const label = options.title ?? route.name;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          const onLongPress = () => {
+            navigation.emit({
+              type: 'tabLongPress',
+              target: route.key,
+            });
+          };
+
+          const icon = options.tabBarIcon?.({
+            focused,
+            color: focused ? colors.primary : iconColor,
+            size: 20,
+          });
+
+          return (
+            <AnimatedTabItem
+              key={route.key}
+              focused={focused}
+              onPress={onPress}
+              onLongPress={onLongPress}
+              icon={icon}
+              label={label}
+              colors={colors}
+            />
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 function MobileTabs({ iconColor }: { iconColor: string }) {
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} iconColor={iconColor} />}
       screenOptions={{
         headerShown: false,
-        headerShadowVisible: false,
-        tabBarPosition: 'bottom',
-        tabBarLabelPosition: 'below-icon',
-        tabBarItemStyle: {
-          paddingVertical: 4,
-          flex: 1,
-        },
-        tabBarStyle: {
-          minHeight: 64,
-          paddingTop: 2,
-          paddingBottom: 2,
-          borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
-          elevation: 0,
-          shadowOpacity: 0,
-          shadowColor: 'transparent',
-          shadowOffset: { width: 0, height: 0 },
-          shadowRadius: 0,
-          ...(Platform.OS === 'web' ? { overflow: 'visible' as const } : {}),
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-        },
       }}>
       {NAV_ITEMS.map((item) => (
         <Tabs.Screen
@@ -222,7 +329,7 @@ function MobileTabs({ iconColor }: { iconColor: string }) {
           name={item.name}
           options={{
             title: NAV_TITLE_OVERRIDES[item.name] ?? item.title,
-            tabBarIcon: ({ focused }) => item.icon(focused, iconColor),
+            tabBarIcon: ({ focused, color }) => item.icon(focused, color),
           }}
         />
       ))}
@@ -335,7 +442,7 @@ export default function TabLayout() {
   const iconColor = colorScheme === 'dark' ? 'white' : 'black';
 
   return (
-    <SafeAreaView edges={['left', 'right', 'bottom']} className="flex-1 bg-background">
+    <SafeAreaView edges={['left', 'right']} className="flex-1 bg-background">
       {isLargeScreen ? (
         <LargeScreenShell iconColor={iconColor} />
       ) : (
