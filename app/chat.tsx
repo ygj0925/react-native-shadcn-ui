@@ -400,7 +400,7 @@ export default function ChatScreen() {
                 ))}
               </ScrollView>
 
-              <Card className="border-border bg-card py-0 shadow-lg shadow-black/5">
+              <Card className="border-border bg-card py-0 shadow-sm shadow-black/5">
                 <CardHeader className="flex-row items-center justify-between px-4 pb-2 pt-4">
                   <CardTitle className={cn(isCompact ? 'text-sm' : 'text-base')}>
                     Message Composer

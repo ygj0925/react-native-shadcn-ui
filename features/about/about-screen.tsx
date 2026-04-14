@@ -321,7 +321,7 @@ function AgendaCard({
           ) : null}
 
           <View className="flex-row flex-wrap items-center gap-3">
-            <View className="rounded-full bg-violet-50 px-3 py-1">
+            <View className="px-3 py-1 rounded-full bg-violet-50">
               <Text className="text-xs font-medium text-violet-600">
                 {item.source === 'local' ? '应用内日程' : item.calendarTitle}
               </Text>
@@ -779,9 +779,9 @@ export default function AboutScreen() {
         <View
           className={cn('mx-auto w-full max-w-6xl gap-4', isDesktop ? 'flex-row items-start' : '')}>
           <View className={cn('gap-4', isDesktop ? 'w-[48%]' : 'w-full')}>
-            <Card className="overflow-hidden rounded-[34px] border-0 bg-white py-0 shadow-lg shadow-violet-200/60">
-              <CardContent className="px-4 pb-5 pt-4">
-                <View className="mb-4 flex-row items-center justify-between">
+            <Card className="overflow-hidden rounded-[34px] border-0 bg-white py-0 shadow-sm shadow-violet-200/60">
+              <CardContent className="px-4 pt-4 pb-5">
+                <View className="flex-row items-center justify-between mb-4">
                   <View>
                     <Text className="text-3xl font-semibold text-slate-800">
                       {formatSelectedMonth(monthAnchor)}
@@ -795,7 +795,7 @@ export default function AboutScreen() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="rounded-2xl border-slate-200 bg-white"
+                      className="bg-white rounded-2xl border-slate-200"
                       disabled={loadingSystemEvents}
                       onPress={() => {
                         const anchor = new Date(`${monthAnchor}T00:00:00`);
@@ -809,7 +809,7 @@ export default function AboutScreen() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="rounded-2xl border-slate-200 bg-white"
+                      className="bg-white rounded-2xl border-slate-200"
                       disabled={loadingSystemEvents}
                       onPress={() => {
                         const anchor = new Date(`${monthAnchor}T00:00:00`);
@@ -854,12 +854,12 @@ export default function AboutScreen() {
                 />
 
                 <View className="mt-4 flex-row flex-wrap gap-3 rounded-[24px] bg-violet-50 px-4 py-3">
-                  <View className="rounded-full bg-white px-3 py-2">
+                  <View className="px-3 py-2 bg-white rounded-full">
                     <Text className="text-xs font-medium text-violet-600">
                       本月本地 {monthStats.localCount}
                     </Text>
                   </View>
-                  <View className="rounded-full bg-white px-3 py-2">
+                  <View className="px-3 py-2 bg-white rounded-full">
                     <Text className="text-xs font-medium text-sky-600">
                       系统日历 {monthStats.systemCount}
                     </Text>
@@ -867,7 +867,7 @@ export default function AboutScreen() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="rounded-full px-3"
+                    className="px-3 rounded-full"
                     disabled={loadingCalendars || loadingSystemEvents}
                     onPress={() => void loadCalendarsAndEvents(monthAnchor)}>
                     {loadingCalendars || loadingSystemEvents ? (
@@ -881,8 +881,8 @@ export default function AboutScreen() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[34px] border-0 bg-[#fbfaff] py-0 shadow-lg shadow-violet-100/70">
-              <CardHeader className="px-5 pb-2 pt-5">
+            <Card className="rounded-[34px] border-0 bg-[#fbfaff] py-0 shadow-sm shadow-violet-100/70">
+              <CardHeader className="px-5 pt-5 pb-2">
                 <View className="flex-row items-center justify-between gap-3">
                   <View>
                     <CardTitle className="text-[20px] text-slate-800">
@@ -892,7 +892,7 @@ export default function AboutScreen() {
                       本地事件和系统日历会一起显示在这里。
                     </Text>
                   </View>
-                  <View className="rounded-full bg-violet-100 px-3 py-1">
+                  <View className="px-3 py-1 rounded-full bg-violet-100">
                     <Text className="text-xs font-medium text-violet-700">
                       {selectedAgenda.length} 条
                     </Text>
@@ -918,10 +918,10 @@ export default function AboutScreen() {
                   ))
                 ) : (
                   <View className="rounded-[28px] border border-dashed border-violet-200 bg-white px-5 py-10">
-                    <Text className="text-center text-base font-medium text-slate-600">
+                    <Text className="text-base font-medium text-center text-slate-600">
                       这一天还没有事件
                     </Text>
-                    <Text className="mt-2 text-center text-sm leading-6 text-slate-400">
+                    <Text className="mt-2 text-sm leading-6 text-center text-slate-400">
                       右侧创建一条新事件，或者点击刷新把系统日历里的安排同步过来。
                     </Text>
                   </View>
@@ -931,8 +931,8 @@ export default function AboutScreen() {
           </View>
 
           <View className={cn('gap-4', isDesktop ? 'flex-1' : 'w-full')}>
-            <Card className="rounded-[34px] border-0 bg-white py-0 shadow-lg shadow-violet-200/60">
-              <CardHeader className="px-5 pb-3 pt-6">
+            <Card className="rounded-[34px] border-0 bg-white py-0 shadow-sm shadow-violet-200/60">
+              <CardHeader className="px-5 pt-6 pb-3">
                 <View className="items-center gap-2">
                   <Text className="text-3xl font-semibold text-slate-800">
                     {editingId ? 'Edit Event' : 'Add New Event'}
@@ -967,13 +967,13 @@ export default function AboutScreen() {
                     value={form.startTime}
                     onChangeText={(value) => updateForm('startTime', value)}
                     placeholder="Start time"
-                    className="h-12 flex-1 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
+                    className="flex-1 h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
                   />
                   <Input
                     value={form.endTime}
                     onChangeText={(value) => updateForm('endTime', value)}
                     placeholder="End time"
-                    className="h-12 flex-1 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
+                    className="flex-1 h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
                   />
                 </View>
 
@@ -1030,7 +1030,7 @@ export default function AboutScreen() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="rounded-full px-2"
+                      className="px-2 rounded-full"
                       disabled={loadingCalendars}
                       onPress={() => void loadCalendarsAndEvents(monthAnchor)}>
                       {loadingCalendars ? (
@@ -1077,7 +1077,7 @@ export default function AboutScreen() {
                         </Button>
                       ))
                     ) : (
-                      <View className="rounded-2xl bg-slate-100 px-4 py-3">
+                      <View className="px-4 py-3 rounded-2xl bg-slate-100">
                         <Text className="text-sm text-slate-500">
                           先加载系统日历，再选择要写入的目标日历。
                         </Text>

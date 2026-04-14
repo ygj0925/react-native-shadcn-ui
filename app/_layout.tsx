@@ -10,6 +10,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import { ZCOOLXiaoWei_400Regular } from '@expo-google-fonts/zcool-xiaowei';
+import { ZCOOLQingKeHuangYou_400Regular } from '@expo-google-fonts/zcool-qingke-huangyou';
+import {
+  NotoSansSC_100Thin,
+  NotoSansSC_300Light,
+  NotoSansSC_400Regular,
+  NotoSansSC_500Medium,
+  NotoSansSC_700Bold,
+  NotoSansSC_900Black,
+} from '@expo-google-fonts/noto-sans-sc';
+import { useEffect } from 'react';
 
 SplashScreen.preventAutoHideAsync();
 // Set the animation options. This is optional.
@@ -25,6 +37,25 @@ export {
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
+
+  const [fontsLoaded] = useFonts({
+    ZCOOLXiaoWei_400Regular,
+    ZCOOLQingKeHuangYou_400Regular,
+    NotoSansSC_100Thin,
+    NotoSansSC_300Light,
+    NotoSansSC_400Regular,
+    NotoSansSC_500Medium,
+    NotoSansSC_700Bold,
+    NotoSansSC_900Black,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
 
   return (
     <KeyboardProvider statusBarTranslucent navigationBarTranslucent preserveEdgeToEdge>

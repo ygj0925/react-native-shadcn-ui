@@ -35,6 +35,11 @@ const QUICK_LINKS = [
 export default function IndexScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right', 'bottom']} className="flex-1 bg-background">
+      <Text className="text-base font-xiaowei">优美的正文字体</Text>
+      <Text className="text-2xl font-huangyou">圆润的标题字体</Text>
+      <Text className="font-sans text-base">正文内容</Text>
+      <Text className="text-lg font-bold">粗体标题</Text>
+      <Text className="text-base font-xiaowei">文艺风格</Text>
       <ScrollView
         className="flex-1 bg-background"
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28 }}>
@@ -64,7 +69,7 @@ export default function IndexScreen() {
                       <Text>Start chatting</Text>
                     </Button>
                   </Link>
-                  <Link href="/login" asChild>
+                  <Link href="/assisant" asChild>
                     <Button variant="outline" className="border-white/20 bg-white/10">
                       <Text className="text-primary-foreground">Open auth flow</Text>
                     </Button>
