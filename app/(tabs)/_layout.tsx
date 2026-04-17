@@ -1,10 +1,10 @@
+import { BlurSurface } from '@/components/blur-surface';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { THEME } from '@/lib/theme';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -13,18 +13,19 @@ import { Slot, Tabs, usePathname, useRouter } from 'expo-router';
 import { Menu, X } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import ReanimatedAnimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import * as SplashScreen from 'expo-splash-screen';
+
+type NavName = 'index' | 'about' | 'home' | 'love' | 'my';
 
 type NavItem = {
-  name: 'index' | 'about' | 'home' | 'love' | 'my';
+  name: NavName;
   title: string;
   href: string;
   description: string;
-  icon: (focused: boolean, color: string) => React.ReactNode;
+  icon: (focused: boolean, color: string, size?: number) => React.ReactNode;
 };
 
 const NAV_ITEMS: NavItem[] = [
@@ -33,23 +34,23 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Chats',
     href: '/',
     description: 'Recent conversations and prompts',
-    icon: (focused, color) =>
+    icon: (focused, color, size = 22) =>
       focused ? (
-        <Ionicons name="chatbox-ellipses" size={20} color={color} />
+        <Ionicons name="chatbubbles" size={size} color={color} />
       ) : (
-        <Ionicons name="chatbox-ellipses-outline" size={20} color={color} />
+        <Ionicons name="chatbubbles-outline" size={size} color={color} />
       ),
   },
   {
     name: 'about',
-    title: '日程',
+    title: 'Schedule',
     href: '/about',
     description: 'Manage schedules and calendar sync',
-    icon: (focused, color) =>
+    icon: (focused, color, size = 22) =>
       focused ? (
-        <FontAwesome5 name="calendar-alt" size={18} color={color} />
+        <FontAwesome5 name="calendar-alt" size={size - 2} color={color} />
       ) : (
-        <Feather name="calendar" size={20} color={color} />
+        <Feather name="calendar" size={size} color={color} />
       ),
   },
   {
@@ -57,11 +58,11 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Workspace',
     href: '/home',
     description: 'Employee homepage and company services',
-    icon: (focused, color) =>
+    icon: (focused, color, size = 22) =>
       focused ? (
-        <MaterialCommunityIcons name="creation" size={20} color={color} />
+        <MaterialCommunityIcons name="creation" size={size} color={color} />
       ) : (
-        <MaterialCommunityIcons name="creation-outline" size={20} color={color} />
+        <MaterialCommunityIcons name="creation-outline" size={size} color={color} />
       ),
   },
   {
@@ -69,60 +70,49 @@ const NAV_ITEMS: NavItem[] = [
     title: 'Favorites',
     href: '/love',
     description: 'Saved chats and highlights',
-    icon: (focused, color) =>
+    icon: (focused, color, size = 22) =>
       focused ? (
-        <MaterialCommunityIcons name="clover" size={20} color={color} />
+        <Ionicons name="heart" size={size} color={color} />
       ) : (
-        <MaterialCommunityIcons name="clover-outline" size={20} color={color} />
+        <Ionicons name="heart-outline" size={size} color={color} />
       ),
   },
   {
     name: 'my',
-    title: 'My',
+    title: 'Profile',
     href: '/my',
     description: 'Profile, settings, and account',
-    icon: (focused, color) =>
+    icon: (focused, color, size = 22) =>
       focused ? (
-        <FontAwesome5 name="user-alt" size={20} color={color} />
+        <Ionicons name="person" size={size} color={color} />
       ) : (
-        <FontAwesome5 name="user" size={20} color={color} />
+        <Ionicons name="person-outline" size={size} color={color} />
       ),
   },
 ];
 
-const NAV_TITLE_OVERRIDES: Partial<Record<NavItem['name'], string>> = {
-  about: 'Schedule',
-};
-
-const PAGE_TITLES: Record<string, string> = {
-  '/': 'Chats',
-  '/about': '日程',
-  '/home': 'Workspace',
-  '/love': 'Favorites',
-  '/my': 'My',
-};
-
-const PAGE_TITLE_OVERRIDES: Record<string, string> = {
-  '/about': 'Schedule',
-};
+const PAGE_TITLES: Record<string, string> = NAV_ITEMS.reduce((acc, item) => {
+  acc[item.href] = item.title;
+  return acc;
+}, {} as Record<string, string>);
 
 const SidebarContent = React.memo(function SidebarContent({
   currentPath,
-  iconColor,
+  tint,
   topInset,
   onNavigate,
   onClose,
   largeScreen,
 }: {
   currentPath: string;
-  iconColor: string;
+  tint: (typeof THEME)['light'];
   topInset: number;
   onNavigate: (href: string) => void;
   onClose?: () => void;
   largeScreen: boolean;
 }) {
   return (
-    <Card className="h-full py-0 border-r rounded-none shadow-2xl border-border bg-card shadow-black/10">
+    <Card className="h-full py-0 border-r rounded-none border-border bg-card">
       <CardHeader className="gap-3 px-4 pb-3" style={{ paddingTop: topInset + 10 }}>
         <View className="flex-row items-center justify-between">
           <View className="gap-1">
@@ -132,7 +122,7 @@ const SidebarContent = React.memo(function SidebarContent({
 
           {!largeScreen ? (
             <Button variant="ghost" size="icon" onPress={onClose}>
-              <X size={18} color="currentColor" strokeWidth={2} />
+              <X size={18} color={tint.foreground} strokeWidth={2} />
             </Button>
           ) : null}
         </View>
@@ -140,7 +130,7 @@ const SidebarContent = React.memo(function SidebarContent({
 
       <Separator />
 
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 12 }}>
+      <ScrollView className="flex-1 p-3">
         <View className="gap-2">
           {NAV_ITEMS.map((item) => {
             const active = currentPath === item.href;
@@ -161,12 +151,12 @@ const SidebarContent = React.memo(function SidebarContent({
                       'mt-0.5 h-8 w-8 items-center justify-center rounded-lg',
                       active ? 'bg-primary' : 'bg-muted'
                     )}>
-                    {item.icon(active, active ? '#ffffff' : iconColor)}
+                    {item.icon(active, active ? tint.primaryForeground : tint.mutedForeground, 18)}
                   </View>
 
                   <View className="flex-1 gap-1">
                     <Text className="text-sm font-medium" numberOfLines={1}>
-                      {NAV_TITLE_OVERRIDES[item.name] ?? item.title}
+                      {item.title}
                     </Text>
                     <Text className="text-xs leading-4 text-muted-foreground" numberOfLines={2}>
                       {item.description}
@@ -196,21 +186,19 @@ function AnimatedTabItem({
   onLongPress,
   icon,
   label,
-  colors,
 }: {
   focused: boolean;
   onPress: () => void;
   onLongPress: () => void;
   icon: React.ReactNode;
   label: string;
-  colors: (typeof THEME)['light'];
 }) {
   const scale = useSharedValue(1);
 
   React.useEffect(() => {
     if (focused) {
       scale.value = 0.85;
-      scale.value = withSpring(1.12, {
+      scale.value = withSpring(1.08, {
         damping: 12,
         stiffness: 300,
         mass: 0.4,
@@ -233,17 +221,14 @@ function AnimatedTabItem({
       accessibilityState={{ selected: focused }}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 6 }}
-    >
-      <ReanimatedAnimated.View style={[{ alignItems: 'center', gap: 2 }, animatedStyle]}>
+      className="flex-1 items-center justify-center py-1.5">
+      <ReanimatedAnimated.View style={animatedStyle} className="items-center gap-0.5">
         {icon}
         <Text
-          className="text-xs leading-none"
-          style={{
-            color: focused ? colors.primary : colors.mutedForeground,
-            fontWeight: focused ? '600' : '400',
-          }}
-        >
+          className={cn(
+            'text-[11px] leading-none',
+            focused ? 'font-semibold text-primary' : 'text-muted-foreground'
+          )}>
           {label}
         </Text>
       </ReanimatedAnimated.View>
@@ -251,25 +236,18 @@ function AnimatedTabItem({
   );
 }
 
-function CustomTabBar({ state, descriptors, navigation, iconColor }: BottomTabBarProps & { iconColor: string }) {
-  const { colorScheme } = useColorScheme();
+function CustomTabBar({
+  state,
+  descriptors,
+  navigation,
+  tint,
+}: BottomTabBarProps & { tint: (typeof THEME)['light'] }) {
   const insets = useSafeAreaInsets();
-  const colors = THEME[colorScheme ?? 'light'];
   return (
-    <View
-      style={{
-        paddingBottom: insets.bottom,
-        backgroundColor: colors.card,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          height: 56,
-          alignItems: 'center',
-          elevation: 10,
-        }}
-      >
+    <BlurSurface
+      className="border-t border-border"
+      style={{ paddingBottom: insets.bottom }}>
+      <View className="flex-row items-center h-14">
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const focused = state.index === index;
@@ -295,8 +273,8 @@ function CustomTabBar({ state, descriptors, navigation, iconColor }: BottomTabBa
 
           const icon = options.tabBarIcon?.({
             focused,
-            color: focused ? colors.primary : iconColor,
-            size: 20,
+            color: focused ? tint.primary : tint.mutedForeground,
+            size: 22,
           });
 
           return (
@@ -307,19 +285,18 @@ function CustomTabBar({ state, descriptors, navigation, iconColor }: BottomTabBa
               onLongPress={onLongPress}
               icon={icon}
               label={label}
-              colors={colors}
             />
           );
         })}
       </View>
-    </View>
+    </BlurSurface>
   );
 }
 
-function MobileTabs({ iconColor }: { iconColor: string }) {
+function MobileTabs({ tint }: { tint: (typeof THEME)['light'] }) {
   return (
     <Tabs
-      tabBar={(props) => <CustomTabBar {...props} iconColor={iconColor} />}
+      tabBar={(props) => <CustomTabBar {...props} tint={tint} />}
       screenOptions={{
         headerShown: false,
       }}>
@@ -328,7 +305,7 @@ function MobileTabs({ iconColor }: { iconColor: string }) {
           key={item.name}
           name={item.name}
           options={{
-            title: NAV_TITLE_OVERRIDES[item.name] ?? item.title,
+            title: item.title,
             tabBarIcon: ({ focused, color }) => item.icon(focused, color),
           }}
         />
@@ -337,7 +314,7 @@ function MobileTabs({ iconColor }: { iconColor: string }) {
   );
 }
 
-function LargeScreenShell({ iconColor }: { iconColor: string }) {
+function LargeScreenShell({ tint }: { tint: (typeof THEME)['light'] }) {
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -345,12 +322,8 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
   const progress = React.useRef(new Animated.Value(1)).current;
   const currentPath = pathname === '/index' ? '/' : pathname;
-  const currentTitle = PAGE_TITLE_OVERRIDES[currentPath] ?? PAGE_TITLES[currentPath] ?? 'Workspace';
+  const currentTitle = PAGE_TITLES[currentPath] ?? 'Workspace';
   const sidebarWidth = Math.min(Math.max(width * 0.22, 220), 260);
-
-  const hideSplash = React.useCallback(async () => {
-    await SplashScreen.hideAsync();
-  }, []);
 
   React.useEffect(() => {
     Animated.timing(progress, {
@@ -376,9 +349,12 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
     outputRange: [-18, 0],
   });
 
-  const navigate = React.useCallback((href: string) => {
-    router.push(href as never);
-  }, [router]);
+  const navigate = React.useCallback(
+    (href: string) => {
+      router.push(href as never);
+    },
+    [router]
+  );
 
   const onMenuPress = React.useCallback(() => {
     setSidebarVisible((current) => !current);
@@ -398,7 +374,7 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
           }}>
           <SidebarContent
             currentPath={currentPath}
-            iconColor={iconColor}
+            tint={tint}
             topInset={insets.top}
             onNavigate={navigate}
             largeScreen
@@ -408,14 +384,14 @@ function LargeScreenShell({ iconColor }: { iconColor: string }) {
 
       <View className="flex-1 bg-background">
         <View
-          className="flex-row items-center justify-between px-4 border-b border-border bg-background"
-          style={{ height: 64 + insets.top, paddingTop: insets.top }}>
+          className="flex-row items-center justify-between h-16 px-4 border-b border-border bg-background"
+          style={{ paddingTop: insets.top, height: 64 + insets.top }}>
           <View className="flex-row items-center gap-3">
             <Button variant="ghost" size="icon" onPress={onMenuPress}>
               {sidebarVisible ? (
-                <X size={18} color="currentColor" strokeWidth={2} />
+                <X size={18} color={tint.foreground} strokeWidth={2} />
               ) : (
-                <Menu size={18} color="currentColor" strokeWidth={2} />
+                <Menu size={18} color={tint.foreground} strokeWidth={2} />
               )}
             </Button>
             <View className="gap-0.5">
@@ -439,15 +415,11 @@ export default function TabLayout() {
   const { colorScheme } = useColorScheme();
   const { width } = useWindowDimensions();
   const isLargeScreen = width >= 768;
-  const iconColor = colorScheme === 'dark' ? 'white' : 'black';
+  const tint = THEME[colorScheme ?? 'light'];
 
   return (
     <SafeAreaView edges={['left', 'right']} className="flex-1 bg-background">
-      {isLargeScreen ? (
-        <LargeScreenShell iconColor={iconColor} />
-      ) : (
-        <MobileTabs iconColor={iconColor} />
-      )}
+      {isLargeScreen ? <LargeScreenShell tint={tint} /> : <MobileTabs tint={tint} />}
     </SafeAreaView>
   );
 }

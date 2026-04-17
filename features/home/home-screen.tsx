@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
@@ -20,6 +19,7 @@ import {
   Users,
 } from 'lucide-react-native';
 import { ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SCREEN_OPTIONS = {
   title: 'Workspace',
@@ -98,11 +98,11 @@ const COMPANY_MODULES = [
 
 function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
-    <Card className="min-w-[150px] flex-1 border-white/10 bg-white/10 py-0 shadow-none">
+    <Card className="min-w-[150px] flex-1 border-primary-foreground/10 bg-primary-foreground/10 py-0 shadow-none">
       <CardContent className="gap-1 px-4 py-4">
-        <Text className="text-xs text-emerald-50/75">{label}</Text>
-        <Text className="text-3xl font-semibold tracking-tight text-white">{value}</Text>
-        <Text className="text-xs text-emerald-50/75">{detail}</Text>
+        <Text className="text-xs text-primary-foreground/75">{label}</Text>
+        <Text className="text-3xl font-semibold tracking-tight text-primary-foreground">{value}</Text>
+        <Text className="text-xs text-primary-foreground/75">{detail}</Text>
       </CardContent>
     </Card>
   );
@@ -111,32 +111,30 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
 export default function HomeScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
-      <ScrollView
-        className="flex-1 bg-background"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28 }}>
+      <ScrollView className="flex-1 bg-background">
         <Stack.Screen options={SCREEN_OPTIONS} />
 
-        <View className="w-full max-w-6xl gap-4 mx-auto">
-          <Card className="py-0 overflow-hidden border-0 shadow-xl bg-emerald-950 shadow-emerald-950/20">
+        <View className="w-full max-w-6xl gap-4 px-4 pt-4 pb-7 mx-auto">
+          <Card className="py-0 overflow-hidden border-0 shadow-sm bg-primary shadow-black/5">
             <CardContent className="gap-5 px-5 py-6">
               <View className="flex-row items-start justify-between gap-4">
                 <View className="max-w-3xl gap-2">
-                  <View className="self-start px-3 py-1 border rounded-full border-white/15 bg-white/10">
-                    <Text className="text-xs font-medium uppercase tracking-[1.2px] text-emerald-50/80">
+                  <View className="self-start px-3 py-1 border rounded-full border-primary-foreground/20 bg-primary-foreground/10">
+                    <Text className="text-xs font-medium uppercase tracking-[1.2px] text-primary-foreground/80">
                       Employee workspace
                     </Text>
                   </View>
-                  <Text className="text-3xl font-semibold leading-tight text-white">
+                  <Text className="text-3xl font-semibold leading-tight text-primary-foreground">
                     让员工少找入口，多完成工作
                   </Text>
-                  <Text className="leading-6 text-emerald-50/80">
+                  <Text className="leading-6 text-primary-foreground/80">
                     首页聚合审批、公告、会议、报销、服务台和 AI
                     问答，让企业内部常用功能都能在两步内到达。
                   </Text>
                 </View>
 
-                <View className="items-center justify-center hidden w-12 h-12 rounded-2xl bg-white/10 lg:flex">
-                  <Sparkles size={20} color="#ffffff" strokeWidth={2.2} />
+                <View className="items-center justify-center w-12 h-12 rounded-2xl bg-primary-foreground/10">
+                  <Sparkles size={20} color="currentColor" strokeWidth={2.2} />
                 </View>
               </View>
 
@@ -167,7 +165,7 @@ export default function HomeScreen() {
                       className="min-w-[260px] flex-1 justify-start rounded-2xl border border-border bg-card px-0 py-0">
                       <Card className="w-full py-0 border-0 shadow-none">
                         <CardHeader className="gap-3 px-5 pt-5 pb-3">
-                          <View className="items-center justify-center w-12 h-12 rounded-2xl bg-emerald-500/10">
+                          <View className="items-center justify-center w-12 h-12 rounded-2xl bg-primary/10">
                             <Icon size={22} color="currentColor" strokeWidth={2} />
                           </View>
                           <View className="gap-1">
@@ -214,7 +212,7 @@ export default function HomeScreen() {
             <Card className="min-w-[280px] flex-1 py-0">
               <CardHeader className="px-5 pt-5 pb-2">
                 <CardTitle>快捷服务</CardTitle>
-                <CardDescription>把员工经常“找不到”的支持能力做成平铺入口。</CardDescription>
+                <CardDescription>把员工经常"找不到"的支持能力做成平铺入口。</CardDescription>
               </CardHeader>
               <CardContent className="gap-3 px-5 pb-5">
                 {QUICK_SERVICES.map((item, index) => {
@@ -275,6 +273,5 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-
   );
 }

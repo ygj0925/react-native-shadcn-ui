@@ -4,9 +4,10 @@ import {
   useAui,
 } from "@assistant-ui/react-native";
 import type { ThreadMessage } from "@assistant-ui/react-native";
+import { Text } from '@/components/ui/text';
+import { cn } from '@/lib/utils';
 import {
   View,
-  Text,
   TextInput,
   FlatList,
   Pressable,
@@ -24,17 +25,12 @@ function MessageBubble({ message }: { message: ThreadMessage }) {
 
   return (
     <View
-      style={{
-        alignSelf: isUser ? "flex-end" : "flex-start",
-        backgroundColor: isUser ? "#007aff" : "#f0f0f0",
-        borderRadius: 16,
-        padding: 12,
-        marginVertical: 4,
-        marginHorizontal: 16,
-        maxWidth: "80%",
-      }}
+      className={cn(
+        'rounded-2xl p-3 my-1 mx-4 max-w-[80%]',
+        isUser ? 'self-end bg-primary' : 'self-start bg-muted'
+      )}
     >
-      <Text style={{ color: isUser ? "#fff" : "#000" }}>{text}</Text>
+      <Text className={isUser ? 'text-primary-foreground' : 'text-foreground'}>{text}</Text>
     </View>
   );
 }
@@ -45,42 +41,23 @@ function Composer() {
   const isEmpty = useAuiState((s) => s.composer.isEmpty);
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        padding: 12,
-        alignItems: "flex-end",
-      }}
-    >
+    <View className="flex-row p-3 items-end bg-background">
       <TextInput
         value={text}
         onChangeText={(t) => aui.composer().setText(t)}
         placeholder="Message..."
         multiline
-        style={{
-          flex: 1,
-          borderWidth: 1,
-          borderColor: "#ddd",
-          borderRadius: 20,
-          paddingHorizontal: 16,
-          paddingVertical: 10,
-          maxHeight: 120,
-        }}
+        className="flex-1 border border-border rounded-[20px] px-4 py-2.5 max-h-[120px] text-foreground"
       />
       <Pressable
         onPress={() => aui.composer().send()}
         disabled={isEmpty}
-        style={{
-          marginLeft: 8,
-          backgroundColor: !isEmpty ? "#007aff" : "#ccc",
-          borderRadius: 20,
-          width: 36,
-          height: 36,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+        className={cn(
+          'ml-2 rounded-[20px] w-9 h-9 items-center justify-center',
+          !isEmpty ? 'bg-primary' : 'bg-muted'
+        )}
       >
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>↑</Text>
+        <Text className="text-primary-foreground font-bold">↑</Text>
       </Pressable>
     </View>
   );
@@ -93,7 +70,7 @@ function ChatScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1 bg-background">
       <FlatList
         data={messages}
         keyExtractor={(m) => m.id}

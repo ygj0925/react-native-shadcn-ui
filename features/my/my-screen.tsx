@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import {
@@ -21,7 +22,7 @@ import {
   BookLock,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { Pressable, ScrollView, Switch, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Item = {
@@ -99,7 +100,7 @@ function SettingsRow({
       </View>
 
       <View className="flex-1 gap-0.5">
-        <Text className="text-[15px]">{item.label}</Text>
+        <Text className="text-base">{item.label}</Text>
         {showValueBelowLabel ? (
           <Text className="text-xs text-muted-foreground" numberOfLines={1}>
             {item.value}
@@ -109,11 +110,8 @@ function SettingsRow({
 
       {item.withToggle ? (
         <Switch
-          trackColor={{ false: '#d7d7db', true: '#22c55e' }}
-          thumbColor="#ffffff"
-          ios_backgroundColor="#d7d7db"
-          value={toggleValue}
-          onValueChange={onToggleChange}
+          checked={toggleValue}
+          onCheckedChange={onToggleChange}
         />
       ) : (
         <View className="flex-row items-center gap-2">
@@ -135,20 +133,12 @@ export default function MyScreen() {
   const { width } = useWindowDimensions();
   const [hapticsEnabled, setHapticsEnabled] = React.useState(true);
   const isCompact = width < 390;
-  const horizontalPadding = isCompact ? 12 : 16;
-
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{
-          paddingHorizontal: horizontalPadding,
-          paddingTop: 10,
-          paddingBottom: 20,
-        }}
-        showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className={cn('pt-2.5 pb-5', isCompact ? 'px-3' : 'px-4')}>
         <View className="gap-1 px-1 mb-4">
-          <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-[24px]' : 'text-[28px]')}>
+          <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-2xl' : 'text-3xl')}>
             Settings
           </Text>
           <Text className="text-xs text-muted-foreground">
@@ -168,7 +158,7 @@ export default function MyScreen() {
                   <View className="flex-row items-center gap-2">
                     <Text className="text-lg font-semibold tracking-tight">Rey Zhang</Text>
                     <View className="rounded-full border border-primary/15 bg-primary px-2 py-0.5">
-                      <Text className="text-[10px] font-medium text-primary-foreground">PLUS</Text>
+                      <Text className="text-xs font-medium text-primary-foreground">PLUS</Text>
                     </View>
                   </View>
                   <Text className="text-xs text-muted-foreground">Member ID: 20240318</Text>
@@ -238,6 +228,7 @@ export default function MyScreen() {
             </Button>
           </CardContent>
         </Card>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

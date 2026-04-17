@@ -1,15 +1,13 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
+import { THEME } from '@/lib/theme';
 import Feather from '@expo/vector-icons/Feather';
 import { useColorScheme } from 'nativewind';
 
-const THEME_ICONS = {
-  light: <Feather name="sun" size={20} color="black" />,
-  dark: <Feather name="moon" size={20} color="white" />,
-};
-
 const ThemeToggle = () => {
   const { colorScheme, toggleColorScheme } = useColorScheme();
+  const scheme = colorScheme ?? 'light';
+  const iconColor = THEME[scheme].foreground;
 
   return (
     <Button
@@ -17,9 +15,9 @@ const ThemeToggle = () => {
       size="icon"
       variant="ghost"
       className="rounded-full ios:size-9 web:mx-4">
-      {THEME_ICONS[colorScheme ?? 'light']}
+      <Feather name={scheme === 'dark' ? 'moon' : 'sun'} size={20} color={iconColor} />
     </Button>
   );
-}
+};
 
 export { ThemeToggle };

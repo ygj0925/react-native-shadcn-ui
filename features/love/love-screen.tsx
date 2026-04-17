@@ -1,61 +1,70 @@
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
+import { Card, CardContent } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
-import { ThemeToggle } from '@/components/themeToggle';
-import { Link, Stack, useRouter } from 'expo-router';
-import { MoonStarIcon, Navigation, StarIcon, SunIcon, MessageCircleMore  } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import * as React from 'react';
-import { Image, type ImageStyle, View, Alert } from 'react-native';
+import { Link, Stack } from 'expo-router';
+import { Heart, MessageCircle, Star } from 'lucide-react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-const LOGO = {
-  light: require('@/assets/images/react-native-reusables-light.png'),
-  dark: require('@/assets/images/react-native-reusables-dark.png'),
-};
 
 const SCREEN_OPTIONS = {
-  title: 'Home',
-  headerTransparent: true,
-  headerRight: () => <ThemeToggle />,
+  title: 'Favorites',
+  headerTransparent: false,
 };
 
-const IMAGE_STYLE: ImageStyle = {
-  height: 76,
-  width: 76,
-};
-
-export default function Screen() {
-  const { colorScheme } = useColorScheme();
-  const router = useRouter();
-  const navigateToGithub = () => {
-    router.push('/login');
-  };
-
+export default function LoveScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
-      <Stack.Screen options={SCREEN_OPTIONS} />
-      <View className="items-center justify-center flex-1 gap-8 p-4">
-        <Image source={LOGO[colorScheme ?? 'light']} style={IMAGE_STYLE} resizeMode="contain" />
-        <View className="gap-2 p-4">
-          <Text className="font-mono text-sm ios:text-foreground text-muted-foreground">
-            1. Edit <Text variant="code">app/index.tsx</Text> to get started.
-          </Text>
-          <Text className="font-mono text-sm ios:text-foreground text-muted-foreground">
-            2. Save to see your changes instantly.
-          </Text>
-        </View>
-        <View className="flex-row gap-2">
-          <Link href="https://reactnativereusables.com" asChild>
-            <Button>
-              <Text>Browse the Docs</Text>
+      <ScrollView className="flex-1 bg-background">
+        <Stack.Screen options={SCREEN_OPTIONS} />
+        <View className="items-center gap-8 px-4 pt-16 pb-8">
+          <View className="items-center justify-center h-20 w-20 rounded-3xl bg-primary/10">
+            <Heart size={36} color="currentColor" strokeWidth={1.5} />
+          </View>
+
+          <View className="items-center gap-2">
+            <Text className="text-2xl font-semibold tracking-tight">No favorites yet</Text>
+            <Text className="max-w-xs text-sm leading-6 text-center text-muted-foreground">
+              Tap the heart icon on any chat or message to save it here for quick access later.
+            </Text>
+          </View>
+
+          <View className="w-full max-w-sm gap-3">
+            <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
+              <CardContent className="flex-row items-center gap-3 px-4 py-4">
+                <View className="items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
+                  <Star size={18} color="currentColor" strokeWidth={2} />
+                </View>
+                <View className="flex-1 gap-0.5">
+                  <Text className="text-sm font-medium">Starred messages</Text>
+                  <Text className="text-xs text-muted-foreground">
+                    Important messages you've bookmarked
+                  </Text>
+                </View>
+              </CardContent>
+            </Card>
+
+            <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
+              <CardContent className="flex-row items-center gap-3 px-4 py-4">
+                <View className="items-center justify-center h-10 w-10 rounded-xl bg-primary/10">
+                  <MessageCircle size={18} color="currentColor" strokeWidth={2} />
+                </View>
+                <View className="flex-1 gap-0.5">
+                  <Text className="text-sm font-medium">Saved conversations</Text>
+                  <Text className="text-xs text-muted-foreground">
+                    Full chats you want to revisit
+                  </Text>
+                </View>
+              </CardContent>
+            </Card>
+          </View>
+
+          <Link href="/chat" asChild>
+            <Button className="w-full max-w-sm">
+              <Text>Start a conversation</Text>
             </Button>
           </Link>
-          <Button variant="ghost" onPress={navigateToGithub}>
-            <Text>Star the Repo</Text>
-            <Icon as={StarIcon} />
-          </Button>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

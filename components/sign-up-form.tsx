@@ -27,10 +27,8 @@ export function SignUpForm() {
     <View className="flex-col gap-6">
       <Card className="border-border bg-card/95 py-0 shadow-sm shadow-black/5">
         <CardHeader className="gap-3 px-5 pb-3 pt-5">
-          <CardTitle className="text-center text-2xl tracking-tight sm:text-left">
-            Register
-          </CardTitle>
-          <CardDescription className="text-center sm:text-left">
+          <CardTitle className="text-center text-2xl tracking-tight">Register</CardTitle>
+          <CardDescription className="text-center">
             Start with the essentials and keep the setup flow lightweight.
           </CardDescription>
         </CardHeader>

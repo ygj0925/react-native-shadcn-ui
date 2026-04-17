@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
+import { THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import {
   ArrowUp,
@@ -16,6 +17,7 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 import { Stack } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { FlatList, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
@@ -109,6 +111,8 @@ function ChatBubble({ item, maxWidth }: { item: Message; maxWidth: number }) {
 }
 
 export default function ChatScreen() {
+  const { colorScheme } = useColorScheme();
+  const tint = THEME[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [input, setInput] = React.useState('');
@@ -254,7 +258,7 @@ export default function ChatScreen() {
                         )}>
                         <Clock3
                           size={15}
-                          color={active ? '#ffffff' : 'currentColor'}
+                          color={active ? tint.primaryForeground : 'currentColor'}
                           strokeWidth={2}
                         />
                       </View>
@@ -338,7 +342,7 @@ export default function ChatScreen() {
             ListEmptyComponent={
               <View className="w-full max-w-sm items-center gap-5">
                 <View className="h-16 w-16 items-center justify-center rounded-full bg-primary">
-                  <Sparkles size={24} color="#ffffff" strokeWidth={2.3} />
+                  <Sparkles size={24} color={tint.primaryForeground} strokeWidth={2.3} />
                 </View>
                 <View className="items-center gap-2">
                   <Text className="text-2xl font-semibold tracking-tight">Start a conversation</Text>

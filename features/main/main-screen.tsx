@@ -36,14 +36,13 @@ export default function IndexScreen() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView
-        className="flex-1 bg-background"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 28 }}>
+        className="flex-1 bg-background">
         <Stack.Screen options={SCREEN_OPTIONS} />
-        <View className="w-full max-w-5xl gap-4 mx-auto">
-          <Card className="py-0 overflow-hidden border-0 shadow-xl bg-primary shadow-black/10">
+        <View className="w-full max-w-5xl gap-4 px-4 pt-4 pb-7 mx-auto">
+          <Card className="py-0 overflow-hidden border-0 shadow-sm bg-primary shadow-black/5">
             <CardContent className="px-5 py-6">
               <View className="gap-5">
-                <View className="self-start px-3 py-1 border rounded-full border-white/20 bg-white/10">
+                <View className="self-start px-3 py-1 border rounded-full border-primary-foreground/20 bg-primary-foreground/10">
                   <Text className="text-xs font-medium uppercase tracking-[1.2px] text-primary-foreground/80">
                     Workspace overview
                   </Text>
@@ -65,7 +64,7 @@ export default function IndexScreen() {
                     </Button>
                   </Link>
                   <Link href="/assisant" asChild>
-                    <Button variant="outline" className="border-white/20 bg-white/10">
+                    <Button variant="outline" className="border-primary-foreground/20 bg-primary-foreground/10">
                       <Text className="text-primary-foreground">Open auth flow</Text>
                     </Button>
                   </Link>

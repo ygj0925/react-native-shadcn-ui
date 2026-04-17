@@ -6,7 +6,9 @@
       "Bash(npx expo:*)",
       "Bash(node -e \"const pkg = require\\('@expo-google-fonts/noto-sans-sc/package.json'\\); const exports = Object.keys\\(require\\('@expo-google-fonts/noto-sans-sc'\\)\\); console.log\\(exports.filter\\(e => e.startsWith\\('NotoSans'\\)\\).join\\('\\\\n'\\)\\)\")",
       "Bash(npm install:*)",
-      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('expo-linear-gradient:', p.dependencies['expo-linear-gradient'] || p.devDependencies?.['expo-linear-gradient'] || 'NOT INSTALLED'\\)\")"
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('expo-linear-gradient:', p.dependencies['expo-linear-gradient'] || p.devDependencies?.['expo-linear-gradient'] || 'NOT INSTALLED'\\)\")",
+      "Bash(dir D:\\\\project\\\\react-native-shadcn-ui\\\\components *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

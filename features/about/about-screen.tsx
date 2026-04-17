@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
 import { getItem, setItem } from '@/lib/storage';
+import { THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import * as DeviceCalendar from 'expo-calendar';
 import {
@@ -19,6 +20,7 @@ import {
   RefreshCw,
   Trash2,
 } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Alert, Platform, ScrollView, View, useWindowDimensions } from 'react-native';
 import { Calendar } from 'react-native-calendars';
@@ -215,7 +217,8 @@ function buildEventDetails(item: ScheduleItem) {
 function buildMarkedDates(
   schedules: ScheduleItem[],
   systemEvents: DeviceEventItem[],
-  selectedDate: string
+  selectedDate: string,
+  colors: { local: string; synced: string; system: string; selected: string }
 ) {
   const map: Record<string, Array<{ key: string; color: string }>> = {};
 
@@ -224,15 +227,15 @@ function buildMarkedDates(
       ...(map[item.date] ?? []),
       {
         key: `local-${item.id}`,
-        color: item.systemCalendarEventId ? '#10b981' : '#8b5cf6',
+        color: item.systemCalendarEventId ? colors.synced : colors.local,
       },
     ].slice(0, 3);
   });
 
   systemEvents.forEach((item) => {
     const existing = map[item.date] ?? [];
-    if (!existing.some((entry) => entry.color === '#3b82f6')) {
-      map[item.date] = [...existing, { key: `system-${item.id}`, color: '#3b82f6' }].slice(0, 3);
+    if (!existing.some((entry) => entry.color === colors.system)) {
+      map[item.date] = [...existing, { key: `system-${item.id}`, color: colors.system }].slice(0, 3);
     }
   });
 
@@ -244,14 +247,14 @@ function buildMarkedDates(
     result[date] = {
       dots,
       selected: date === selectedDate,
-      selectedColor: '#7c3aed',
+      selectedColor: colors.selected,
     };
   });
 
   result[selectedDate] = {
     ...(result[selectedDate] ?? {}),
     selected: true,
-    selectedColor: '#7c3aed',
+    selectedColor: colors.selected,
   };
 
   return result;
@@ -277,7 +280,7 @@ function toDeviceEventItem(event: DeviceCalendar.Event, calendars: SystemCalenda
     endTime: formatTimeLabel(endDate),
     calendarId: event.calendarId,
     calendarTitle: calendar?.title ?? '系统日历',
-    color: calendar?.color ?? '#3b82f6',
+    color: calendar?.color ?? '#007aff',
     allDay: !!event.allDay,
   } satisfies DeviceEventItem;
 }
@@ -299,44 +302,47 @@ function AgendaCard({
   onOpen: () => void;
   busy?: boolean;
 }) {
+  const { colorScheme } = useColorScheme();
+  const tint = THEME[colorScheme ?? 'light'];
+
   return (
-    <View className="rounded-[26px] bg-white px-4 py-4 shadow-sm shadow-slate-200/70">
+    <View className="rounded-2xl bg-card px-4 py-4 shadow-sm shadow-black/5">
       <View className="flex-row items-start gap-3">
         <View className="items-center pt-1">
           <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
         </View>
 
         <View className="flex-1 gap-2">
-          <Text className="text-xs tracking-wide text-slate-400">
+          <Text className="text-xs tracking-wide text-muted-foreground">
             {item.source === 'system' && item.allDay
               ? '全天日程'
               : `${item.startTime} - ${item.endTime}`}
           </Text>
-          <Text className="text-xl font-semibold leading-7 text-slate-800">{item.title}</Text>
+          <Text className="text-xl font-semibold leading-7 text-foreground">{item.title}</Text>
 
           {item.notes ? (
-            <Text className="text-sm leading-6 text-slate-400" numberOfLines={2}>
+            <Text className="text-sm leading-6 text-muted-foreground" numberOfLines={2}>
               {item.notes}
             </Text>
           ) : null}
 
           <View className="flex-row flex-wrap items-center gap-3">
-            <View className="px-3 py-1 rounded-full bg-violet-50">
-              <Text className="text-xs font-medium text-violet-600">
+            <View className="px-3 py-1 rounded-full bg-accent">
+              <Text className="text-xs font-medium text-primary">
                 {item.source === 'local' ? '应用内日程' : item.calendarTitle}
               </Text>
             </View>
 
             {item.location ? (
               <View className="flex-row items-center gap-1">
-                <MapPin size={12} color="#94a3b8" />
-                <Text className="text-xs text-slate-400">{item.location}</Text>
+                <MapPin size={12} color={tint.mutedForeground} />
+                <Text className="text-xs text-muted-foreground">{item.location}</Text>
               </View>
             ) : null}
           </View>
 
           {item.source === 'local' ? (
-            <Text className="text-xs text-slate-400">
+            <Text className="text-xs text-muted-foreground">
               {item.calendarTitle
                 ? `系统日历: ${item.calendarTitle} · ${getReminderLabel(item.reminderMinutesBefore)}`
                 : '当前仅保存在应用内'}
@@ -344,7 +350,7 @@ function AgendaCard({
           ) : null}
 
           {item.source === 'local' ? (
-            <Text className="text-xs text-slate-400">
+            <Text className="text-xs text-muted-foreground">
               最近同步: {formatSyncLabel(item.lastSyncedAt)}
             </Text>
           ) : null}
@@ -353,7 +359,7 @@ function AgendaCard({
         <View className="gap-2">
           {item.source === 'local' && onEdit ? (
             <Button variant="ghost" size="icon" className="rounded-full" onPress={onEdit}>
-              <Pencil size={16} color="#7c3aed" />
+              <Pencil size={16} color={tint.primary} />
             </Button>
           ) : null}
 
@@ -364,9 +370,9 @@ function AgendaCard({
             disabled={busy}
             onPress={onOpen}>
             {busy ? (
-              <LoaderCircle size={16} color="#7c3aed" />
+              <LoaderCircle size={16} color={tint.primary} />
             ) : (
-              <ExternalLink size={16} color="#7c3aed" />
+              <ExternalLink size={16} color={tint.primary} />
             )}
           </Button>
 
@@ -377,7 +383,7 @@ function AgendaCard({
               className="rounded-full"
               disabled={busy}
               onPress={onDelete}>
-              <Trash2 size={16} color="#ef4444" />
+              <Trash2 size={16} color={tint.destructive} />
             </Button>
           ) : null}
         </View>
@@ -387,6 +393,8 @@ function AgendaCard({
 }
 
 export default function AboutScreen() {
+  const { colorScheme } = useColorScheme();
+  const tint = THEME[colorScheme ?? 'light'];
   const { width } = useWindowDimensions();
   const isDesktop = width >= 980;
   const today = React.useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -434,7 +442,7 @@ export default function AboutScreen() {
       .map((item) => ({
         ...item,
         source: 'local' as const,
-        color: item.systemCalendarEventId ? '#10b981' : '#8b5cf6',
+        color: item.systemCalendarEventId ? tint.chart2 : tint.primary,
       }));
 
     const systemItems: AgendaItem[] = systemEvents
@@ -442,7 +450,7 @@ export default function AboutScreen() {
       .filter(
         (item) => !localItems.some((localItem) => localItem.systemCalendarEventId === item.id)
       )
-      .map((item) => ({ ...item, source: 'system' as const, color: item.color ?? '#3b82f6' }));
+      .map((item) => ({ ...item, source: 'system' as const, color: item.color ?? tint.chart4 }));
 
     return [...localItems, ...systemItems].sort((left, right) => {
       const leftTime = left.source === 'system' && left.allDay ? '00:00' : left.startTime;
@@ -770,23 +778,29 @@ export default function AboutScreen() {
     ]);
   }
 
-  const markedDates = buildMarkedDates(schedules, systemEvents, selectedDate);
+  const markedDates = buildMarkedDates(schedules, systemEvents, selectedDate, {
+    local: tint.primary,
+    synced: tint.chart2,
+    system: tint.chart4,
+    selected: tint.primary,
+  });
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-[#f5f3ff]">
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 18, paddingBottom: 28 }}>
+        >
+        <View className="px-4 pt-4 pb-7">
         <View
           className={cn('mx-auto w-full max-w-6xl gap-4', isDesktop ? 'flex-row items-start' : '')}>
           <View className={cn('gap-4', isDesktop ? 'w-[48%]' : 'w-full')}>
-            <Card className="overflow-hidden rounded-[34px] border-0 bg-white py-0 shadow-sm shadow-violet-200/60">
+            <Card className="overflow-hidden rounded-2xl border-0 bg-card py-0 shadow-sm shadow-black/5">
               <CardContent className="px-4 pt-4 pb-5">
                 <View className="flex-row items-center justify-between mb-4">
                   <View>
-                    <Text className="text-3xl font-semibold text-slate-800">
+                    <Text className="text-3xl font-semibold text-foreground">
                       {formatSelectedMonth(monthAnchor)}
                     </Text>
-                    <Text className="text-sm text-slate-400">
+                    <Text className="text-sm text-muted-foreground">
                       {formatSelectedYear(monthAnchor)}
                     </Text>
                   </View>
@@ -795,7 +809,7 @@ export default function AboutScreen() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-white rounded-2xl border-slate-200"
+                      className="bg-card rounded-2xl border-border"
                       disabled={loadingSystemEvents}
                       onPress={() => {
                         const anchor = new Date(`${monthAnchor}T00:00:00`);
@@ -804,12 +818,12 @@ export default function AboutScreen() {
                         setMonthAnchor(next);
                         void loadSystemEvents(next);
                       }}>
-                      <Text className="text-lg text-slate-500">{'<'}</Text>
+                      <Text className="text-lg text-muted-foreground">{'<'}</Text>
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="bg-white rounded-2xl border-slate-200"
+                      className="bg-card rounded-2xl border-border"
                       disabled={loadingSystemEvents}
                       onPress={() => {
                         const anchor = new Date(`${monthAnchor}T00:00:00`);
@@ -818,7 +832,7 @@ export default function AboutScreen() {
                         setMonthAnchor(next);
                         void loadSystemEvents(next);
                       }}>
-                      <Text className="text-lg text-slate-500">{'>'}</Text>
+                      <Text className="text-lg text-muted-foreground">{'>'}</Text>
                     </Button>
                   </View>
                 </View>
@@ -840,12 +854,12 @@ export default function AboutScreen() {
                     void loadSystemEvents(next);
                   }}
                   theme={{
-                    calendarBackground: '#ffffff',
-                    textSectionTitleColor: '#94a3b8',
-                    dayTextColor: '#1f2a44',
-                    textDisabledColor: '#cbd5e1',
-                    todayTextColor: '#7c3aed',
-                    selectedDayTextColor: '#ffffff',
+                    calendarBackground: tint.card,
+                    textSectionTitleColor: tint.mutedForeground,
+                    dayTextColor: tint.foreground,
+                    textDisabledColor: tint.border,
+                    todayTextColor: tint.primary,
+                    selectedDayTextColor: tint.primaryForeground,
                     textDayFontSize: 18,
                     textDayHeaderFontSize: 13,
                     textDayFontWeight: '500',
@@ -853,14 +867,14 @@ export default function AboutScreen() {
                   style={{ borderRadius: 28 }}
                 />
 
-                <View className="mt-4 flex-row flex-wrap gap-3 rounded-[24px] bg-violet-50 px-4 py-3">
-                  <View className="px-3 py-2 bg-white rounded-full">
-                    <Text className="text-xs font-medium text-violet-600">
+                <View className="mt-4 flex-row flex-wrap gap-3 rounded-2xl bg-accent px-4 py-3">
+                  <View className="px-3 py-2 bg-card rounded-full">
+                    <Text className="text-xs font-medium text-primary">
                       本月本地 {monthStats.localCount}
                     </Text>
                   </View>
-                  <View className="px-3 py-2 bg-white rounded-full">
-                    <Text className="text-xs font-medium text-sky-600">
+                  <View className="px-3 py-2 bg-card rounded-full">
+                    <Text className="text-xs font-medium text-primary">
                       系统日历 {monthStats.systemCount}
                     </Text>
                   </View>
@@ -871,29 +885,29 @@ export default function AboutScreen() {
                     disabled={loadingCalendars || loadingSystemEvents}
                     onPress={() => void loadCalendarsAndEvents(monthAnchor)}>
                     {loadingCalendars || loadingSystemEvents ? (
-                      <LoaderCircle size={14} color="#7c3aed" />
+                      <LoaderCircle size={14} color={tint.primary} />
                     ) : (
-                      <RefreshCw size={14} color="#7c3aed" />
+                      <RefreshCw size={14} color={tint.primary} />
                     )}
-                    <Text className="text-violet-600">刷新系统日程</Text>
+                    <Text className="text-primary">刷新系统日程</Text>
                   </Button>
                 </View>
               </CardContent>
             </Card>
 
-            <Card className="rounded-[34px] border-0 bg-[#fbfaff] py-0 shadow-sm shadow-violet-100/70">
+            <Card className="rounded-2xl border-0 bg-card py-0 shadow-sm shadow-black/5">
               <CardHeader className="px-5 pt-5 pb-2">
                 <View className="flex-row items-center justify-between gap-3">
                   <View>
-                    <CardTitle className="text-[20px] text-slate-800">
+                    <CardTitle className="text-xl text-foreground">
                       {formatDateLabel(selectedDate)}
                     </CardTitle>
-                    <Text className="mt-1 text-sm text-slate-400">
+                    <Text className="mt-1 text-sm text-muted-foreground">
                       本地事件和系统日历会一起显示在这里。
                     </Text>
                   </View>
-                  <View className="px-3 py-1 rounded-full bg-violet-100">
-                    <Text className="text-xs font-medium text-violet-700">
+                  <View className="px-3 py-1 rounded-full bg-accent">
+                    <Text className="text-xs font-medium text-primary">
                       {selectedAgenda.length} 条
                     </Text>
                   </View>
@@ -917,11 +931,11 @@ export default function AboutScreen() {
                     />
                   ))
                 ) : (
-                  <View className="rounded-[28px] border border-dashed border-violet-200 bg-white px-5 py-10">
-                    <Text className="text-base font-medium text-center text-slate-600">
+                  <View className="rounded-2xl border border-dashed border-border bg-card px-5 py-10">
+                    <Text className="text-base font-medium text-center text-foreground">
                       这一天还没有事件
                     </Text>
-                    <Text className="mt-2 text-sm leading-6 text-center text-slate-400">
+                    <Text className="mt-2 text-sm leading-6 text-center text-muted-foreground">
                       右侧创建一条新事件，或者点击刷新把系统日历里的安排同步过来。
                     </Text>
                   </View>
@@ -931,13 +945,13 @@ export default function AboutScreen() {
           </View>
 
           <View className={cn('gap-4', isDesktop ? 'flex-1' : 'w-full')}>
-            <Card className="rounded-[34px] border-0 bg-white py-0 shadow-sm shadow-violet-200/60">
+            <Card className="rounded-2xl border-0 bg-card py-0 shadow-sm shadow-black/5">
               <CardHeader className="px-5 pt-6 pb-3">
                 <View className="items-center gap-2">
-                  <Text className="text-3xl font-semibold text-slate-800">
+                  <Text className="text-3xl font-semibold text-foreground">
                     {editingId ? 'Edit Event' : 'Add New Event'}
                   </Text>
-                  <Text className="text-sm text-slate-400">{formatDateLabel(selectedDate)}</Text>
+                  <Text className="text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</Text>
                 </View>
               </CardHeader>
 
@@ -946,20 +960,20 @@ export default function AboutScreen() {
                   value={form.title}
                   onChangeText={(value) => updateForm('title', value)}
                   placeholder="Event name*"
-                  className="h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
+                  className="h-12 rounded-2xl border-border bg-muted text-foreground"
                 />
 
                 <Textarea
                   value={form.notes}
                   onChangeText={(value) => updateForm('notes', value)}
                   placeholder="Type the note here..."
-                  className="min-h-28 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
+                  className="min-h-28 rounded-2xl border-border bg-muted text-foreground"
                 />
 
                 <Input
                   value={selectedDate}
                   editable={false}
-                  className="h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-500"
+                  className="h-12 rounded-2xl border-border bg-muted text-muted-foreground"
                 />
 
                 <View className="flex-row gap-3">
@@ -967,13 +981,13 @@ export default function AboutScreen() {
                     value={form.startTime}
                     onChangeText={(value) => updateForm('startTime', value)}
                     placeholder="Start time"
-                    className="flex-1 h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
+                    className="flex-1 h-12 rounded-2xl border-border bg-muted text-foreground"
                   />
                   <Input
                     value={form.endTime}
                     onChangeText={(value) => updateForm('endTime', value)}
                     placeholder="End time"
-                    className="flex-1 h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
+                    className="flex-1 h-12 rounded-2xl border-border bg-muted text-foreground"
                   />
                 </View>
 
@@ -981,13 +995,13 @@ export default function AboutScreen() {
                   value={form.location}
                   onChangeText={(value) => updateForm('location', value)}
                   placeholder="Location"
-                  className="h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-700"
+                  className="h-12 rounded-2xl border-border bg-muted text-foreground"
                 />
 
-                <View className="flex-row items-center justify-between rounded-[24px] bg-slate-50 px-4 py-3">
+                <View className="flex-row items-center justify-between rounded-2xl bg-muted px-4 py-3">
                   <View className="flex-1 pr-4">
-                    <Text className="text-base font-medium text-slate-700">同步到系统日历</Text>
-                    <Text className="mt-1 text-xs leading-5 text-slate-400">
+                    <Text className="text-base font-medium text-foreground">同步到系统日历</Text>
+                    <Text className="mt-1 text-xs leading-5 text-muted-foreground">
                       打开后创建时会写入系统日历，也能从左侧读取系统日程。
                     </Text>
                   </View>
@@ -997,7 +1011,7 @@ export default function AboutScreen() {
                   />
                 </View>
                 <View className="gap-2">
-                  <Text className="text-sm font-medium text-slate-700">提醒时间</Text>
+                  <Text className="text-sm font-medium text-foreground">提醒时间</Text>
                   <View className="flex-row flex-wrap gap-2">
                     {REMINDER_OPTIONS.map((option) => (
                       <Button
@@ -1006,16 +1020,16 @@ export default function AboutScreen() {
                         className={cn(
                           'rounded-2xl px-4 py-3',
                           form.reminderMinutesBefore === option.value
-                            ? 'bg-violet-100'
-                            : 'bg-slate-100'
+                            ? 'bg-accent'
+                            : 'bg-muted'
                         )}
                         onPress={() => updateForm('reminderMinutesBefore', option.value)}>
                         <Text
                           className={cn(
                             'text-sm font-medium',
                             form.reminderMinutesBefore === option.value
-                              ? 'text-violet-700'
-                              : 'text-slate-500'
+                              ? 'text-primary'
+                              : 'text-muted-foreground'
                           )}>
                           {option.label}
                         </Text>
@@ -1026,7 +1040,7 @@ export default function AboutScreen() {
 
                 <View className="gap-2">
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-sm font-medium text-slate-700">选择系统日历</Text>
+                    <Text className="text-sm font-medium text-foreground">选择系统日历</Text>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -1034,11 +1048,11 @@ export default function AboutScreen() {
                       disabled={loadingCalendars}
                       onPress={() => void loadCalendarsAndEvents(monthAnchor)}>
                       {loadingCalendars ? (
-                        <LoaderCircle size={14} color="#7c3aed" />
+                        <LoaderCircle size={14} color={tint.primary} />
                       ) : (
-                        <CalendarDays size={14} color="#7c3aed" />
+                        <CalendarDays size={14} color={tint.primary} />
                       )}
-                      <Text className="text-violet-600">加载</Text>
+                      <Text className="text-primary">加载</Text>
                     </Button>
                   </View>
 
@@ -1050,7 +1064,7 @@ export default function AboutScreen() {
                           variant="secondary"
                           className={cn(
                             'rounded-2xl px-4 py-3',
-                            form.calendarId === calendar.id ? 'bg-violet-100' : 'bg-slate-100'
+                            form.calendarId === calendar.id ? 'bg-accent' : 'bg-muted'
                           )}
                           onPress={() =>
                             setForm((current) => ({
@@ -1062,14 +1076,14 @@ export default function AboutScreen() {
                           <View className="flex-row items-center gap-2">
                             <View
                               className="h-2.5 w-2.5 rounded-full"
-                              style={{ backgroundColor: calendar.color || '#7c3aed' }}
+                              style={{ backgroundColor: calendar.color || tint.primary }}
                             />
                             <Text
                               className={cn(
                                 'text-sm font-medium',
                                 form.calendarId === calendar.id
-                                  ? 'text-violet-700'
-                                  : 'text-slate-500'
+                                  ? 'text-primary'
+                                  : 'text-muted-foreground'
                               )}>
                               {calendar.title}
                             </Text>
@@ -1077,38 +1091,38 @@ export default function AboutScreen() {
                         </Button>
                       ))
                     ) : (
-                      <View className="px-4 py-3 rounded-2xl bg-slate-100">
-                        <Text className="text-sm text-slate-500">
+                      <View className="px-4 py-3 rounded-2xl bg-muted">
+                        <Text className="text-sm text-muted-foreground">
                           先加载系统日历，再选择要写入的目标日历。
                         </Text>
                       </View>
                     )}
                   </View>
 
-                  <Text className="text-xs leading-5 text-slate-400">
+                  <Text className="text-xs leading-5 text-muted-foreground">
                     已接入 {deviceCalendars.length} 个系统日历，可写入 {writableCalendars.length}{' '}
                     个。
                   </Text>
                 </View>
 
-                <View className="rounded-[24px] bg-violet-50 px-4 py-4">
+                <View className="rounded-2xl bg-accent px-4 py-4">
                   <View className="flex-row items-center gap-2">
-                    <Clock3 size={15} color="#7c3aed" />
-                    <Text className="text-sm font-medium text-violet-700">系统同步能力</Text>
+                    <Clock3 size={15} color={tint.primary} />
+                    <Text className="text-sm font-medium text-primary">系统同步能力</Text>
                   </View>
-                  <Text className="mt-2 text-xs leading-6 text-slate-500">
+                  <Text className="mt-2 text-xs leading-6 text-muted-foreground">
                     页面会读取系统日历已有事件，并支持把新建事件同步到系统日历。同步后的事件可以直接从左侧列表打开到系统日历继续编辑。
                   </Text>
                 </View>
 
                 <Button
                   size="lg"
-                  className="h-14 rounded-2xl bg-violet-600"
+                  className="h-14 rounded-2xl bg-primary"
                   onPress={() => void handleSubmit()}>
                   {editingId ? (
-                    <CheckCircle2 size={18} color="#ffffff" />
+                    <CheckCircle2 size={18} color={tint.primaryForeground} />
                   ) : (
-                    <Plus size={18} color="#ffffff" />
+                    <Plus size={18} color={tint.primaryForeground} />
                   )}
                   <Text>{editingId ? 'Update Event' : 'Create Event'}</Text>
                 </Button>
@@ -1118,12 +1132,13 @@ export default function AboutScreen() {
                     variant="ghost"
                     className="rounded-2xl"
                     onPress={() => resetForm(selectedDate)}>
-                    <Text className="text-slate-500">取消编辑</Text>
+                    <Text className="text-muted-foreground">取消编辑</Text>
                   </Button>
                 ) : null}
               </CardContent>
             </Card>
           </View>
+        </View>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -26,10 +26,8 @@ export function SignInForm() {
   return (
     <View className="flex-col gap-6">
       <View className="gap-1">
-        <CardTitle className="text-2xl tracking-tight text-center sm:text-left">
-          Sign in
-        </CardTitle>
-        <CardDescription className="text-center sm:text-left">
+        <CardTitle className="text-2xl tracking-tight text-center">Sign in</CardTitle>
+        <CardDescription className="text-center">
           Use your email to access recent conversations and workspace shortcuts.
         </CardDescription>
       </View>
