@@ -222,7 +222,7 @@ function AnimatedTabItem({
       onPress={onPress}
       onLongPress={onLongPress}
       className="flex-1 items-center justify-center py-1.5">
-      <ReanimatedAnimated.View style={animatedStyle} className="items-center gap-0.5">
+      <ReanimatedAnimated.View style={[animatedStyle, { alignItems: 'center', gap: 2 }]} className="items-center gap-0.5">
         {icon}
         <Text
           className={cn(

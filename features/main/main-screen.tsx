@@ -38,7 +38,7 @@ export default function IndexScreen() {
       <ScrollView
         className="flex-1 bg-background">
         <Stack.Screen options={SCREEN_OPTIONS} />
-        <View className="w-full max-w-5xl gap-4 px-4 pt-4 pb-7 mx-auto">
+        <View className="w-full max-w-5xl gap-4 px-4 pt-4 mx-auto pb-7">
           <Card className="py-0 overflow-hidden border-0 shadow-sm bg-primary shadow-black/5">
             <CardContent className="px-5 py-6">
               <View className="gap-5">

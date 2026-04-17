@@ -24,6 +24,8 @@ import {
 import * as React from 'react';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { use } from 'i18next';
 
 type Item = {
   id: string;
@@ -133,6 +135,12 @@ export default function MyScreen() {
   const { width } = useWindowDimensions();
   const [hapticsEnabled, setHapticsEnabled] = React.useState(true);
   const isCompact = width < 390;
+  const router = useRouter();
+  
+  const logout = () => {
+    router.push('/login');
+  }
+  
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -222,7 +230,7 @@ export default function MyScreen() {
 
         <Card className="py-0 shadow-sm border-border bg-card shadow-black/5">
           <CardContent className="px-4 py-3">
-            <Button variant="outline" className="justify-start w-full">
+            <Button onPress={logout} variant="outline" className="justify-start w-full">
               <LogOut size={16} color="currentColor" strokeWidth={2} />
               <Text>Logout</Text>
             </Button>
