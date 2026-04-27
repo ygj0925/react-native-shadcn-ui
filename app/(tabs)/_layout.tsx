@@ -13,7 +13,7 @@ import { Slot, Tabs, usePathname, useRouter } from 'expo-router';
 import { Menu, X } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import ReanimatedAnimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -414,8 +414,22 @@ function LargeScreenShell({ tint }: { tint: (typeof THEME)['light'] }) {
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
   const { width } = useWindowDimensions();
-  const isLargeScreen = width >= 768;
   const tint = THEME[colorScheme ?? 'light'];
+
+  // On web with static rendering, useWindowDimensions returns 0 during SSG
+  // (no window object in Node.js). This causes MobileTabs to flash before
+  // hydration resolves the real width. Defer layout until after mount on web.
+  const [layoutReady, setLayoutReady] = React.useState(Platform.OS !== 'web');
+
+  React.useEffect(() => {
+    if (!layoutReady) setLayoutReady(true);
+  }, []);
+
+  const isLargeScreen = width >= 768;
+
+  if (!layoutReady) {
+    return <SafeAreaView edges={['left', 'right']} className="flex-1 bg-background" />;
+  }
 
   return (
     <SafeAreaView edges={['left', 'right']} className="flex-1 bg-background">

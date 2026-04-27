@@ -1,22 +1,22 @@
 import { post } from '@/lib/request';
 import type { TokenPair } from '@/lib/request';
 import { setTokens, clearTokens } from '@/lib/request';
-import { encryptPassword } from '@/lib/crypto';
+import { encryptPassword, aesEncrypt } from '@/lib/crypto';
 import { router } from 'expo-router';
 
 export interface LoginParams {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface RegisterParams {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface UserInfo {
   id: string;
-  email: string;
+  username: string;
   nickname: string;
   avatar: string;
 }
@@ -31,8 +31,8 @@ export async function login(params: LoginParams): Promise<LoginResult> {
   const res = await post<LoginResult>(
     '/auth/login',
     {
-      email: params.email,
-      password: encryptPassword(params.password),
+      email: params.username,
+      password: aesEncrypt(params.password),
     },
     { skipAuth: true, showLoading: true },
   );
@@ -47,8 +47,8 @@ export async function register(params: RegisterParams) {
   const res = await post(
     '/auth/register',
     {
-      email: params.email,
-      password: encryptPassword(params.password),
+      email: params.username,
+      password: aesEncrypt(params.password),
     },
     { skipAuth: true, showLoading: true },
   );

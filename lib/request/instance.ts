@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosError, AxiosResponse } from 'axios';
+import { Platform } from 'react-native';
 import { router } from 'expo-router';
 import type {
   ApiResponse,
@@ -10,8 +11,14 @@ import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './token
 import { BusinessError, handleAxiosError } from './error';
 import { showLoading, hideLoading } from './loading';
 
-const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX ?? '';
+
+// Web: use relative path so requests go through the Metro dev proxy (avoids CORS)
+// Native: use the full URL directly (no CORS restrictions)
+const BASE_URL = Platform.OS === 'web'
+  ? `/${API_PREFIX.replace(/\/+$/, '')}`
+  : `${API_URL.replace(/\/+$/, '')}/${API_PREFIX.replace(/\/+$/, '')}`;
 
 const instance = axios.create({
   baseURL: BASE_URL,

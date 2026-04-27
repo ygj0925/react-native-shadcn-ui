@@ -1,39 +1,44 @@
-import CryptoES from 'crypto-es';
+import { AES, Utf8, Base64, CBC, Pkcs7, MD5, SHA256, HmacSHA256 } from 'crypto-es';
 import * as ExpoCrypto from 'expo-crypto';
+import JSEncrypt from 'jsencrypt';
 
 // ─── AES 对称加密 ──────────────────────────────────────
-// 密钥由后端约定，建议通过环境变量注入
-const AES_KEY = process.env.EXPO_PUBLIC_AES_KEY ?? 'default-aes-key-16';
+const AES_KEY = process.env.EXPO_PUBLIC_AES_KEY ?? '==BallCat-Auth==';
 
-const key = CryptoES.enc.Utf8.parse(AES_KEY);
-const iv = CryptoES.enc.Utf8.parse(AES_KEY.substring(0, 16));
+function getAesKeyAndIv() {
+  const key = Utf8.parse(AES_KEY);
+  const iv = Utf8.parse(AES_KEY.substring(0, 16));
+  return { key, iv };
+}
 
 export function aesEncrypt(plainText: string): string {
-  const encrypted = CryptoES.AES.encrypt(plainText, key, {
+  const { key, iv } = getAesKeyAndIv();
+  const encrypted = AES.encrypt(plainText, key, {
     iv,
-    mode: CryptoES.mode.CBC,
-    padding: CryptoES.pad.Pkcs7,
+    mode: CBC,
+    padding: Pkcs7,
   });
   return encrypted.toString();
 }
 
 export function aesDecrypt(cipherText: string): string {
-  const decrypted = CryptoES.AES.decrypt(cipherText, key, {
+  const { key, iv } = getAesKeyAndIv();
+  const decrypted = AES.decrypt(cipherText, key, {
     iv,
-    mode: CryptoES.mode.CBC,
-    padding: CryptoES.pad.Pkcs7,
+    mode: CBC,
+    padding: Pkcs7,
   });
-  return decrypted.toString(CryptoES.enc.Utf8);
+  return decrypted.toString(Utf8);
 }
 
 // ─── 哈希 ──────────────────────────────────────────────
 
 export function md5(text: string): string {
-  return CryptoES.MD5(text).toString();
+  return MD5(text).toString();
 }
 
 export function sha256(text: string): string {
-  return CryptoES.SHA256(text).toString();
+  return SHA256(text).toString();
 }
 
 export async function sha256Native(text: string): Promise<string> {
@@ -46,17 +51,17 @@ export async function sha256Native(text: string): Promise<string> {
 // ─── Base64 ────────────────────────────────────────────
 
 export function base64Encode(text: string): string {
-  return CryptoES.enc.Base64.stringify(CryptoES.enc.Utf8.parse(text));
+  return Base64.stringify(Utf8.parse(text));
 }
 
 export function base64Decode(encoded: string): string {
-  return CryptoES.enc.Base64.parse(encoded).toString(CryptoES.enc.Utf8);
+  return Base64.parse(encoded).toString(Utf8);
 }
 
 // ─── HMAC 签名 ─────────────────────────────────────────
 
 export function hmacSHA256(message: string, secret: string): string {
-  return CryptoES.HmacSHA256(message, secret).toString();
+  return HmacSHA256(message, secret).toString();
 }
 
 // ─── 随机数 ─────────────────────────────────────────────
@@ -70,7 +75,6 @@ export function randomBytes(size: number): Uint8Array {
 }
 
 // ─── 接口签名 ──────────────────────────────────────────
-// 将请求参数按key排序拼接后HMAC签名，防止请求被篡改
 
 export function signRequest(
   params: Record<string, any>,
@@ -86,10 +90,22 @@ export function signRequest(
   return hmacSHA256(raw, secret);
 }
 
-// ─── 密码加密（登录场景）─────────────────────────────────
-// md5(password) + AES加密，双重保护
+// ─── RSA 非对称加密 ────────────────────────────────────────
 
-export function encryptPassword(password: string): string {
-  const hashed = md5(password);
-  return aesEncrypt(hashed);
+const RSA_PUBLIC_KEY = process.env.EXPO_PUBLIC_RSA_KEY ?? '';
+
+export function rsaEncrypt(plainText: string, publicKey?: string): string | false {
+  const encryptor = new JSEncrypt();
+  encryptor.setPublicKey(publicKey ?? RSA_PUBLIC_KEY);
+  return encryptor.encrypt(plainText);
+}
+
+// ─── 密码加密（登录场景）─────────────────────────────────
+
+export function encryptPassword(password: string, publicKey?: string): string {
+  const result = rsaEncrypt(password, publicKey);
+  if (!result) {
+    throw new Error('RSA encryption failed, check the public key');
+  }
+  return result;
 }
