@@ -25,9 +25,9 @@ export function SignUpForm() {
 
   return (
     <View className="flex-col gap-6">
-      <Card className="border-border bg-card/95 py-0 shadow-sm shadow-black/5">
-        <CardHeader className="gap-3 px-5 pb-3 pt-5">
-          <CardTitle className="text-center text-2xl tracking-tight">Register</CardTitle>
+      <Card className="py-0 shadow-sm border-border bg-card/95 shadow-black/5">
+        <CardHeader className="gap-3 px-5 pt-5 pb-3">
+          <CardTitle className="text-2xl tracking-tight text-center">Register</CardTitle>
           <CardDescription className="text-center">
             Start with the essentials and keep the setup flow lightweight.
           </CardDescription>
@@ -65,13 +65,13 @@ export function SignUpForm() {
               />
             </View>
             <Button
-              className="h-11 w-full"
+              className="w-full h-11"
               onPress={onSubmit}
               disabled={!email.trim() || !password.trim()}>
               <Text>Continue</Text>
             </Button>
           </View>
-          <Text className="text-center text-sm">
+          <Text className="text-sm text-center">
             Already have an account?{' '}
             <Text className="text-sm font-medium underline" onPress={() => router.push('/login')}>
               Sign in
@@ -86,7 +86,7 @@ export function SignUpForm() {
         </CardContent>
       </Card>
 
-      <Card className="border-border bg-muted/35 py-0 shadow-none">
+      <Card className="py-0 shadow-none border-border bg-muted/35">
         <CardContent className="px-5 py-4">
           <Text className="text-sm leading-6 text-muted-foreground">
             This currently loops back to sign-in so the rest of the interface stays demo-ready while
