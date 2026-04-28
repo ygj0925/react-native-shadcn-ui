@@ -1,22 +1,19 @@
-import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
-import { AuthScreenContainer } from '@/components/auth-screen-container';
-import { AuthShell } from '@/components/auth-shell';
-import { SignUpForm } from '@/components/sign-up-form';
-import { ThemeToggle } from '@/components/themeToggle';
-
-const SCREEN_OPTIONS = {
-  title: 'Register',
-  headerShown: true,
-  headerShadowVisible: false,
-  headerLargeTitle: Platform.OS === 'ios',
-  headerRight: () => <ThemeToggle />,
-};
+import { AuthScreenContainer } from '@/components/auth/auth-screen-container';
+import { AuthGradientHeader } from '@/components/auth/auth-gradient-header';
+import { AuthShell } from '@/components/auth/auth-shell';
+import { SignUpForm } from '@/components/auth/sign-up-form';
 
 export default function RegisterScreen() {
   return (
     <AuthScreenContainer>
-      <Stack.Screen options={SCREEN_OPTIONS} />
+      <Stack.Screen options={{
+        title: '',
+        headerShown: true,
+        headerShadowVisible: false,
+        headerBackTitle: '',
+        headerBackground: AuthGradientHeader,
+      }} />
       <AuthShell
         eyebrow="New here"
         title="Create your account"

@@ -1,24 +1,19 @@
 import { Stack } from 'expo-router';
-import { useHeaderHeight } from '@react-navigation/elements';
-import { AuthScreenContainer } from '@/components/auth-screen-container';
-import { SignInForm } from '@/components/sign-in-form';
-import { View } from 'react-native';
+import { AuthScreenContainer } from '@/components/auth/auth-screen-container';
+import { AuthGradientHeader } from '@/components/auth/auth-gradient-header';
+import { SignInForm } from '@/components/auth/sign-in-form';
 
 export default function LoginScreen() {
-  const headerHeight = useHeaderHeight();
-
   return (
     <AuthScreenContainer>
       <Stack.Screen options={{
         title: '',
         headerShown: true,
         headerShadowVisible: false,
-        headerTransparent: true,
         headerBackTitle: '',
+        headerBackground: AuthGradientHeader,
       }} />
-      <View style={{ paddingTop: headerHeight }}>
-        <SignInForm />
-      </View>
+      <SignInForm />
     </AuthScreenContainer>
   );
 }
