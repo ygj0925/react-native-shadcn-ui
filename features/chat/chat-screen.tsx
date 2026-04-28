@@ -1,35 +1,29 @@
 import {
   AssistantRuntimeProvider,
-  useAuiState,
   useAui,
-} from "@assistant-ui/react-native";
-import type { ThreadMessage } from "@assistant-ui/react-native";
+  useAuiState,
+} from '@assistant-ui/react-native';
+import type { MessageState } from '@assistant-ui/react-native';
 import { Text } from '@/components/ui/text';
+import { useAppRuntime } from '@/hooks/use-app-runtime';
 import { cn } from '@/lib/utils';
-import {
-  View,
-  TextInput,
-  FlatList,
-  Pressable,
-} from "react-native";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAppRuntime } from "@/hooks/use-app-runtime";
+import { FlatList, Pressable, TextInput, View } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-function MessageBubble({ message }: { message: ThreadMessage }) {
-  const isUser = message.role === "user";
+function MessageBubble({ message }: { message: MessageState }) {
+  const isUser = message.role === 'user';
   const text = message.content
-    .filter((p) => p.type === "text")
-    .map((p) => ("text" in p ? p.text : ""))
-    .join("\n");
+    .filter((part) => part.type === 'text')
+    .map((part) => ('text' in part ? part.text : ''))
+    .join('\n');
 
   return (
     <View
       className={cn(
-        'rounded-2xl p-3 my-1 mx-4 max-w-[80%]',
+        'my-1 mx-4 max-w-[80%] rounded-2xl p-3',
         isUser ? 'self-end bg-primary' : 'self-start bg-muted'
-      )}
-    >
+      )}>
       <Text className={isUser ? 'text-primary-foreground' : 'text-foreground'}>{text}</Text>
     </View>
   );
@@ -37,43 +31,40 @@ function MessageBubble({ message }: { message: ThreadMessage }) {
 
 function Composer() {
   const aui = useAui();
-  const text = useAuiState((s) => s.composer.text);
-  const isEmpty = useAuiState((s) => s.composer.isEmpty);
+  const text = useAuiState((state) => state.composer.text);
+  const isEmpty = useAuiState((state) => state.composer.isEmpty);
 
   return (
-    <View className="flex-row p-3 items-end bg-background">
+    <View className="flex-row items-end bg-background p-3">
       <TextInput
         value={text}
-        onChangeText={(t) => aui.composer().setText(t)}
+        onChangeText={(value) => aui.composer().setText(value)}
         placeholder="Message..."
         multiline
-        className="flex-1 border border-border rounded-[20px] px-4 py-2.5 max-h-[120px] text-foreground"
+        className="max-h-[120px] flex-1 rounded-[20px] border border-border px-4 py-2.5 text-foreground"
       />
       <Pressable
         onPress={() => aui.composer().send()}
         disabled={isEmpty}
         className={cn(
-          'ml-2 rounded-[20px] w-9 h-9 items-center justify-center',
+          'ml-2 h-9 w-9 items-center justify-center rounded-[20px]',
           !isEmpty ? 'bg-primary' : 'bg-muted'
-        )}
-      >
-        <Text className="text-primary-foreground font-bold">↑</Text>
+        )}>
+        <Text className="font-bold text-primary-foreground">{'>'}</Text>
       </Pressable>
     </View>
   );
 }
 
 function ChatScreen() {
-  const messages = useAuiState(
-    (s) => s.thread.messages,
-  ) as ThreadMessage[];
+  const messages = useAuiState((state) => state.thread.messages);
   const insets = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-background">
       <FlatList
         data={messages}
-        keyExtractor={(m) => m.id}
+        keyExtractor={(message) => message.id}
         renderItem={({ item }) => <MessageBubble message={item} />}
         contentContainerStyle={{ paddingBottom: 72 }}
         keyboardDismissMode="interactive"

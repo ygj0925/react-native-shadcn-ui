@@ -82,6 +82,9 @@ type AgendaItem =
   | ({ source: 'local'; color: string } & ScheduleItem)
   | ({ source: 'system'; color: string } & DeviceEventItem);
 
+type LocalAgendaItem = Extract<AgendaItem, { source: 'local' }>;
+type SystemAgendaItem = Extract<AgendaItem, { source: 'system' }>;
+
 const STORAGE_KEY = 'about-schedules';
 
 const REMINDER_OPTIONS: Array<{ label: string; value: number | null }> = [
@@ -437,7 +440,7 @@ export default function AboutScreen() {
   );
 
   const selectedAgenda = React.useMemo(() => {
-    const localItems: AgendaItem[] = schedules
+    const localItems: LocalAgendaItem[] = schedules
       .filter((item) => item.date === selectedDate)
       .map((item) => ({
         ...item,
@@ -445,7 +448,7 @@ export default function AboutScreen() {
         color: item.systemCalendarEventId ? tint.chart2 : tint.primary,
       }));
 
-    const systemItems: AgendaItem[] = systemEvents
+    const systemItems: SystemAgendaItem[] = systemEvents
       .filter((item) => item.date === selectedDate)
       .filter(
         (item) => !localItems.some((localItem) => localItem.systemCalendarEventId === item.id)
@@ -581,11 +584,15 @@ export default function AboutScreen() {
         return;
       }
 
-      setSystemEvents(
-        events
-          .map((item) => toDeviceEventItem(item, calendarsParam))
-          .filter((item): item is DeviceEventItem => !!item)
-      );
+      const normalizedEvents: DeviceEventItem[] = [];
+      events.forEach((item) => {
+        const normalized = toDeviceEventItem(item, calendarsParam);
+        if (normalized) {
+          normalizedEvents.push(normalized);
+        }
+      });
+
+      setSystemEvents(normalizedEvents);
     } catch (error) {
       if (gen !== loadGenRef.current) {
         return;

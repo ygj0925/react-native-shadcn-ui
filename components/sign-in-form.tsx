@@ -8,10 +8,11 @@ import { Text } from '@/components/ui/text';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
-import { Alert, type TextInput, View } from 'react-native';
+import { Alert, Pressable, type TextInput, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod/v4';
 import { login } from '@/api/services/auth'
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const schema = z.object({
   username: z
@@ -42,6 +43,7 @@ export function SignInForm() {
   });
 
   const [loading, setLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   async function onSubmit(values: FormValues) {
     try {
@@ -113,10 +115,19 @@ export function SignInForm() {
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 returnKeyType="done"
                 onSubmitEditing={handleSubmit(onSubmit)}
                 autoComplete="password"
+                endAdornment={
+                  <Pressable className='ml-1' onPress={() => setShowPassword((prev) => !prev)}>
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color="#888"
+                    />
+                  </Pressable>
+                }
               />
             )}
           />

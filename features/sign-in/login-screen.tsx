@@ -1,21 +1,24 @@
 import { Stack } from 'expo-router';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { AuthScreenContainer } from '@/components/auth-screen-container';
 import { SignInForm } from '@/components/sign-in-form';
-
-const SCREEN_OPTIONS = {
-  title: '',
-  headerShown: true,
-  headerShadowVisible: false,
-  headerTransparent: true,
-  headerBackTitle: '',
-  headerRight: undefined as any,
-};
+import { View } from 'react-native';
 
 export default function LoginScreen() {
+  const headerHeight = useHeaderHeight();
+
   return (
     <AuthScreenContainer>
-      <Stack.Screen options={SCREEN_OPTIONS} />
-      <SignInForm />
+      <Stack.Screen options={{
+        title: '',
+        headerShown: true,
+        headerShadowVisible: false,
+        headerTransparent: true,
+        headerBackTitle: '',
+      }} />
+      <View style={{ paddingTop: headerHeight }}>
+        <SignInForm />
+      </View>
     </AuthScreenContainer>
   );
 }
