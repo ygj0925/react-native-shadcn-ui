@@ -1,7 +1,6 @@
 import { post } from '@/lib/request';
-import type { TokenPair } from '@/lib/request';
 import { setTokens, clearTokens } from '@/lib/request';
-import { encryptPassword, aesEncrypt } from '@/lib/crypto';
+import { aesEncrypt } from '@/lib/crypto';
 import { router } from 'expo-router';
 const BASIC_AUTHORIZATION = 'Basic dWk6dWk='
 export interface LoginParams {

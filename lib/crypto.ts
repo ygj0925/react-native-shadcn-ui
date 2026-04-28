@@ -1,6 +1,26 @@
 import { AES, Utf8, Base64, CBC, Pkcs7, MD5, SHA256, HmacSHA256 } from 'crypto-es';
-import * as ExpoCrypto from 'expo-crypto';
 import JSEncrypt from 'jsencrypt';
+
+type ExpoCryptoModule = typeof import('expo-crypto');
+
+let expoCryptoModule: ExpoCryptoModule | null = null;
+let expoCryptoLoadAttempted = false;
+
+function getExpoCrypto(): ExpoCryptoModule | null {
+  if (expoCryptoLoadAttempted) {
+    return expoCryptoModule;
+  }
+
+  expoCryptoLoadAttempted = true;
+
+  try {
+    expoCryptoModule = require('expo-crypto') as ExpoCryptoModule;
+  } catch {
+    expoCryptoModule = null;
+  }
+
+  return expoCryptoModule;
+}
 
 // ─── AES 对称加密 ──────────────────────────────────────
 const AES_KEY = process.env.EXPO_PUBLIC_AES_KEY ?? '==BallCat-Auth==';
@@ -42,10 +62,15 @@ export function sha256(text: string): string {
 }
 
 export async function sha256Native(text: string): Promise<string> {
-  return ExpoCrypto.digestStringAsync(
-    ExpoCrypto.CryptoDigestAlgorithm.SHA256,
-    text,
-  );
+  const expoCrypto = getExpoCrypto();
+  if (expoCrypto) {
+    return expoCrypto.digestStringAsync(
+      expoCrypto.CryptoDigestAlgorithm.SHA256,
+      text,
+    );
+  }
+
+  return sha256(text);
 }
 
 // ─── Base64 ────────────────────────────────────────────
@@ -67,11 +92,34 @@ export function hmacSHA256(message: string, secret: string): string {
 // ─── 随机数 ─────────────────────────────────────────────
 
 export function randomUUID(): string {
-  return ExpoCrypto.randomUUID();
+  const expoCrypto = getExpoCrypto();
+  if (expoCrypto) {
+    return expoCrypto.randomUUID();
+  }
+
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+
+  const bytes = randomBytes(16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0'));
+  return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`;
 }
 
 export function randomBytes(size: number): Uint8Array {
-  return ExpoCrypto.getRandomBytes(size);
+  const expoCrypto = getExpoCrypto();
+  if (expoCrypto) {
+    return expoCrypto.getRandomBytes(size);
+  }
+
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.getRandomValues) {
+    return cryptoApi.getRandomValues(new Uint8Array(size));
+  }
+
+  throw new Error('Secure random generator is unavailable in this runtime');
 }
 
 // ─── 接口签名 ──────────────────────────────────────────
