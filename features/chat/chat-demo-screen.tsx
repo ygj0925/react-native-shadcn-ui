@@ -19,7 +19,7 @@ import {
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { FlatList, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { FlatList, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -51,8 +51,10 @@ type Message = {
   content: string;
 };
 
-const INITIAL_ASSISTANT_REPLY =
-  "Sure! Imagine you're in a car, smoothly cruising down the highway. Turbulence is like the road getting a little bumpy for a moment, but the plane is still safely moving forward.";
+const MIMO_BASE_URL =
+  Platform.OS === 'web' ? '/mimo-api' : (process.env.EXPO_PUBLIC_MIMO_BASE_URL ?? '');
+const MIMO_API_KEY = process.env.EXPO_PUBLIC_MIMO_API_KEY ?? '';
+const MIMO_MODEL = process.env.EXPO_PUBLIC_MIMO_MODEL ?? 'mimo-v2.5-pro';
 
 let messageIdCounter = 0;
 function nextMessageId(role: string) {
@@ -150,35 +152,110 @@ export default function ChatScreen() {
     return () => clearTimeout(timer);
   }, [messages, isGenerating]);
 
-  function sendMessage(text: string) {
+  async function sendMessage(text: string) {
     const trimmed = text.trim();
 
     if (!trimmed || isGenerating) {
       return;
     }
 
-    setMessages((current) => [
-      ...current,
-      {
-        id: nextMessageId('user'),
-        role: 'user',
-        content: trimmed,
-      },
-    ]);
+    const userMsg: Message = {
+      id: nextMessageId('user'),
+      role: 'user',
+      content: trimmed,
+    };
+    const updatedMessages = [...messages, userMsg];
+    const assistantId = nextMessageId('assistant');
+
+    setMessages(updatedMessages);
     setInput('');
     setIsGenerating(true);
 
-    setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: nextMessageId('assistant'),
-          role: 'assistant',
-          content: INITIAL_ASSISTANT_REPLY,
+    try {
+      const useStream = !!globalThis.ReadableStream;
+
+      const response = await fetch(`${MIMO_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'api-key': MIMO_API_KEY,
         },
+        body: JSON.stringify({
+          model: MIMO_MODEL,
+          messages: updatedMessages.map(({ role, content }) => ({ role, content })),
+          max_completion_tokens: 4096,
+          temperature: 1.0,
+          top_p: 0.95,
+          stream: useStream,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      if (useStream && response.body) {
+        setMessages((prev) => [
+          ...prev,
+          { id: assistantId, role: 'assistant', content: '' },
+        ]);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let content = '';
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') continue;
+
+            try {
+              const json = JSON.parse(data);
+              const delta = json.choices?.[0]?.delta;
+              if (delta?.content) {
+                content += delta.content;
+                setMessages((prev) =>
+                  prev.map((m) => (m.id === assistantId ? { ...m, content } : m))
+                );
+              }
+            } catch {
+              // partial JSON chunk, skip
+            }
+          }
+        }
+
+        if (!content) {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: '暂无回复' } : m))
+          );
+        }
+      } else {
+        const data = await response.json();
+        const msg = data.choices?.[0]?.message;
+        const reply = msg?.content || msg?.reasoning_content || '暂无回复';
+
+        setMessages((prev) => [
+          ...prev,
+          { id: assistantId, role: 'assistant', content: reply },
+        ]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { id: nextMessageId('assistant'), role: 'assistant', content: '请求失败，请稍后重试。' },
       ]);
+    } finally {
       setIsGenerating(false);
-    }, 1200);
+    }
   }
 
   function onSend() {
@@ -197,8 +274,8 @@ export default function ChatScreen() {
   function renderHistorySidebar() {
     return (
       <View style={{ width: sidebarWidth }}>
-        <Card className="h-full rounded-none border-r border-border bg-card py-0 shadow-2xl shadow-black/10">
-          <CardHeader className="gap-3 px-4 pb-3 pt-5">
+        <Card className="h-full py-0 border-r rounded-none shadow-2xl border-border bg-card shadow-black/10">
+          <CardHeader className="gap-3 px-4 pt-5 pb-3">
             <View className="flex-row items-center justify-between">
               <View className="gap-1">
                 <CardTitle className="text-lg">Chat History</CardTitle>
@@ -298,13 +375,13 @@ export default function ChatScreen() {
         }}
       />
 
-      <View className="flex-1 flex-row bg-background">
+      <View className="flex-row flex-1 bg-background">
         {isLargeScreen && sidebarVisible ? renderHistorySidebar() : null}
 
         <View className="flex-1 bg-background">
           {!isLargeScreen ? (
             <View
-              className="flex-row items-center justify-between pb-3 pt-2"
+              className="flex-row items-center justify-between pt-2 pb-3"
               style={{ paddingHorizontal: contentPadding }}>
               <Button variant="ghost" size="icon" onPress={onMenuPress}>
                 <Menu size={18} color="currentColor" strokeWidth={2} />
@@ -340,8 +417,8 @@ export default function ChatScreen() {
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => <ChatBubble item={item} maxWidth={bubbleMaxWidth} />}
             ListEmptyComponent={
-              <View className="w-full max-w-sm items-center gap-5">
-                <View className="h-16 w-16 items-center justify-center rounded-full bg-primary">
+              <View className="items-center w-full max-w-sm gap-5">
+                <View className="items-center justify-center w-16 h-16 rounded-full bg-primary">
                   <Sparkles size={24} color={tint.primaryForeground} strokeWidth={2.3} />
                 </View>
                 <View className="items-center gap-2">
@@ -357,7 +434,7 @@ export default function ChatScreen() {
                 {isGenerating ? (
                   <Card
                     style={{ maxWidth: bubbleMaxWidth }}
-                    className="border-border bg-card py-0 shadow-sm shadow-black/5">
+                    className="py-0 shadow-sm border-border bg-card shadow-black/5">
                     <CardContent className="gap-2 px-4 py-3">
                       <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
                         Assistant
@@ -392,7 +469,7 @@ export default function ChatScreen() {
                     onPress={() => setInput(suggestion.title)}>
                     <Card
                       style={{ width: suggestionWidth }}
-                      className="border-border bg-card py-0 shadow-sm shadow-black/5">
+                      className="py-0 shadow-sm border-border bg-card shadow-black/5">
                       <CardContent className="gap-1 px-4 py-3">
                         <Text className="text-sm font-semibold leading-5">{suggestion.title}</Text>
                         <Text className="text-xs leading-4 text-muted-foreground">
@@ -404,8 +481,8 @@ export default function ChatScreen() {
                 ))}
               </ScrollView>
 
-              <Card className="border-border bg-card py-0 shadow-sm shadow-black/5">
-                <CardHeader className="flex-row items-center justify-between px-4 pb-2 pt-4">
+              <Card className="py-0 shadow-sm border-border bg-card shadow-black/5">
+                <CardHeader className="flex-row items-center justify-between px-4 pt-4 pb-2">
                   <CardTitle className={cn(isCompact ? 'text-sm' : 'text-base')}>
                     Message Composer
                   </CardTitle>
@@ -423,7 +500,7 @@ export default function ChatScreen() {
                     </Button>
 
                     <Input
-                      className="h-11 flex-1"
+                      className="flex-1 h-11"
                       placeholder="Message"
                       returnKeyType="send"
                       submitBehavior="submit"
@@ -451,7 +528,7 @@ export default function ChatScreen() {
                       </Button>
                     </View>
 
-                    <Text className="flex-1 pl-3 text-right text-xs text-muted-foreground" numberOfLines={1}>
+                    <Text className="flex-1 pl-3 text-xs text-right text-muted-foreground" numberOfLines={1}>
                       Press enter or tap send
                     </Text>
                   </View>

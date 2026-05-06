@@ -8,31 +8,69 @@
     "other": "{{count}}个苹果"
   },
   "settings": {
+    "title": "设置",
+    "subtitle": "管理您的账户、应用偏好和语音体验。",
     "about": "关于",
-    "app_name": "App Name",
-    "arabic": "Arabic",
-    "english": "English",
-    "generale": "General",
+    "app_name": "应用名称",
+    "arabic": "阿拉伯语",
+    "english": "英语",
+    "generale": "通用",
     "github": "Github",
-    "language": "Language",
-    "links": "Links",
+    "language": "语言",
+    "links": "链接",
     "logout": "退出登录",
-    "more": "More",
-    "privacy": "Privacy Policy",
-    "rate": "Rate",
-    "share": "Share",
-    "support": "Support",
-    "support_us": "Support Us",
-    "terms": "Terms of Service",
+    "more": "更多",
+    "privacy": "隐私政策",
+    "rate": "评分",
+    "share": "分享",
+    "support": "支持",
+    "support_us": "支持我们",
+    "terms": "服务条款",
     "theme": {
-      "dark": "Dark",
-      "light": "Light",
-      "system": "System",
-      "title": "Theme"
+      "dark": "深色",
+      "light": "浅色",
+      "system": "跟随系统",
+      "title": "主题"
     },
-    "title": "Settings",
-    "version": "Version",
-    "website": "Website"
+    "version": "版本",
+    "website": "网站",
+    "profile": {
+      "plus": "PLUS",
+      "member_id": "会员ID: {{id}}",
+      "ai_points": "AI积分 {{points}} | 成长值 {{growth}}",
+      "membership": "会员",
+      "plan_name": "ChatGPT Plus 年度计划",
+      "renews_in": "{{days}}天后续费"
+    },
+    "account": {
+      "title": "账户",
+      "email": "邮箱",
+      "subscription": "订阅",
+      "restore_purchases": "恢复购买",
+      "data_controls": "数据控制",
+      "archived_chats": "已归档聊天",
+      "custom_instructions": "自定义指令",
+      "on": "开启"
+    },
+    "app": {
+      "title": "应用",
+      "color_scheme": "配色方案",
+      "haptic_feedback": "触觉反馈"
+    },
+    "speech": {
+      "title": "语音",
+      "description": "为获得最佳效果，请选择您主要使用的语言。如果未列出，可能仍通过自动检测支持。",
+      "voice": "语音",
+      "main_language": "主要语言",
+      "auto_detect": "自动检测"
+    },
+    "about_section": {
+      "title": "关于",
+      "help_center": "帮助中心",
+      "terms_of_use": "使用条款",
+      "privacy_policy": "隐私政策",
+      "app_version_label": "ChatGPT iOS版"
+    }
   },
-  "welcome": "Welcome to obytes app site"
+  "welcome": "欢迎使用obytes应用"
 }

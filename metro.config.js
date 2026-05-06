@@ -15,11 +15,21 @@ const apiProxy = createProxyMiddleware({
   secure: false,
 });
 
+const mimoProxy = createProxyMiddleware({
+  target: 'https://api.xiaomimimo.com',
+  changeOrigin: true,
+  secure: true,
+  pathRewrite: { '^/mimo-api': '/v1' },
+});
+
 config.server = {
   ...config.server,
   enhanceMiddleware: (middleware) => {
     return (req, res, next) => {
-      if (req.url && req.url.startsWith('/' + API_PREFIX)) {
+      if (req.url && req.url.startsWith('/mimo-api')) {
+        return mimoProxy(req, res, next);
+      }
+      if (req.url && req.url.startsWith('/' + API_PREFIX) && !req.url.startsWith('/api/chat')) {
         return apiProxy(req, res, next);
       }
       return middleware(req, res, next);

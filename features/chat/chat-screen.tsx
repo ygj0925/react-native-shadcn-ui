@@ -7,6 +7,7 @@ import type { MessageState } from '@assistant-ui/react-native';
 import { Text } from '@/components/ui/text';
 import { useAppRuntime } from '@/hooks/use-app-runtime';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -31,24 +32,35 @@ function MessageBubble({ message }: { message: MessageState }) {
 
 function Composer() {
   const aui = useAui();
-  const text = useAuiState((state) => state.composer.text);
-  const isEmpty = useAuiState((state) => state.composer.isEmpty);
+  const [text, setText] = useState('');
+
+  function handleChangeText(value: string) {
+    setText(value);
+    aui.composer().setText(value);
+  }
+
+  function handleSend() {
+    aui.composer().send();
+    setText('');
+  }
+
+  const canSend = text.trim().length > 0;
 
   return (
-    <View className="flex-row items-end bg-background p-3">
+    <View className="flex-row items-end p-3 bg-background">
       <TextInput
         value={text}
-        onChangeText={(value) => aui.composer().setText(value)}
+        onChangeText={handleChangeText}
         placeholder="Message..."
         multiline
         className="max-h-[120px] flex-1 rounded-[20px] border border-border px-4 py-2.5 text-foreground"
       />
       <Pressable
-        onPress={() => aui.composer().send()}
-        disabled={isEmpty}
+        onPress={handleSend}
+        disabled={!canSend}
         className={cn(
           'ml-2 h-9 w-9 items-center justify-center rounded-[20px]',
-          !isEmpty ? 'bg-primary' : 'bg-muted'
+          canSend ? 'bg-primary' : 'bg-muted'
         )}>
         <Text className="font-bold text-primary-foreground">{'>'}</Text>
       </Pressable>
