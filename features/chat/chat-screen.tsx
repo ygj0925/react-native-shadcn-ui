@@ -13,7 +13,7 @@ import {
   type Option,
 } from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
-import { useAppRuntime, MIMO_MODELS, type MiMoModel } from '@/hooks/use-app-runtime';
+import { useAppRuntime, MIMO_MODELS } from '@/hooks/use-app-runtime';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
@@ -36,7 +36,7 @@ function ChatHeader({
         </SelectTrigger>
         <SelectContent side="bottom">
           {MIMO_MODELS.map((m) => (
-            <SelectItem key={m} label={m} value={m} />
+            <SelectItem key={m.value} label={m.label} value={m.value} />
           ))}
         </SelectContent>
       </Select>
@@ -125,10 +125,10 @@ function ChatScreen({ model, onModelChange }: { model: Option; onModelChange: (o
 export default function ChatIndex() {
   const [model, setModel] = useState<Option>({
     label: 'MiMo-V2.5-Pro',
-    value: 'MiMo-V2.5-Pro',
+    value: 'mimo-v2.5-pro',
   });
 
-  const runtime = useAppRuntime(model.value as MiMoModel);
+  const runtime = useAppRuntime(model.value);
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
