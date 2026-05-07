@@ -4,13 +4,45 @@ import {
   useAuiState,
 } from '@assistant-ui/react-native';
 import type { MessageState } from '@assistant-ui/react-native';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  type Option,
+} from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
-import { useAppRuntime } from '@/hooks/use-app-runtime';
+import { useAppRuntime, MIMO_MODELS, type MiMoModel } from '@/hooks/use-app-runtime';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { FlatList, Pressable, TextInput, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+function ChatHeader({
+  model,
+  onModelChange,
+}: {
+  model: Option;
+  onModelChange: (option: Option) => void;
+}) {
+  return (
+    <View className="flex-row items-center justify-between border-b border-border bg-background px-4 py-2">
+      <Text className="text-base font-semibold text-foreground">Assistant</Text>
+      <Select value={model} onValueChange={onModelChange}>
+        <SelectTrigger size="sm" className="min-w-[160px]">
+          <SelectValue placeholder="Select model" />
+        </SelectTrigger>
+        <SelectContent side="bottom">
+          {MIMO_MODELS.map((m) => (
+            <SelectItem key={m} label={m} value={m} />
+          ))}
+        </SelectContent>
+      </Select>
+    </View>
+  );
+}
 
 function MessageBubble({ message }: { message: MessageState }) {
   const isUser = message.role === 'user';
@@ -68,12 +100,13 @@ function Composer() {
   );
 }
 
-function ChatScreen() {
+function ChatScreen({ model, onModelChange }: { model: Option; onModelChange: (option: Option) => void }) {
   const messages = useAuiState((state) => state.thread.messages);
   const insets = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-background">
+      <ChatHeader model={model} onModelChange={onModelChange} />
       <FlatList
         data={messages}
         keyExtractor={(message) => message.id}
@@ -90,11 +123,16 @@ function ChatScreen() {
 }
 
 export default function ChatIndex() {
-  const runtime = useAppRuntime();
+  const [model, setModel] = useState<Option>({
+    label: 'MiMo-V2.5-Pro',
+    value: 'MiMo-V2.5-Pro',
+  });
+
+  const runtime = useAppRuntime(model.value as MiMoModel);
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <ChatScreen />
+      <ChatScreen model={model} onModelChange={setModel} />
     </AssistantRuntimeProvider>
   );
 }

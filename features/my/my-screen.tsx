@@ -4,6 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 import {
   Archive,
   ChevronRight,
@@ -147,7 +148,7 @@ export default function MyScreen() {
         <View className={cn('pt-2.5 pb-5', isCompact ? 'px-3' : 'px-4')}>
         <View className="gap-1 px-1 mb-4">
           <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-2xl' : 'text-3xl')}>
-            Settings
+            {t("settings.title")}
           </Text>
           <Text className="text-xs text-muted-foreground">
             Manage your account, app preferences, and voice experience.

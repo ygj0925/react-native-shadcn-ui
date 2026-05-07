@@ -1,9 +1,13 @@
 import zh from '@/translations/zh.json';
 import en from '@/translations/en.json';
+import ar from '@/translations/ar.json'
 
 export const resources = {
   en: {
     translation: en,
+  },
+  ar: {
+    translation: ar,
   },
   zh: {
     translation: zh,

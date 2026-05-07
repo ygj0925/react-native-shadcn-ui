@@ -22,6 +22,13 @@ const mimoProxy = createProxyMiddleware({
   pathRewrite: { '^/mimo-api': '/v1' },
 });
 
+const mimoTpProxy = createProxyMiddleware({
+  target: 'https://token-plan-cn.xiaomimimo.com',
+  changeOrigin: true,
+  secure: true,
+  pathRewrite: { '^/mimo-tp': '/v1' },
+});
+
 config.server = {
   ...config.server,
   enhanceMiddleware: (middleware) => {
@@ -29,7 +36,10 @@ config.server = {
       if (req.url && req.url.startsWith('/mimo-api')) {
         return mimoProxy(req, res, next);
       }
-      if (req.url && req.url.startsWith('/' + API_PREFIX) && !req.url.startsWith('/api/chat')) {
+      if (req.url && req.url.startsWith('/mimo-tp')) {
+        return mimoTpProxy(req, res, next);
+      }
+      if (req.url && req.url.startsWith('/' + API_PREFIX)) {
         return apiProxy(req, res, next);
       }
       return middleware(req, res, next);

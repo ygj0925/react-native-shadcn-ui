@@ -1,0 +1,76 @@
+{
+  "onboarding": {
+    "message": "Welcome to React Native Shadcn UI"
+  },
+  "greeting": "Hello, {{name}}!",
+  "apple": {
+    "one": "1 apple",
+    "other": "{{count}} apples"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account, app preferences, and voice experience.",
+    "about": "About",
+    "app_name": "App Name",
+    "arabic": "Arabic",
+    "english": "English",
+    "generale": "General",
+    "github": "Github",
+    "language": "Language",
+    "links": "Links",
+    "logout": "Logout",
+    "more": "More",
+    "privacy": "Privacy Policy",
+    "rate": "Rate",
+    "share": "Share",
+    "support": "Support",
+    "support_us": "Support Us",
+    "terms": "Terms of Service",
+    "theme": {
+      "dark": "Dark",
+      "light": "Light",
+      "system": "System",
+      "title": "Theme"
+    },
+    "version": "Version",
+    "website": "Website",
+    "profile": {
+      "plus": "PLUS",
+      "member_id": "Member ID: {{id}}",
+      "ai_points": "AI points {{points}} | Growth value {{growth}}",
+      "membership": "Membership",
+      "plan_name": "ChatGPT Plus Annual Plan",
+      "renews_in": "Renews in {{days}} days"
+    },
+    "account": {
+      "title": "Account",
+      "email": "Email",
+      "subscription": "Subscription",
+      "restore_purchases": "Restore purchases",
+      "data_controls": "Data Controls",
+      "archived_chats": "Archived Chats",
+      "custom_instructions": "Custom instructions",
+      "on": "On"
+    },
+    "app": {
+      "title": "App",
+      "color_scheme": "Color Scheme",
+      "haptic_feedback": "Haptic Feedback"
+    },
+    "speech": {
+      "title": "Speech",
+      "description": "For best results, select the language you mainly speak. If it's not listed, it may still be supported via auto-detection.",
+      "voice": "Voice",
+      "main_language": "Main Language",
+      "auto_detect": "Auto-Detect"
+    },
+    "about_section": {
+      "title": "About",
+      "help_center": "Help Center",
+      "terms_of_use": "Terms of Use",
+      "privacy_policy": "Privacy Policy",
+      "app_version_label": "ChatGPT for iOS"
+    }
+  },
+  "welcome": "Welcome to obytes app site"
+}

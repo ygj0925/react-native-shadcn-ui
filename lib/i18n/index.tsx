@@ -1,4 +1,5 @@
-import * as RNLocalize from 'react-native-localize';
+/* eslint-disable react-refresh/only-export-components */
+import { getLocales } from 'expo-localization';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { I18nManager } from 'react-native';
@@ -8,24 +9,31 @@ import { getLanguage } from './utils';
 
 export * from './utils';
 
-const deviceLanguage = RNLocalize.getLocales()[0].languageTag;
+let savedLang: string | undefined;
+try {
+  savedLang = getLanguage() || getLocales()[0]?.languageTag;
+} catch {
+  savedLang = 'en';
+}
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: deviceLanguage,
+  lng: savedLang,
   fallbackLng: 'en',
-  compatibilityJSON: 'v4', // Updated to v4 for i18next compatibility
-
-  // allows integrating dynamic values into translations.
+  compatibilityJSON: 'v4',
   interpolation: {
-    escapeValue: false, // escape passed in values to avoid XSS injections
+    escapeValue: false,
   },
 });
 
 // Is it a RTL language?
 export const isRTL: boolean = i18n.dir() === 'rtl';
 
-I18nManager.allowRTL(isRTL);
-I18nManager.forceRTL(isRTL);
+try {
+  I18nManager.allowRTL(isRTL);
+  I18nManager.forceRTL(isRTL);
+} catch {
+  // server-side
+}
 
 export default i18n;

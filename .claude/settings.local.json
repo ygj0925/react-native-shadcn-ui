@@ -9,7 +9,20 @@
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('expo-linear-gradient:', p.dependencies['expo-linear-gradient'] || p.devDependencies?.['expo-linear-gradient'] || 'NOT INSTALLED'\\)\")",
       "Bash(dir D:\\\\project\\\\react-native-shadcn-ui\\\\components *)",
       "Bash(npx tsc *)",
-      "Bash(xargs cat *)"
+      "Bash(xargs cat *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "Bash(git commit *)",
+      "Bash(grep -v '.git$')",
+      "Bash(git mv *)",
+      "Bash(git rm *)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 20)",
+      "Bash(xargs grep *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\project\\\\react-native-shadcn-ui\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(curl *)",
+      "Bash(git status *)"
     ]
   }
 }
