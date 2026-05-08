@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   FileText,
   Headphones,
+  LayoutGrid,
   MessageSquareText,
   ReceiptText,
   ScanSearch,
@@ -96,6 +97,32 @@ export default function HomeScreen() {
               </View>
             </CardContent>
           </Card>
+
+          <Link href={'/components-showcase' as never} asChild>
+            <Button
+              variant="ghost"
+              className="h-auto w-full justify-start rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 px-0 py-0">
+              <View className="w-full flex-row items-center gap-4 px-5 py-5">
+                <View className="items-center justify-center w-14 h-14 rounded-2xl bg-primary">
+                  <LayoutGrid size={26} color="white" strokeWidth={2.2} />
+                </View>
+                <View className="flex-1 gap-1">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-lg font-semibold tracking-tight">组件库</Text>
+                    <View className="rounded-full bg-primary px-2 py-0.5">
+                      <Text className="text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                        New
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="text-sm leading-5 text-muted-foreground">
+                    浏览全部 UI 组件并查看实时示例
+                  </Text>
+                </View>
+                <ArrowRight size={20} color="currentColor" strokeWidth={2.2} />
+              </View>
+            </Button>
+          </Link>
 
           <View className="gap-4">
             <View className="px-1">

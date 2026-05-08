@@ -1,6 +1,15 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  type Option,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { t } from '@/lib/i18n';
@@ -28,11 +37,95 @@ const SCREEN_OPTIONS = {
   headerShown: false,
 };
 
+type ToolCall = {
+  id: string;
+  function: { name: string; arguments: string };
+};
+
 type Message = {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'tool';
   content: string;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
 };
+
+type ToolCallUI = {
+  toolCallId: string;
+  toolName: string;
+  args: any;
+  result?: any;
+};
+
+const MIMO_TOOLS = [
+  {
+    type: 'function' as const,
+    function: {
+      name: 'show_select',
+      description: '展示一个下拉选择框让用户从多个选项中选择一个。当需要用户做单选决策时使用此工具。',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: '选择框的标题' },
+          options: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                label: { type: 'string', description: '显示给用户的选项文本' },
+                value: { type: 'string', description: '选项的值' },
+              },
+              required: ['label', 'value'],
+            },
+            description: '可供选择的选项列表',
+          },
+        },
+        required: ['title', 'options'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'show_confirm',
+      description: '展示一个确认对话框让用户确认或取消操作。当需要用户做是/否决策时使用此工具。',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: '确认框的标题' },
+          message: { type: 'string', description: '确认框的详细描述信息' },
+        },
+        required: ['title', 'message'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'show_multi_select',
+      description: '展示一个多选列表让用户选择多个选项。当需要用户从列表中勾选多项时使用此工具。',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: '多选框的标题' },
+          options: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                label: { type: 'string', description: '显示给用户的选项文本' },
+                value: { type: 'string', description: '选项的值' },
+              },
+              required: ['label', 'value'],
+            },
+            description: '可供选择的选项列表',
+          },
+        },
+        required: ['title', 'options'],
+      },
+    },
+  },
+];
 
 const MIMO_BASE_URL =
   Platform.OS === 'web' ? '/mimo-api' : (process.env.EXPO_PUBLIC_MIMO_BASE_URL ?? '');
@@ -47,27 +140,213 @@ function nextMessageId(role: string) {
 function ChatBubble({ item, maxWidth }: { item: Message; maxWidth: number }) {
   const isUser = item.role === 'user';
 
+  if (item.role === 'tool') return null;
+  if (!item.content && !item.tool_calls?.length) return null;
+
   return (
     <View className={cn('w-full', isUser ? 'items-end' : 'items-start')}>
-      <Card
-        style={{ maxWidth }}
-        className={cn(
-          'gap-0 border py-0 shadow-sm shadow-black/5',
-          isUser ? 'border-primary bg-primary' : 'border-border bg-card'
-        )}>
+      {item.content ? (
+        <Card
+          style={{ maxWidth }}
+          className={cn(
+            'gap-0 border py-0 shadow-sm shadow-black/5',
+            isUser ? 'border-primary bg-primary' : 'border-border bg-card'
+          )}>
+          <CardContent className="gap-2 px-4 py-3">
+            <Text
+              className={cn(
+                'text-xs font-medium uppercase tracking-[0.8px]',
+                isUser ? 'text-primary-foreground/80' : 'text-muted-foreground'
+              )}>
+              {isUser ? t('chat.you') : t('chat.assistant')}
+            </Text>
+            <Text className={cn('leading-6', isUser ? 'text-primary-foreground' : 'text-foreground')}>
+              {item.content}
+            </Text>
+          </CardContent>
+        </Card>
+      ) : null}
+    </View>
+  );
+}
+
+function SelectToolUI({
+  args,
+  result,
+  onResult,
+}: {
+  args: { title: string; options: { label: string; value: string }[] };
+  result?: { value: string; label: string };
+  onResult: (result: any) => void;
+}) {
+  const [selected, setSelected] = React.useState<Option | undefined>();
+
+  if (result) {
+    return (
+      <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
         <CardContent className="gap-2 px-4 py-3">
-          <Text
-            className={cn(
-              'text-xs font-medium uppercase tracking-[0.8px]',
-              isUser ? 'text-primary-foreground/80' : 'text-muted-foreground'
-            )}>
-            {isUser ? t('chat.you') : t('chat.assistant')}
-          </Text>
-          <Text className={cn('leading-6', isUser ? 'text-primary-foreground' : 'text-foreground')}>
-            {item.content}
-          </Text>
+          <Text className="text-xs font-medium text-muted-foreground">{args.title}</Text>
+          <Text className="text-foreground">已选择: {result.label || result.value}</Text>
         </CardContent>
       </Card>
+    );
+  }
+
+  return (
+    <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
+      <CardContent className="gap-3 px-4 py-3">
+        <Text className="text-sm font-medium text-foreground">{args.title}</Text>
+        <Select value={selected} onValueChange={setSelected}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择..." />
+          </SelectTrigger>
+          <SelectContent side="bottom">
+            {args.options.map((opt) => (
+              <SelectItem key={opt.value} label={opt.label} value={opt.value} />
+            ))}
+          </SelectContent>
+        </Select>
+      </CardContent>
+      <CardFooter className="px-4 pb-3">
+        <Button
+          disabled={!selected}
+          onPress={() => {
+            if (selected) onResult({ value: selected.value, label: selected.label });
+          }}>
+          <Text className="text-primary-foreground">确认</Text>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function ConfirmToolUI({
+  args,
+  result,
+  onResult,
+}: {
+  args: { title: string; message: string };
+  result?: { confirmed: boolean };
+  onResult: (result: any) => void;
+}) {
+  if (result) {
+    return (
+      <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
+        <CardContent className="gap-2 px-4 py-3">
+          <Text className="text-xs font-medium text-muted-foreground">{args.title}</Text>
+          <Text className="text-foreground">{result.confirmed ? '已确认' : '已取消'}</Text>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
+      <CardContent className="gap-2 px-4 py-3">
+        <Text className="text-sm font-medium text-foreground">{args.title}</Text>
+        <Text className="text-muted-foreground">{args.message}</Text>
+      </CardContent>
+      <CardFooter className="flex-row gap-3 px-4 pb-3">
+        <Button variant="outline" onPress={() => onResult({ confirmed: false })}>
+          <Text>取消</Text>
+        </Button>
+        <Button onPress={() => onResult({ confirmed: true })}>
+          <Text className="text-primary-foreground">确认</Text>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function MultiSelectToolUI({
+  args,
+  result,
+  onResult,
+}: {
+  args: { title: string; options: { label: string; value: string }[] };
+  result?: { values: string[] };
+  onResult: (result: any) => void;
+}) {
+  const [selected, setSelected] = React.useState<Set<string>>(new Set());
+
+  function toggle(value: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
+
+  if (result) {
+    const labels = args.options
+      .filter((opt) => result.values.includes(opt.value))
+      .map((opt) => opt.label);
+    return (
+      <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
+        <CardContent className="gap-2 px-4 py-3">
+          <Text className="text-xs font-medium text-muted-foreground">{args.title}</Text>
+          <Text className="text-foreground">已选择: {labels.join(', ')}</Text>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="py-0 border-border bg-card shadow-sm shadow-black/5">
+      <CardContent className="gap-3 px-4 py-3">
+        <Text className="text-sm font-medium text-foreground">{args.title}</Text>
+        {args.options.map((opt) => (
+          <Pressable
+            key={opt.value}
+            className="flex-row items-center gap-3"
+            onPress={() => toggle(opt.value)}>
+            <Checkbox
+              checked={selected.has(opt.value)}
+              onCheckedChange={() => toggle(opt.value)}
+            />
+            <Text className="text-foreground">{opt.label}</Text>
+          </Pressable>
+        ))}
+      </CardContent>
+      <CardFooter className="px-4 pb-3">
+        <Button
+          disabled={selected.size === 0}
+          onPress={() => onResult({ values: Array.from(selected) })}>
+          <Text className="text-primary-foreground">提交</Text>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function ToolCallBubble({
+  toolCall,
+  maxWidth,
+  onResult,
+}: {
+  toolCall: ToolCallUI;
+  maxWidth: number;
+  onResult: (toolCallId: string, result: any) => void;
+}) {
+  let args: any = {};
+  try {
+    args = typeof toolCall.args === 'string' ? JSON.parse(toolCall.args) : toolCall.args;
+  } catch { /* empty */ }
+
+  const handleResult = (result: any) => onResult(toolCall.toolCallId, result);
+
+  return (
+    <View className="w-full items-start" style={{ maxWidth }}>
+      {toolCall.toolName === 'show_select' && (
+        <SelectToolUI args={args} result={toolCall.result} onResult={handleResult} />
+      )}
+      {toolCall.toolName === 'show_confirm' && (
+        <ConfirmToolUI args={args} result={toolCall.result} onResult={handleResult} />
+      )}
+      {toolCall.toolName === 'show_multi_select' && (
+        <MultiSelectToolUI args={args} result={toolCall.result} onResult={handleResult} />
+      )}
     </View>
   );
 }
@@ -79,6 +358,11 @@ export default function ChatScreen() {
   const { width } = useWindowDimensions();
   const [input, setInput] = React.useState('');
   const [messages, setMessages] = React.useState<Message[]>([]);
+  const messagesRef = React.useRef<Message[]>([]);
+  React.useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+  const [toolCalls, setToolCalls] = React.useState<ToolCallUI[]>([]);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
@@ -125,6 +409,29 @@ export default function ChatScreen() {
     return () => clearTimeout(timer);
   }, [messages, isGenerating]);
 
+  async function callApi(apiMessages: { role: string; content: string; tool_calls?: any[]; tool_call_id?: string }[]) {
+    const response = await fetch(`${MIMO_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': MIMO_API_KEY,
+      },
+      body: JSON.stringify({
+        model: MIMO_MODEL,
+        messages: apiMessages,
+        tools: MIMO_TOOLS,
+        tool_choice: 'auto',
+        max_completion_tokens: 4096,
+        temperature: 1.0,
+        top_p: 0.95,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+
   async function sendMessage(text: string) {
     const trimmed = text.trim();
 
@@ -138,87 +445,104 @@ export default function ChatScreen() {
       content: trimmed,
     };
     const updatedMessages = [...messages, userMsg];
-    const assistantId = nextMessageId('assistant');
 
     setMessages(updatedMessages);
     setInput('');
     setIsGenerating(true);
 
     try {
-      const useStream = !!globalThis.ReadableStream;
-
-      const response = await fetch(`${MIMO_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': MIMO_API_KEY,
-        },
-        body: JSON.stringify({
-          model: MIMO_MODEL,
-          messages: updatedMessages.map(({ role, content }) => ({ role, content })),
-          max_completion_tokens: 4096,
-          temperature: 1.0,
-          top_p: 0.95,
-          stream: useStream,
-        }),
+      const apiMessages = updatedMessages.map((m) => {
+        const msg: any = { role: m.role, content: m.content };
+        if (m.tool_calls) msg.tool_calls = m.tool_calls;
+        if (m.tool_call_id) msg.tool_call_id = m.tool_call_id;
+        return msg;
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      const data = await callApi(apiMessages);
+      const choice = data.choices?.[0];
+      const msg = choice?.message;
 
-      if (useStream && response.body) {
-        setMessages((prev) => [
-          ...prev,
-          { id: assistantId, role: 'assistant', content: '' },
-        ]);
+      if (msg?.tool_calls?.length) {
+        const assistantMsg: Message = {
+          id: nextMessageId('assistant'),
+          role: 'assistant',
+          content: msg.content || '',
+          tool_calls: msg.tool_calls,
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let content = '';
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() ?? '';
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') continue;
-
-            try {
-              const json = JSON.parse(data);
-              const delta = json.choices?.[0]?.delta;
-              if (delta?.content) {
-                content += delta.content;
-                setMessages((prev) =>
-                  prev.map((m) => (m.id === assistantId ? { ...m, content } : m))
-                );
-              }
-            } catch {
-              // partial JSON chunk, skip
-            }
-          }
-        }
-
-        if (!content) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === assistantId ? { ...m, content: t('chat.no_reply') } : m))
-          );
-        }
+        const newToolCalls: ToolCallUI[] = msg.tool_calls.map((tc: any) => ({
+          toolCallId: tc.id,
+          toolName: tc.function.name,
+          args: tc.function.arguments,
+        }));
+        setToolCalls((prev) => [...prev, ...newToolCalls]);
       } else {
-        const data = await response.json();
-        const msg = data.choices?.[0]?.message;
         const reply = msg?.content || msg?.reasoning_content || t('chat.no_reply');
-
         setMessages((prev) => [
           ...prev,
-          { id: assistantId, role: 'assistant', content: reply },
+          { id: nextMessageId('assistant'), role: 'assistant', content: reply },
+        ]);
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { id: nextMessageId('assistant'), role: 'assistant', content: t('chat.request_failed') },
+      ]);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  async function handleToolResult(toolCallId: string, result: any) {
+    setToolCalls((prev) =>
+      prev.map((tc) => (tc.toolCallId === toolCallId ? { ...tc, result } : tc))
+    );
+
+    const toolResultMsg: Message = {
+      id: nextMessageId('tool'),
+      role: 'tool',
+      content: JSON.stringify(result),
+      tool_call_id: toolCallId,
+    };
+
+    const updatedMessages = [...messagesRef.current, toolResultMsg];
+    messagesRef.current = updatedMessages;
+    setMessages(updatedMessages);
+    setIsGenerating(true);
+
+    try {
+      const apiMessages = updatedMessages.map((m) => {
+        const msg: any = { role: m.role, content: m.content };
+        if (m.tool_calls) msg.tool_calls = m.tool_calls;
+        if (m.tool_call_id) msg.tool_call_id = m.tool_call_id;
+        return msg;
+      });
+
+      const data = await callApi(apiMessages);
+      const choice = data.choices?.[0];
+      const msg = choice?.message;
+
+      if (msg?.tool_calls?.length) {
+        const assistantMsg: Message = {
+          id: nextMessageId('assistant'),
+          role: 'assistant',
+          content: msg.content || '',
+          tool_calls: msg.tool_calls,
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+
+        const newToolCalls: ToolCallUI[] = msg.tool_calls.map((tc: any) => ({
+          toolCallId: tc.id,
+          toolName: tc.function.name,
+          args: tc.function.arguments,
+        }));
+        setToolCalls((prev) => [...prev, ...newToolCalls]);
+      } else {
+        const reply = msg?.content || msg?.reasoning_content || t('chat.no_reply');
+        setMessages((prev) => [
+          ...prev,
+          { id: nextMessageId('assistant'), role: 'assistant', content: reply },
         ]);
       }
     } catch {
@@ -388,7 +712,26 @@ export default function ChatScreen() {
             contentContainerStyle={{ paddingHorizontal: isLargeScreen ? 20 : contentPadding }}
             keyboardDismissMode="interactive"
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => <ChatBubble item={item} maxWidth={bubbleMaxWidth} />}
+            renderItem={({ item }) => {
+              if (item.role === 'tool') return null;
+              const itemToolCalls = (item.tool_calls
+                ?.map((tc) => toolCalls.find((t) => t.toolCallId === tc.id))
+                .filter(Boolean) ?? []) as ToolCallUI[];
+
+              return (
+                <View className="gap-3">
+                  <ChatBubble item={item} maxWidth={bubbleMaxWidth} />
+                  {itemToolCalls.map((tc) => (
+                    <ToolCallBubble
+                      key={tc.toolCallId}
+                      toolCall={tc}
+                      maxWidth={bubbleMaxWidth}
+                      onResult={handleToolResult}
+                    />
+                  ))}
+                </View>
+              );
+            }}
             ListEmptyComponent={
               <View className="items-center w-full max-w-sm gap-5">
                 <View className="items-center justify-center w-16 h-16 rounded-full bg-primary">

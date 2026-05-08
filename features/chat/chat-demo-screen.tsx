@@ -1,9 +1,10 @@
 import {
   AssistantRuntimeProvider,
+  MessagePrimitive,
+  MessageByIndexProvider,
   useAui,
   useAuiState,
 } from '@assistant-ui/react-native';
-import type { MessageState } from '@assistant-ui/react-native';
 import {
   Select,
   SelectContent,
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
 import { useAppRuntime, MIMO_MODELS } from '@/hooks/use-app-runtime';
+import { ToolUIs } from '@/features/chat/tool-uis';
 import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -45,21 +47,57 @@ function ChatHeader({
   );
 }
 
-function MessageBubble({ message }: { message: MessageState }) {
-  const isUser = message.role === 'user';
-  const text = message.content
-    .filter((part) => part.type === 'text')
-    .map((part) => ('text' in part ? part.text : ''))
-    .join('\n');
-
+function AssistantTextBubble({ text }: { text: string }) {
+  if (!text) return null;
   return (
     <View
-      className={cn(
-        'my-1 mx-4 max-w-[80%] rounded-2xl p-3',
-        isUser ? 'self-end bg-primary' : 'self-start bg-muted'
-      )}>
-      <Text className={isUser ? 'text-primary-foreground' : 'text-foreground'}>{text}</Text>
+      style={{
+        alignSelf: 'flex-start',
+        maxWidth: '85%',
+        marginHorizontal: 12,
+        marginVertical: 4,
+        backgroundColor: '#f0f0f3',
+        borderRadius: 16,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+      }}>
+      <Text style={{ color: '#1c2024', fontSize: 14, lineHeight: 20 }}>{text}</Text>
     </View>
+  );
+}
+
+function UserBubble({ text }: { text: string }) {
+  return (
+    <View
+      style={{
+        alignSelf: 'flex-end',
+        maxWidth: '85%',
+        marginHorizontal: 12,
+        marginVertical: 4,
+        backgroundColor: '#000000',
+        borderRadius: 16,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+      }}>
+      <Text style={{ color: '#ffffff', fontSize: 14, lineHeight: 20 }}>{text}</Text>
+    </View>
+  );
+}
+
+function MessageBubble({ index, isUser, plainText }: { index: number; isUser: boolean; plainText: string }) {
+  if (isUser) {
+    return <UserBubble text={plainText} />;
+  }
+  return (
+    <MessageByIndexProvider index={index}>
+      <MessagePrimitive.Root>
+        <MessagePrimitive.Parts
+          components={{
+            Text: ({ text }) => <AssistantTextBubble text={text} />,
+          }}
+        />
+      </MessagePrimitive.Root>
+    </MessageByIndexProvider>
   );
 }
 
@@ -111,10 +149,22 @@ function ChatScreen({ model, onModelChange }: { model: Option; onModelChange: (o
       <FlatList
         data={messages}
         keyExtractor={(message) => message.id}
-        renderItem={({ item }) => <MessageBubble message={item} />}
-        contentContainerStyle={{ paddingBottom: 72 }}
+        renderItem={({ item, index }) => {
+          const plainText = item.content
+            .filter((part) => part.type === 'text')
+            .map((part) => ('text' in part ? part.text : ''))
+            .join('\n');
+          return (
+            <MessageBubble
+              index={index}
+              isUser={item.role === 'user'}
+              plainText={plainText}
+            />
+          );
+        }}
+        contentContainerStyle={{ paddingBottom: 72, paddingTop: 8 }}
         keyboardDismissMode="interactive"
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
       />
       <KeyboardStickyView offset={{ closed: insets.bottom }}>
         <Composer />
@@ -133,6 +183,7 @@ export default function ChatIndex() {
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
+      <ToolUIs />
       <ChatScreen model={model} onModelChange={setModel} />
     </AssistantRuntimeProvider>
   );

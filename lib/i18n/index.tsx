@@ -1,5 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-import { getLocales } from 'expo-localization';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { I18nManager } from 'react-native';
@@ -9,12 +8,16 @@ import { getLanguage } from './utils';
 
 export * from './utils';
 
-let savedLang: string | undefined;
-try {
-  savedLang = getLanguage() || getLocales()[0]?.languageTag;
-} catch {
-  savedLang = 'en';
+function detectDeviceLocale(): string | undefined {
+  try {
+    const mod = require('expo-localization');
+    return mod.getLocales?.()[0]?.languageTag;
+  } catch {
+    return undefined;
+  }
 }
+
+const savedLang = getLanguage() || detectDeviceLocale() || 'en';
 
 i18n.use(initReactI18next).init({
   resources,

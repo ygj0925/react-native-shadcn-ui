@@ -48,6 +48,18 @@ function SelectTrigger({
     children?: React.ReactNode;
     size?: 'default' | 'sm';
   }) {
+  const { open, onOpenChange } = SelectPrimitive.useRootContext();
+
+  const webTouchFix =
+    Platform.OS === 'web'
+      ? {
+          onTouchEnd: (e: any) => {
+            e.preventDefault();
+            onOpenChange(!open);
+          },
+        }
+      : {};
+
   return (
     <SelectPrimitive.Trigger
       ref={ref}
@@ -60,6 +72,7 @@ function SelectTrigger({
         size === 'sm' && 'h-8 py-2 sm:py-1.5',
         className
       )}
+      {...webTouchFix}
       {...props}>
       <>{children}</>
       <Icon as={ChevronDown} aria-hidden={true} className="text-muted-foreground size-4" />
