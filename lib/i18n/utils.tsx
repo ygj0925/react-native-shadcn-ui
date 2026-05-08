@@ -3,10 +3,9 @@ import type { Language, resources } from './resources';
 import type { RecursiveKeyOf } from './types';
 import i18n from 'i18next';
 import memoize from 'lodash.memoize';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { I18nManager, NativeModules, Platform } from 'react-native';
 
-import { useMMKVString } from 'react-native-mmkv';
 import RNRestart from 'react-native-restart';
 import { storage } from '../storage';
 
@@ -15,7 +14,13 @@ export type TxKeyPath = RecursiveKeyOf<DefaultLocale>;
 
 export const LOCAL = 'local';
 
-export const getLanguage = () => storage.getString(LOCAL); // 'Marc' getItem<Language | undefined>(LOCAL);
+export const getLanguage = () => {
+  try {
+    return storage.getString(LOCAL);
+  } catch {
+    return undefined;
+  }
+};
 
 export const t = memoize(
   (key: TxKeyPath, options = undefined) =>
@@ -43,16 +48,25 @@ export function changeLanguage(lang: Language) {
 }
 
 export function useSelectedLanguage() {
-  const [language, setLang] = useMMKVString(LOCAL);
+  const [language, setLanguageState] = useState<Language | undefined>(() => {
+    try {
+      return storage.getString(LOCAL) as Language | undefined;
+    } catch {
+      return undefined;
+    }
+  });
 
-  const setLanguage = useCallback(
-    (lang: Language) => {
-      setLang(lang);
-      if (lang !== undefined)
-        changeLanguage(lang as Language);
-    },
-    [setLang],
-  );
+  const setLanguage = useCallback((lang: Language) => {
+    try {
+      storage.set(LOCAL, lang);
+    } catch {
+      // ignore storage failures (e.g. SSR)
+    }
+    setLanguageState(lang);
+    if (lang !== undefined) {
+      changeLanguage(lang);
+    }
+  }, []);
 
   return { language: language as Language, setLanguage };
 }

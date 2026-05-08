@@ -38,6 +38,10 @@ function createFallbackStorage(): StorageLike {
 }
 
 function createStorage(): StorageLike {
+  if (Platform.OS === 'web') {
+    return createFallbackStorage();
+  }
+
   try {
     const mmkvModule = require('react-native-mmkv') as {
       createMMKV?: () => StorageLike;
