@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
+import { t } from '@/lib/i18n';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
@@ -17,10 +18,10 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const schema = z.object({
   username: z
     .string()
-    .min(1, 'Please enter your AD account'),
+    .min(1, t('auth.ad_account_required')),
   password: z
     .string()
-    .min(1, 'Please enter your password'),
+    .min(1, t('auth.password_required')),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -54,7 +55,7 @@ export function SignInForm() {
       console.log('====================================');
       // router.replace('/(tabs)');
     } catch (e: any) {
-      Alert.alert('Login Failed', e.message ?? 'Please check your account and password.');
+      Alert.alert(t('auth.login_failed'), e.message ?? t('auth.login_failed_desc'));
     } finally {
       setLoading(false);
     }
@@ -63,20 +64,20 @@ export function SignInForm() {
   return (
     <View className="flex-col gap-6">
       <View className="gap-1">
-        <CardTitle className="text-2xl tracking-tight text-center">Sign in</CardTitle>
+        <CardTitle className="text-2xl tracking-tight text-center">{t('auth.sign_in')}</CardTitle>
         <CardDescription className="text-center">
-          Use your AD account to sign in to your workspace.
+          {t('auth.sign_in_desc')}
         </CardDescription>
       </View>
       <View className="gap-5">
         <View className="gap-2">
-          <Label htmlFor="username">AD Account</Label>
+          <Label htmlFor="username">{t('auth.ad_account')}</Label>
           <Controller
             control={control}
             name="username"
             render={({ field: { onChange, onBlur, value } }) => (
               <Input
-                placeholder="Enter your AD account"
+                placeholder={t('auth.ad_account_placeholder')}
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -94,15 +95,15 @@ export function SignInForm() {
 
         <View className="gap-2">
           <View className="flex-row items-center">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('auth.password')}</Label>
             <Button
               variant="link"
               size="sm"
               className="h-4 px-1 py-0 ml-auto web:h-fit sm:h-4"
               onPress={() => {
-                Alert.alert('Forgot Password', 'Please contact your IT administrator to reset your AD password.');
+                Alert.alert(t('auth.forgot_title'), t('auth.forgot_desc'));
               }}>
-              <Text className="font-normal leading-4">Forgot password?</Text>
+              <Text className="font-normal leading-4">{t('auth.forgot')}</Text>
             </Button>
           </View>
           <Controller
@@ -111,7 +112,7 @@ export function SignInForm() {
             render={({ field: { onChange, onBlur, value } }) => (
               <Input
                 ref={passwordInputRef}
-                placeholder="Enter your password"
+                placeholder={t('auth.password_placeholder')}
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
@@ -140,22 +141,22 @@ export function SignInForm() {
           className="w-full h-11"
           onPress={handleSubmit(onSubmit)}
           disabled={loading}>
-          <Text>{loading ? 'Signing in...' : 'Sign in'}</Text>
+          <Text>{loading ? t('auth.signing_in') : t('auth.sign_in')}</Text>
         </Button>
       </View>
 
       <Text className="text-sm text-center">
-        Don't have an account?{' '}
+        {t('auth.no_account')}{' '}
         <Text
           className="text-sm font-medium underline"
           onPress={() => router.push('/register')}>
-          Create one
+          {t('auth.create_one')}
         </Text>
       </Text>
 
       <View className="flex-row items-center">
         <Separator className="flex-1" />
-        <Text className="px-4 text-sm text-muted-foreground">or continue with</Text>
+        <Text className="px-4 text-sm text-muted-foreground">{t('auth.or_continue')}</Text>
         <Separator className="flex-1" />
       </View>
 

@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { t } from '@/lib/i18n';
 import { useColorScheme } from 'nativewind';
 import { Alert, Image, Platform, View } from 'react-native';
 
@@ -34,7 +35,10 @@ export function SocialConnections() {
             size="sm"
             className="flex-1"
             onPress={() => {
-              Alert.alert('Coming Soon', `Sign in with ${strategy.type.replace('oauth_', '')} is not yet available.`);
+              Alert.alert(
+                t('auth.social_alert_title'),
+                t('auth.social_alert_desc', { provider: strategy.type.replace('oauth_', '') })
+              );
             }}>
             <Image
               className={cn('size-4', strategy.useTint && Platform.select({ web: 'dark:invert' }))}

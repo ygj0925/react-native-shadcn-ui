@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
+import { t } from '@/lib/i18n';
 import { getItem, setItem } from '@/lib/storage';
 import { THEME } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -87,12 +88,14 @@ type SystemAgendaItem = Extract<AgendaItem, { source: 'system' }>;
 
 const STORAGE_KEY = 'about-schedules';
 
-const REMINDER_OPTIONS: Array<{ label: string; value: number | null }> = [
-  { label: '不提醒', value: null },
-  { label: '15 分钟前', value: 15 },
-  { label: '30 分钟前', value: 30 },
-  { label: '1 小时前', value: 60 },
-];
+function getReminderOptions(): Array<{ label: string; value: number | null }> {
+  return [
+    { label: t('about.reminder_none'), value: null },
+    { label: t('about.reminder_15'), value: 15 },
+    { label: t('about.reminder_30'), value: 30 },
+    { label: t('about.reminder_60'), value: 60 },
+  ];
+}
 
 function createEmptyForm(): ScheduleForm {
   return {
@@ -136,7 +139,7 @@ function formatDateLabel(date: string) {
 
 function formatSyncLabel(value?: string | null) {
   if (!value) {
-    return '未同步';
+    return t('about.not_synced');
   }
 
   return new Intl.DateTimeFormat('zh-CN', {
@@ -273,7 +276,7 @@ function toDeviceEventItem(event: DeviceCalendar.Event, calendars: SystemCalenda
 
   return {
     id: event.id,
-    title: event.title?.trim() || '未命名日程',
+    title: event.title?.trim() || t('about.unnamed_event'),
     notes: event.notes?.trim() || '',
     location: event.location?.trim() || '',
     startDate,
@@ -282,14 +285,14 @@ function toDeviceEventItem(event: DeviceCalendar.Event, calendars: SystemCalenda
     startTime: formatTimeLabel(startDate),
     endTime: formatTimeLabel(endDate),
     calendarId: event.calendarId,
-    calendarTitle: calendar?.title ?? '系统日历',
+    calendarTitle: calendar?.title ?? t('about.system_calendar'),
     color: calendar?.color ?? '#007aff',
     allDay: !!event.allDay,
   } satisfies DeviceEventItem;
 }
 
 function getReminderLabel(value: number | null | undefined) {
-  return REMINDER_OPTIONS.find((option) => option.value === value)?.label ?? '不提醒';
+  return getReminderOptions().find((option) => option.value === value)?.label ?? t('about.reminder_none');
 }
 
 function AgendaCard({
@@ -318,7 +321,7 @@ function AgendaCard({
         <View className="flex-1 gap-2">
           <Text className="text-xs tracking-wide text-muted-foreground">
             {item.source === 'system' && item.allDay
-              ? '全天日程'
+              ? t('about.all_day')
               : `${item.startTime} - ${item.endTime}`}
           </Text>
           <Text className="text-xl font-semibold leading-7 text-foreground">{item.title}</Text>
@@ -332,7 +335,7 @@ function AgendaCard({
           <View className="flex-row flex-wrap items-center gap-3">
             <View className="px-3 py-1 rounded-full bg-accent">
               <Text className="text-xs font-medium text-primary">
-                {item.source === 'local' ? '应用内日程' : item.calendarTitle}
+                {item.source === 'local' ? t('about.in_app_event') : item.calendarTitle}
               </Text>
             </View>
 
@@ -347,14 +350,14 @@ function AgendaCard({
           {item.source === 'local' ? (
             <Text className="text-xs text-muted-foreground">
               {item.calendarTitle
-                ? `系统日历: ${item.calendarTitle} · ${getReminderLabel(item.reminderMinutesBefore)}`
-                : '当前仅保存在应用内'}
+                ? t('about.calendar_label', { name: item.calendarTitle, reminder: getReminderLabel(item.reminderMinutesBefore) })
+                : t('about.in_app_only')}
             </Text>
           ) : null}
 
           {item.source === 'local' ? (
             <Text className="text-xs text-muted-foreground">
-              最近同步: {formatSyncLabel(item.lastSyncedAt)}
+              {t('about.last_sync', { time: formatSyncLabel(item.lastSyncedAt) })}
             </Text>
           ) : null}
         </View>
@@ -502,12 +505,12 @@ export default function AboutScreen() {
   }
   async function ensureCalendarReady() {
     if (Platform.OS === 'web') {
-      Alert.alert('Web 端暂不支持系统日历。');
+      Alert.alert(t('about.alert.web_unsupported'));
       return false;
     }
 
     if (!(await DeviceCalendar.isAvailableAsync())) {
-      Alert.alert('当前设备不可用系统日历能力。');
+      Alert.alert(t('about.alert.device_unsupported'));
       return false;
     }
 
@@ -518,7 +521,7 @@ export default function AboutScreen() {
 
     const requested = await DeviceCalendar.requestCalendarPermissionsAsync();
     if (requested.status !== 'granted') {
-      Alert.alert('没有获得日历权限', '请先在系统设置里允许应用访问系统日历。');
+      Alert.alert(t('about.alert.no_permission_title'), t('about.alert.no_permission_desc'));
       return false;
     }
 
@@ -555,7 +558,7 @@ export default function AboutScreen() {
 
       await loadSystemEvents(anchorDate, normalized);
     } catch (error) {
-      Alert.alert('读取系统日历失败', error instanceof Error ? error.message : '请稍后再试。');
+      Alert.alert(t('about.alert.read_failed'), error instanceof Error ? error.message : t('about.alert.try_later'));
     } finally {
       setLoadingCalendars(false);
     }
@@ -597,7 +600,7 @@ export default function AboutScreen() {
       if (gen !== loadGenRef.current) {
         return;
       }
-      Alert.alert('获取系统日程失败', error instanceof Error ? error.message : '请稍后再试。');
+      Alert.alert(t('about.alert.load_events_failed'), error instanceof Error ? error.message : t('about.alert.try_later'));
     } finally {
       if (gen === loadGenRef.current) {
         setLoadingSystemEvents(false);
@@ -611,12 +614,12 @@ export default function AboutScreen() {
     const endTime = normalizeTimeValue(form.endTime, existing?.endTime ?? '10:00');
 
     if (!form.title.trim()) {
-      Alert.alert('请填写事件名称。');
+      Alert.alert(t('about.alert.name_required'));
       return null;
     }
 
     if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
-      Alert.alert('结束时间必须晚于开始时间。');
+      Alert.alert(t('about.alert.time_invalid'));
       return null;
     }
 
@@ -650,7 +653,7 @@ export default function AboutScreen() {
       calendars.find((entry) => entry.id === item.calendarId) ?? pickDefaultCalendar(calendars);
 
     if (!target) {
-      Alert.alert('没有可写入的系统日历。');
+      Alert.alert(t('about.alert.no_writable'));
       return false;
     }
 
@@ -684,7 +687,7 @@ export default function AboutScreen() {
       await loadSystemEvents(item.date);
       return eventId;
     } catch (error) {
-      Alert.alert('同步失败', error instanceof Error ? error.message : '写入系统日历没有成功。');
+      Alert.alert(t('about.alert.sync_failed'), error instanceof Error ? error.message : t('about.alert.sync_failed_desc'));
       return false;
     } finally {
       setPendingActionId(null);
@@ -721,7 +724,7 @@ export default function AboutScreen() {
     try {
       await DeviceCalendar.openEventInCalendarAsync({ id: eventId }, { allowsEditing: true });
     } catch (error) {
-      Alert.alert('打开失败', error instanceof Error ? error.message : '无法打开系统日历事件。');
+      Alert.alert(t('about.alert.open_failed'), error instanceof Error ? error.message : t('about.alert.open_failed_desc'));
     } finally {
       setPendingActionId(null);
     }
@@ -733,7 +736,7 @@ export default function AboutScreen() {
     try {
       await DeviceCalendar.openEventInCalendarAsync({ id: item.id }, { allowsEditing: true });
     } catch (error) {
-      Alert.alert('打开失败', error instanceof Error ? error.message : '无法打开系统日历事件。');
+      Alert.alert(t('about.alert.open_failed'), error instanceof Error ? error.message : t('about.alert.open_failed_desc'));
     } finally {
       setPendingActionId(null);
     }
@@ -757,10 +760,10 @@ export default function AboutScreen() {
   }
 
   function deleteSchedule(item: ScheduleItem) {
-    Alert.alert('删除事件', '确认删除这条本地事件吗？如果已经同步到系统日历，也会一起删除。', [
-      { text: '取消', style: 'cancel' },
+    Alert.alert(t('about.alert.delete_title'), t('about.alert.delete_confirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: '删除',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           setPendingActionId(item.id);
@@ -877,12 +880,12 @@ export default function AboutScreen() {
                 <View className="mt-4 flex-row flex-wrap gap-3 rounded-2xl bg-accent px-4 py-3">
                   <View className="px-3 py-2 bg-card rounded-full">
                     <Text className="text-xs font-medium text-primary">
-                      本月本地 {monthStats.localCount}
+                      {t('about.monthly_local', { count: monthStats.localCount })}
                     </Text>
                   </View>
                   <View className="px-3 py-2 bg-card rounded-full">
                     <Text className="text-xs font-medium text-primary">
-                      系统日历 {monthStats.systemCount}
+                      {t('about.monthly_system', { count: monthStats.systemCount })}
                     </Text>
                   </View>
                   <Button
@@ -896,7 +899,7 @@ export default function AboutScreen() {
                     ) : (
                       <RefreshCw size={14} color={tint.primary} />
                     )}
-                    <Text className="text-primary">刷新系统日程</Text>
+                    <Text className="text-primary">{t('about.refresh_system')}</Text>
                   </Button>
                 </View>
               </CardContent>
@@ -910,12 +913,12 @@ export default function AboutScreen() {
                       {formatDateLabel(selectedDate)}
                     </CardTitle>
                     <Text className="mt-1 text-sm text-muted-foreground">
-                      本地事件和系统日历会一起显示在这里。
+                      {t('about.selected_subtitle')}
                     </Text>
                   </View>
                   <View className="px-3 py-1 rounded-full bg-accent">
                     <Text className="text-xs font-medium text-primary">
-                      {selectedAgenda.length} 条
+                      {t('about.items_count', { count: selectedAgenda.length })}
                     </Text>
                   </View>
                 </View>
@@ -940,10 +943,10 @@ export default function AboutScreen() {
                 ) : (
                   <View className="rounded-2xl border border-dashed border-border bg-card px-5 py-10">
                     <Text className="text-base font-medium text-center text-foreground">
-                      这一天还没有事件
+                      {t('about.no_event_title')}
                     </Text>
                     <Text className="mt-2 text-sm leading-6 text-center text-muted-foreground">
-                      右侧创建一条新事件，或者点击刷新把系统日历里的安排同步过来。
+                      {t('about.no_event_subtitle')}
                     </Text>
                   </View>
                 )}
@@ -956,7 +959,7 @@ export default function AboutScreen() {
               <CardHeader className="px-5 pt-6 pb-3">
                 <View className="items-center gap-2">
                   <Text className="text-3xl font-semibold text-foreground">
-                    {editingId ? 'Edit Event' : 'Add New Event'}
+                    {editingId ? t('about.edit_event') : t('about.add_event')}
                   </Text>
                   <Text className="text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</Text>
                 </View>
@@ -966,14 +969,14 @@ export default function AboutScreen() {
                 <Input
                   value={form.title}
                   onChangeText={(value) => updateForm('title', value)}
-                  placeholder="Event name*"
+                  placeholder={t('about.event_name_placeholder')}
                   className="h-12 rounded-2xl border-border bg-muted text-foreground"
                 />
 
                 <Textarea
                   value={form.notes}
                   onChangeText={(value) => updateForm('notes', value)}
-                  placeholder="Type the note here..."
+                  placeholder={t('about.event_notes_placeholder')}
                   className="min-h-28 rounded-2xl border-border bg-muted text-foreground"
                 />
 
@@ -987,13 +990,13 @@ export default function AboutScreen() {
                   <Input
                     value={form.startTime}
                     onChangeText={(value) => updateForm('startTime', value)}
-                    placeholder="Start time"
+                    placeholder={t('about.start_time_placeholder')}
                     className="flex-1 h-12 rounded-2xl border-border bg-muted text-foreground"
                   />
                   <Input
                     value={form.endTime}
                     onChangeText={(value) => updateForm('endTime', value)}
-                    placeholder="End time"
+                    placeholder={t('about.end_time_placeholder')}
                     className="flex-1 h-12 rounded-2xl border-border bg-muted text-foreground"
                   />
                 </View>
@@ -1001,15 +1004,15 @@ export default function AboutScreen() {
                 <Input
                   value={form.location}
                   onChangeText={(value) => updateForm('location', value)}
-                  placeholder="Location"
+                  placeholder={t('about.location_placeholder')}
                   className="h-12 rounded-2xl border-border bg-muted text-foreground"
                 />
 
                 <View className="flex-row items-center justify-between rounded-2xl bg-muted px-4 py-3">
                   <View className="flex-1 pr-4">
-                    <Text className="text-base font-medium text-foreground">同步到系统日历</Text>
+                    <Text className="text-base font-medium text-foreground">{t('about.sync_to_system')}</Text>
                     <Text className="mt-1 text-xs leading-5 text-muted-foreground">
-                      打开后创建时会写入系统日历，也能从左侧读取系统日程。
+                      {t('about.sync_to_system_desc')}
                     </Text>
                   </View>
                   <Switch
@@ -1018,9 +1021,9 @@ export default function AboutScreen() {
                   />
                 </View>
                 <View className="gap-2">
-                  <Text className="text-sm font-medium text-foreground">提醒时间</Text>
+                  <Text className="text-sm font-medium text-foreground">{t('about.reminder_label')}</Text>
                   <View className="flex-row flex-wrap gap-2">
-                    {REMINDER_OPTIONS.map((option) => (
+                    {getReminderOptions().map((option) => (
                       <Button
                         key={option.label}
                         variant="secondary"
@@ -1047,7 +1050,7 @@ export default function AboutScreen() {
 
                 <View className="gap-2">
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-sm font-medium text-foreground">选择系统日历</Text>
+                    <Text className="text-sm font-medium text-foreground">{t('about.select_calendar')}</Text>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -1059,7 +1062,7 @@ export default function AboutScreen() {
                       ) : (
                         <CalendarDays size={14} color={tint.primary} />
                       )}
-                      <Text className="text-primary">加载</Text>
+                      <Text className="text-primary">{t('about.load')}</Text>
                     </Button>
                   </View>
 
@@ -1100,25 +1103,24 @@ export default function AboutScreen() {
                     ) : (
                       <View className="px-4 py-3 rounded-2xl bg-muted">
                         <Text className="text-sm text-muted-foreground">
-                          先加载系统日历，再选择要写入的目标日历。
+                          {t('about.no_calendar_hint')}
                         </Text>
                       </View>
                     )}
                   </View>
 
                   <Text className="text-xs leading-5 text-muted-foreground">
-                    已接入 {deviceCalendars.length} 个系统日历，可写入 {writableCalendars.length}{' '}
-                    个。
+                    {t('about.calendar_count_hint', { total: deviceCalendars.length, writable: writableCalendars.length })}
                   </Text>
                 </View>
 
                 <View className="rounded-2xl bg-accent px-4 py-4">
                   <View className="flex-row items-center gap-2">
                     <Clock3 size={15} color={tint.primary} />
-                    <Text className="text-sm font-medium text-primary">系统同步能力</Text>
+                    <Text className="text-sm font-medium text-primary">{t('about.sync_capability')}</Text>
                   </View>
                   <Text className="mt-2 text-xs leading-6 text-muted-foreground">
-                    页面会读取系统日历已有事件，并支持把新建事件同步到系统日历。同步后的事件可以直接从左侧列表打开到系统日历继续编辑。
+                    {t('about.sync_capability_desc')}
                   </Text>
                 </View>
 
@@ -1131,7 +1133,7 @@ export default function AboutScreen() {
                   ) : (
                     <Plus size={18} color={tint.primaryForeground} />
                   )}
-                  <Text>{editingId ? 'Update Event' : 'Create Event'}</Text>
+                  <Text>{editingId ? t('about.update_event') : t('about.create_event')}</Text>
                 </Button>
 
                 {editingId ? (
@@ -1139,7 +1141,7 @@ export default function AboutScreen() {
                     variant="ghost"
                     className="rounded-2xl"
                     onPress={() => resetForm(selectedDate)}>
-                    <Text className="text-muted-foreground">取消编辑</Text>
+                    <Text className="text-muted-foreground">{t('about.cancel_edit')}</Text>
                   </Button>
                 ) : null}
               </CardContent>

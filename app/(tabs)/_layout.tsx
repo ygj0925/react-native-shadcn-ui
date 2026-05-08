@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
+import { t } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { THEME } from '@/lib/theme';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -28,73 +29,70 @@ type NavItem = {
   icon: (focused: boolean, color: string, size?: number) => React.ReactNode;
 };
 
-const NAV_ITEMS: NavItem[] = [
-  {
-    name: 'index',
-    title: 'Chats',
-    href: '/',
-    description: 'Recent conversations and prompts',
-    icon: (focused, color, size = 22) =>
-      focused ? (
-        <Ionicons name="chatbubbles" size={size} color={color} />
-      ) : (
-        <Ionicons name="chatbubbles-outline" size={size} color={color} />
-      ),
-  },
-  {
-    name: 'about',
-    title: 'Schedule',
-    href: '/about',
-    description: 'Manage schedules and calendar sync',
-    icon: (focused, color, size = 22) =>
-      focused ? (
-        <FontAwesome5 name="calendar-alt" size={size - 2} color={color} />
-      ) : (
-        <Feather name="calendar" size={size} color={color} />
-      ),
-  },
-  {
-    name: 'home',
-    title: 'Workspace',
-    href: '/home',
-    description: 'Employee homepage and company services',
-    icon: (focused, color, size = 22) =>
-      focused ? (
-        <MaterialCommunityIcons name="creation" size={size} color={color} />
-      ) : (
-        <MaterialCommunityIcons name="creation-outline" size={size} color={color} />
-      ),
-  },
-  {
-    name: 'love',
-    title: 'Favorites',
-    href: '/love',
-    description: 'Saved chats and highlights',
-    icon: (focused, color, size = 22) =>
-      focused ? (
-        <Ionicons name="heart" size={size} color={color} />
-      ) : (
-        <Ionicons name="heart-outline" size={size} color={color} />
-      ),
-  },
-  {
-    name: 'my',
-    title: 'Profile',
-    href: '/my',
-    description: 'Profile, settings, and account',
-    icon: (focused, color, size = 22) =>
-      focused ? (
-        <Ionicons name="person" size={size} color={color} />
-      ) : (
-        <Ionicons name="person-outline" size={size} color={color} />
-      ),
-  },
-];
-
-const PAGE_TITLES: Record<string, string> = NAV_ITEMS.reduce((acc, item) => {
-  acc[item.href] = item.title;
-  return acc;
-}, {} as Record<string, string>);
+function getNavItems(): NavItem[] {
+  return [
+    {
+      name: 'index',
+      title: t('nav.chats'),
+      href: '/',
+      description: t('nav.chats_desc'),
+      icon: (focused, color, size = 22) =>
+        focused ? (
+          <Ionicons name="chatbubbles" size={size} color={color} />
+        ) : (
+          <Ionicons name="chatbubbles-outline" size={size} color={color} />
+        ),
+    },
+    {
+      name: 'about',
+      title: t('nav.schedule'),
+      href: '/about',
+      description: t('nav.schedule_desc'),
+      icon: (focused, color, size = 22) =>
+        focused ? (
+          <FontAwesome5 name="calendar-alt" size={size - 2} color={color} />
+        ) : (
+          <Feather name="calendar" size={size} color={color} />
+        ),
+    },
+    {
+      name: 'home',
+      title: t('nav.workspace'),
+      href: '/home',
+      description: t('nav.workspace_desc'),
+      icon: (focused, color, size = 22) =>
+        focused ? (
+          <MaterialCommunityIcons name="creation" size={size} color={color} />
+        ) : (
+          <MaterialCommunityIcons name="creation-outline" size={size} color={color} />
+        ),
+    },
+    {
+      name: 'love',
+      title: t('nav.favorites'),
+      href: '/love',
+      description: t('nav.favorites_desc'),
+      icon: (focused, color, size = 22) =>
+        focused ? (
+          <Ionicons name="heart" size={size} color={color} />
+        ) : (
+          <Ionicons name="heart-outline" size={size} color={color} />
+        ),
+    },
+    {
+      name: 'my',
+      title: t('nav.profile'),
+      href: '/my',
+      description: t('nav.profile_desc'),
+      icon: (focused, color, size = 22) =>
+        focused ? (
+          <Ionicons name="person" size={size} color={color} />
+        ) : (
+          <Ionicons name="person-outline" size={size} color={color} />
+        ),
+    },
+  ];
+}
 
 const SidebarContent = React.memo(function SidebarContent({
   currentPath,
@@ -103,6 +101,7 @@ const SidebarContent = React.memo(function SidebarContent({
   onNavigate,
   onClose,
   largeScreen,
+  navItems,
 }: {
   currentPath: string;
   tint: (typeof THEME)['light'];
@@ -110,14 +109,15 @@ const SidebarContent = React.memo(function SidebarContent({
   onNavigate: (href: string) => void;
   onClose?: () => void;
   largeScreen: boolean;
+  navItems: NavItem[];
 }) {
   return (
     <Card className="h-full py-0 border-r rounded-none border-border bg-card">
       <CardHeader className="gap-3 px-4 pb-3" style={{ paddingTop: topInset + 10 }}>
         <View className="flex-row items-center justify-between">
           <View className="gap-1">
-            <CardTitle className="text-lg">Navigation</CardTitle>
-            <Text className="text-sm text-muted-foreground">Move across your core pages</Text>
+            <CardTitle className="text-lg">{t('nav.navigation')}</CardTitle>
+            <Text className="text-sm text-muted-foreground">{t('nav.navigation_subtitle')}</Text>
           </View>
 
           {!largeScreen ? (
@@ -132,7 +132,7 @@ const SidebarContent = React.memo(function SidebarContent({
 
       <ScrollView className="flex-1 p-3">
         <View className="gap-2">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active = currentPath === item.href;
 
             return (
@@ -173,7 +173,7 @@ const SidebarContent = React.memo(function SidebarContent({
 
       <CardContent className="px-4 py-3">
         <Text className="text-xs text-muted-foreground">
-          iPad keeps this navigation pinned by default, and you can collapse it from the header.
+          {t('nav.ipad_hint')}
         </Text>
       </CardContent>
     </Card>
@@ -293,14 +293,14 @@ function CustomTabBar({
   );
 }
 
-function MobileTabs({ tint }: { tint: (typeof THEME)['light'] }) {
+function MobileTabs({ tint, navItems }: { tint: (typeof THEME)['light']; navItems: NavItem[] }) {
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} tint={tint} />}
       screenOptions={{
         headerShown: false,
       }}>
-      {NAV_ITEMS.map((item) => (
+      {navItems.map((item) => (
         <Tabs.Screen
           key={item.name}
           name={item.name}
@@ -314,7 +314,7 @@ function MobileTabs({ tint }: { tint: (typeof THEME)['light'] }) {
   );
 }
 
-function LargeScreenShell({ tint }: { tint: (typeof THEME)['light'] }) {
+function LargeScreenShell({ tint, navItems }: { tint: (typeof THEME)['light']; navItems: NavItem[] }) {
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -322,7 +322,14 @@ function LargeScreenShell({ tint }: { tint: (typeof THEME)['light'] }) {
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
   const progress = React.useRef(new Animated.Value(1)).current;
   const currentPath = pathname === '/index' ? '/' : pathname;
-  const currentTitle = PAGE_TITLES[currentPath] ?? 'Workspace';
+  const pageTitles = React.useMemo(
+    () => navItems.reduce((acc, item) => {
+      acc[item.href] = item.title;
+      return acc;
+    }, {} as Record<string, string>),
+    [navItems]
+  );
+  const currentTitle = pageTitles[currentPath] ?? t('nav.workspace');
   const sidebarWidth = Math.min(Math.max(width * 0.22, 220), 260);
 
   React.useEffect(() => {
@@ -378,6 +385,7 @@ function LargeScreenShell({ tint }: { tint: (typeof THEME)['light'] }) {
             topInset={insets.top}
             onNavigate={navigate}
             largeScreen
+            navItems={navItems}
           />
         </Animated.View>
       </Animated.View>
@@ -395,12 +403,12 @@ function LargeScreenShell({ tint }: { tint: (typeof THEME)['light'] }) {
               )}
             </Button>
             <View className="gap-0.5">
-              <Text className="text-xs font-medium text-muted-foreground">Workspace</Text>
+              <Text className="text-xs font-medium text-muted-foreground">{t('nav.workspace')}</Text>
               <Text className="text-lg font-semibold tracking-tight">{currentTitle}</Text>
             </View>
           </View>
 
-          <Text className="text-sm text-muted-foreground">iPad Layout</Text>
+          <Text className="text-sm text-muted-foreground">{t('nav.ipad_layout')}</Text>
         </View>
 
         <View className="flex-1">
@@ -415,6 +423,7 @@ export default function TabLayout() {
   const { colorScheme } = useColorScheme();
   const { width } = useWindowDimensions();
   const tint = THEME[colorScheme ?? 'light'];
+  const navItems = React.useMemo(() => getNavItems(), []);
 
   // On web with static rendering, useWindowDimensions returns 0 during SSG
   // (no window object in Node.js). This causes MobileTabs to flash before
@@ -433,7 +442,7 @@ export default function TabLayout() {
 
   return (
     <SafeAreaView edges={['left', 'right']} className="flex-1 bg-background">
-      {isLargeScreen ? <LargeScreenShell tint={tint} /> : <MobileTabs tint={tint} />}
+      {isLargeScreen ? <LargeScreenShell tint={tint} navItems={navItems} /> : <MobileTabs tint={tint} navItems={navItems} />}
     </SafeAreaView>
   );
 }

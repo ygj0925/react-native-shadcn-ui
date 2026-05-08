@@ -26,7 +26,6 @@ import * as React from 'react';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { use } from 'i18next';
 
 type Item = {
   id: string;
@@ -43,44 +42,45 @@ type Section = {
   items: Item[];
 };
 
-const sections: Section[] = [
-  {
-    title: 'Account',
-    items: [
-      { id: 'email', label: 'Email', icon: Mail, value: 'rey@gmail.com' },
-      { id: 'subscription', label: 'Subscription', icon: SquarePlus, value: 'ChatGPT Plus' },
-      { id: 'restore', label: 'Restore purchases', icon: RefreshCw },
-      { id: 'data', label: 'Data Controls', icon: Shield, withChevron: true },
-      { id: 'archive', label: 'Archived Chats', icon: Archive, withChevron: true },
-      { id: 'custom', label: 'Custom instructions', icon: BookLock, value: 'On', withChevron: true },
-    ],
-  },
-  {
-    title: 'App',
-    items: [
-      { id: 'theme', label: 'Color Scheme', icon: Palette, value: 'System', withChevron: true },
-      { id: 'haptics', label: 'Haptic Feedback', icon: WalletCards, withToggle: true },
-    ],
-  },
-  {
-    title: 'Speech',
-    description:
-      "For best results, select the language you mainly speak. If it's not listed, it may still be supported via auto-detection.",
-    items: [
-      { id: 'voice', label: 'Voice', icon: Volume2, value: 'Breeze', withChevron: true },
-      { id: 'language', label: 'Main Language', icon: Globe, value: 'Auto-Detect', withChevron: true },
-    ],
-  },
-  {
-    title: 'About',
-    items: [
-      { id: 'help', label: 'Help Center', icon: CircleHelp },
-      { id: 'terms', label: 'Terms of Use', icon: FileText },
-      { id: 'privacy', label: 'Privacy Policy', icon: Shield },
-      { id: 'version', label: 'ChatGPT for iOS', icon: UserRoundCog, value: '1.2024.136' },
-    ],
-  },
-];
+function getSections(): Section[] {
+  return [
+    {
+      title: t('settings.account.title'),
+      items: [
+        { id: 'email', label: t('settings.account.email'), icon: Mail, value: 'rey@gmail.com' },
+        { id: 'subscription', label: t('settings.account.subscription'), icon: SquarePlus, value: 'ChatGPT Plus' },
+        { id: 'restore', label: t('settings.account.restore_purchases'), icon: RefreshCw },
+        { id: 'data', label: t('settings.account.data_controls'), icon: Shield, withChevron: true },
+        { id: 'archive', label: t('settings.account.archived_chats'), icon: Archive, withChevron: true },
+        { id: 'custom', label: t('settings.account.custom_instructions'), icon: BookLock, value: t('settings.account.on'), withChevron: true },
+      ],
+    },
+    {
+      title: t('settings.app.title'),
+      items: [
+        { id: 'theme', label: t('settings.app.color_scheme'), icon: Palette, value: t('settings.theme.system'), withChevron: true },
+        { id: 'haptics', label: t('settings.app.haptic_feedback'), icon: WalletCards, withToggle: true },
+      ],
+    },
+    {
+      title: t('settings.speech.title'),
+      description: t('settings.speech.description'),
+      items: [
+        { id: 'voice', label: t('settings.speech.voice'), icon: Volume2, value: 'Breeze', withChevron: true },
+        { id: 'language', label: t('settings.speech.main_language'), icon: Globe, value: t('settings.speech.auto_detect'), withChevron: true },
+      ],
+    },
+    {
+      title: t('settings.about_section.title'),
+      items: [
+        { id: 'help', label: t('settings.about_section.help_center'), icon: CircleHelp },
+        { id: 'terms', label: t('settings.about_section.terms_of_use'), icon: FileText },
+        { id: 'privacy', label: t('settings.about_section.privacy_policy'), icon: Shield },
+        { id: 'version', label: t('settings.about_section.app_version_label'), icon: UserRoundCog, value: '1.2024.136' },
+      ],
+    },
+  ];
+}
 
 function SettingsRow({
   item,
@@ -137,21 +137,22 @@ export default function MyScreen() {
   const [hapticsEnabled, setHapticsEnabled] = React.useState(true);
   const isCompact = width < 390;
   const router = useRouter();
-  
+  const sections = getSections();
+
   const logout = () => {
     router.push('/login');
   }
-  
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className={cn('pt-2.5 pb-5', isCompact ? 'px-3' : 'px-4')}>
         <View className="gap-1 px-1 mb-4">
           <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-2xl' : 'text-3xl')}>
-            {t("settings.title")}
+            {t('settings.title')}
           </Text>
           <Text className="text-xs text-muted-foreground">
-            Manage your account, app preferences, and voice experience.
+            {t('settings.subtitle')}
           </Text>
         </View>
 
@@ -167,12 +168,12 @@ export default function MyScreen() {
                   <View className="flex-row items-center gap-2">
                     <Text className="text-lg font-semibold tracking-tight">Rey Zhang</Text>
                     <View className="rounded-full border border-primary/15 bg-primary px-2 py-0.5">
-                      <Text className="text-xs font-medium text-primary-foreground">PLUS</Text>
+                      <Text className="text-xs font-medium text-primary-foreground">{t('settings.profile.plus')}</Text>
                     </View>
                   </View>
-                  <Text className="text-xs text-muted-foreground">Member ID: 20240318</Text>
+                  <Text className="text-xs text-muted-foreground">{t('settings.profile.member_id', { id: '20240318' })}</Text>
                   <Text className="text-xs leading-4 text-muted-foreground">
-                    AI points 1,286 | Growth value 92
+                    {t('settings.profile.ai_points', { points: '1,286', growth: 92 })}
                   </Text>
                 </View>
 
@@ -186,11 +187,11 @@ export default function MyScreen() {
               <View className="flex-row items-center justify-between">
                 <View className="gap-1">
                   <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
-                    Membership
+                    {t('settings.profile.membership')}
                   </Text>
-                  <Text className="text-sm font-medium">ChatGPT Plus Annual Plan</Text>
+                  <Text className="text-sm font-medium">{t('settings.profile.plan_name')}</Text>
                 </View>
-                <Text className="text-xs text-muted-foreground">Renews in 28 days</Text>
+                <Text className="text-xs text-muted-foreground">{t('settings.profile.renews_in', { days: 28 })}</Text>
               </View>
             </View>
           </View>
@@ -233,7 +234,7 @@ export default function MyScreen() {
           <CardContent className="px-4 py-3">
             <Button onPress={logout} variant="outline" className="justify-start w-full">
               <LogOut size={16} color="currentColor" strokeWidth={2} />
-              <Text>Logout</Text>
+              <Text>{t('settings.logout')}</Text>
             </Button>
           </CardContent>
         </Card>

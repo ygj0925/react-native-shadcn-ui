@@ -3,6 +3,7 @@ import { AuthScreenContainer } from '@/components/auth/auth-screen-container';
 import { AuthGradientHeader } from '@/components/auth/auth-gradient-header';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { SignUpForm } from '@/components/auth/sign-up-form';
+import { t } from '@/lib/i18n';
 
 export default function RegisterScreen() {
   return (
@@ -15,10 +16,10 @@ export default function RegisterScreen() {
         headerBackground: AuthGradientHeader,
       }} />
       <AuthShell
-        eyebrow="New here"
-        title="Create your account"
-        description="Set up your profile once, then move between chat, schedules, and favorites without friction."
-        footer="This stays as a polished demo flow for now, so we can improve the visuals before wiring real authentication.">
+        eyebrow={t('auth.register_eyebrow')}
+        title={t('auth.register_title')}
+        description={t('auth.register_description')}
+        footer={t('auth.register_shell_footer')}>
         <SignUpForm />
       </AuthShell>
     </AuthScreenContainer>

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
+import { t } from '@/lib/i18n';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import { TextInput, View } from 'react-native';
@@ -27,18 +28,18 @@ export function SignUpForm() {
     <View className="flex-col gap-6">
       <Card className="py-0 shadow-sm border-border bg-card/95 shadow-black/5">
         <CardHeader className="gap-3 px-5 pt-5 pb-3">
-          <CardTitle className="text-2xl tracking-tight text-center">Register</CardTitle>
+          <CardTitle className="text-2xl tracking-tight text-center">{t('auth.register')}</CardTitle>
           <CardDescription className="text-center">
-            Start with the essentials and keep the setup flow lightweight.
+            {t('auth.register_desc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6 px-5 pb-5">
           <View className="gap-5">
             <View className="gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
-                placeholder="name@company.com"
+                placeholder={t('auth.email_placeholder')}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -51,14 +52,14 @@ export function SignUpForm() {
             </View>
             <View className="gap-2">
               <View className="flex-row items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
               </View>
               <Input
                 ref={passwordInputRef}
                 id="password"
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Create a password"
+                placeholder={t('auth.create_password_placeholder')}
                 secureTextEntry
                 returnKeyType="send"
                 onSubmitEditing={onSubmit}
@@ -68,18 +69,18 @@ export function SignUpForm() {
               className="w-full h-11"
               onPress={onSubmit}
               disabled={!email.trim() || !password.trim()}>
-              <Text>Continue</Text>
+              <Text>{t('auth.continue')}</Text>
             </Button>
           </View>
           <Text className="text-sm text-center">
-            Already have an account?{' '}
+            {t('auth.have_account')}{' '}
             <Text className="text-sm font-medium underline" onPress={() => router.push('/login')}>
-              Sign in
+              {t('auth.sign_in_link')}
             </Text>
           </Text>
           <View className="flex-row items-center">
             <Separator className="flex-1" />
-            <Text className="px-4 text-sm text-muted-foreground">or connect with</Text>
+            <Text className="px-4 text-sm text-muted-foreground">{t('auth.or_connect')}</Text>
             <Separator className="flex-1" />
           </View>
           <SocialConnections />
@@ -89,8 +90,7 @@ export function SignUpForm() {
       <Card className="py-0 shadow-none border-border bg-muted/35">
         <CardContent className="px-5 py-4">
           <Text className="text-sm leading-6 text-muted-foreground">
-            This currently loops back to sign-in so the rest of the interface stays demo-ready while
-            authentication is still being polished.
+            {t('auth.register_footer')}
           </Text>
         </CardContent>
       </Card>
