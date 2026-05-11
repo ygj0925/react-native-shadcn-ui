@@ -278,7 +278,27 @@
       "release_preview": "Mobile chat update and keyboard polish",
       "summary_title": "Weekly meeting summary",
       "summary_preview": "Action items and follow-up owners"
-    }
+    },
+    "actions": {
+      "copy": "نسخ",
+      "copied": "تم النسخ",
+      "edit": "تعديل",
+      "regenerate": "إعادة التوليد",
+      "good": "إجابة جيدة",
+      "bad": "إجابة سيئة",
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "stop": "إيقاف",
+      "send": "إرسال",
+      "attach": "إرفاق",
+      "remove": "إزالة"
+    },
+    "branch": {
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "thinking": "يفكر",
+    "untitled_thread": "محادثة جديدة"
   },
   "auth": {
     "sign_in": "Sign in",

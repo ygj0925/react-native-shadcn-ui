@@ -1,23 +1,37 @@
+import {
+  CompositeAttachmentAdapter,
+  SimpleImageAttachmentAdapter,
+  SimpleTextAttachmentAdapter,
+  type FeedbackAdapter,
+} from "@assistant-ui/react-native";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { DirectChatTransport, ToolLoopAgent, tool, jsonSchema } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Platform } from "react-native";
 
 const baseURL =
   Platform.OS === "web"
-    ? "/mimo-tp"
-    : process.env.EXPO_PUBLIC_MIMO_TP_BASE_URL ||
-      "https://token-plan-cn.xiaomimimo.com/v1";
+    ? "/mimo-api"
+    : process.env.EXPO_PUBLIC_MIMO_BASE_URL ||
+      "https://api.xiaomimimo.com/v1";
 
 const apiKey =
-  process.env.EXPO_PUBLIC_MIMO_TP_API_KEY ||
-  "tp-crry1wbphs88mstr60fsxdkndmaehxipam78khv2fg65dovp";
+  process.env.EXPO_PUBLIC_MIMO_API_KEY ||
+  "sk-cv7i164o0szeuwem9irk4pnte7mpt422rweh43zbmgp5t8pw";
+
+const customFetch: typeof fetch = (input, init) => {
+  const headers = new Headers(init?.headers);
+  headers.delete("authorization");
+  headers.set("api-key", apiKey);
+  return fetch(input, { ...init, headers });
+};
 
 const openai = createOpenAI({
   baseURL,
   apiKey,
-  name: "mimo-tp",
+  name: "mimo",
+  fetch: customFetch,
 });
 
 export const MIMO_MODELS = [
@@ -121,13 +135,45 @@ const interactiveTools = {
 };
 
 export function useAppRuntime(modelId: string = "mimo-v2.5-pro") {
-  const transport = useMemo(() => {
-    const agent = new ToolLoopAgent({
-      model: openai.chat(modelId),
-      tools: interactiveTools,
-    });
-    return new DirectChatTransport({ agent });
-  }, [modelId]);
+  // Keep modelId in a ref so prepareCall always reads the latest value
+  // without the transport needing to be recreated.
+  const modelIdRef = useRef(modelId);
+  modelIdRef.current = modelId;
 
-  return useChatRuntime({ transport });
+  // Create transport and adapters exactly once (empty deps).
+  // Model switching works via the ref inside prepareCall.
+  const { transport, adapters } = useMemo(() => {
+    const agent = new ToolLoopAgent({
+      model: openai.chat(modelIdRef.current),
+      tools: interactiveTools,
+      // prepareCall receives the full baseCallArgs (including prompt/messages)
+      // and must return them spread — returning only { model } would wipe prompt.
+      prepareCall: (args) => ({
+        ...args,
+        model: openai.chat(modelIdRef.current),
+      }),
+    });
+
+    return {
+      transport: new DirectChatTransport({ agent }),
+      adapters: {
+        attachments: new CompositeAttachmentAdapter([
+          new SimpleImageAttachmentAdapter(),
+          new SimpleTextAttachmentAdapter(),
+        ]),
+        feedback: feedbackAdapter,
+      },
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return useChatRuntime({ transport, adapters });
 }
+
+const feedbackAdapter: FeedbackAdapter = {
+  submit: ({ message, type }) => {
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.log("[assistant-ui feedback]", type, message.id);
+    }
+  },
+};

@@ -22,7 +22,11 @@
       "Bash(Get-ChildItem -Path \"D:\\\\project\\\\react-native-shadcn-ui\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
       "Bash(curl *)",
-      "Bash(git status *)"
+      "Bash(git status *)",
+      "Bash(eas --version)",
+      "Bash(npx eas *)",
+      "Bash(where eas *)",
+      "Bash(npm ls *)"
     ]
   }
 }

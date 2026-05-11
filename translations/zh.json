@@ -278,7 +278,27 @@
       "release_preview": "移动端聊天更新和键盘优化",
       "summary_title": "周会总结",
       "summary_preview": "行动项和后续负责人"
-    }
+    },
+    "actions": {
+      "copy": "复制",
+      "copied": "已复制",
+      "edit": "编辑",
+      "regenerate": "重新生成",
+      "good": "回答不错",
+      "bad": "回答较差",
+      "save": "保存",
+      "cancel": "取消",
+      "stop": "停止",
+      "send": "发送",
+      "attach": "附件",
+      "remove": "移除"
+    },
+    "branch": {
+      "previous": "上一条",
+      "next": "下一条"
+    },
+    "thinking": "思考中",
+    "untitled_thread": "新会话"
   },
   "auth": {
     "sign_in": "登录",
