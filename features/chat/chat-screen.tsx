@@ -30,6 +30,7 @@ import {
 } from '@assistant-ui/react-native';
 import { Stack } from 'expo-router';
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Copy as CopyIcon,
@@ -366,7 +367,7 @@ function UserMessageItem() {
     <>
       {/* Normal (read) view — hidden while editing */}
       <ComposerPrimitive.If editing={false}>
-        <View className="items-end w-full px-3 py-2">
+        <View className="items-end w-full px-3 py-1">
           <View style={{ maxWidth: bubbleMaxWidth }} className="gap-1">
             <Card className="py-0 border bg-primary border-primary">
               <CardContent className="gap-2 px-4 py-3">
@@ -401,7 +402,7 @@ function UserMessageItem() {
 
       {/* Edit composer — visible while editing */}
       <ComposerPrimitive.If editing>
-        <View className="items-end w-full px-3 py-2">
+        <View className="items-end w-full px-3 py-1">
           <View style={{ width: '92%' }}>
             <ComposerPrimitive.Root>
               <Card className="py-0 border-border bg-card">
@@ -442,7 +443,7 @@ function AssistantMessage() {
   const bubbleMaxWidth = useBubbleMaxWidth();
 
   return (
-    <View className="items-start w-full px-3 py-2">
+    <View className="items-start w-full px-3 py-1">
       <View style={{ maxWidth: bubbleMaxWidth }} className="gap-1">
         <Card className="py-0 border-border bg-card">
           <CardContent className="gap-1 px-4 py-3">
@@ -693,7 +694,7 @@ function RunningFooter({ bubbleMaxWidth }: { bubbleMaxWidth: number }) {
   if (!isRunning || lastMessageRole === 'assistant') return null;
 
   return (
-    <View className="items-start w-full px-3 py-2">
+    <View className="items-start w-full px-3 py-1">
       <View style={{ maxWidth: bubbleMaxWidth }}>
         <Card className="py-0 border-border bg-card">
           <CardContent className="gap-2 px-4 py-3">
@@ -720,27 +721,67 @@ function ChatThread({
   const flatListRef = React.useRef<FlatList>(null);
   const isRunning = useAuiState((s) => s.thread.isRunning);
   const isAtBottomRef = React.useRef(true);
-  const isRunningRef = React.useRef(isRunning);
-  isRunningRef.current = isRunning;
+  const prevIsRunningRef = React.useRef(isRunning);
+  const userScrollingRef = React.useRef(false);
+  const layoutHeightRef = React.useRef(0);
+  const [isAtBottom, setIsAtBottom] = React.useState(true);
+
+  const handleScrollBeginDrag = React.useCallback(() => {
+    userScrollingRef.current = true;
+    isAtBottomRef.current = false;
+  }, []);
 
   const handleScroll = React.useCallback((event: any) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
     const distanceFromBottom =
       contentSize.height - contentOffset.y - layoutMeasurement.height;
-    isAtBottomRef.current = distanceFromBottom < 80;
+
+    if (userScrollingRef.current) {
+      if (distanceFromBottom < 20) {
+        isAtBottomRef.current = true;
+        userScrollingRef.current = false;
+        setIsAtBottom(true);
+      } else if (distanceFromBottom > 80) {
+        setIsAtBottom(false);
+      }
+    } else if (distanceFromBottom < 20) {
+      isAtBottomRef.current = true;
+      setIsAtBottom(true);
+    }
   }, []);
 
-  const handleContentSizeChange = React.useCallback(() => {
-    if (isAtBottomRef.current || isRunningRef.current) {
-      flatListRef.current?.scrollToEnd({ animated: true });
+  const handleLayout = React.useCallback((event: any) => {
+    layoutHeightRef.current = event.nativeEvent.layout.height;
+  }, []);
+
+  const handleContentSizeChange = React.useCallback((_w: number, h: number) => {
+    if (isAtBottomRef.current) {
+      const offset = Math.max(0, h - layoutHeightRef.current);
+      flatListRef.current?.scrollToOffset({ offset, animated: true });
+    } else if (userScrollingRef.current) {
+      setIsAtBottom(false);
     }
   }, []);
 
   React.useEffect(() => {
-    if (isRunning) {
+    if (isRunning && !prevIsRunningRef.current) {
+      userScrollingRef.current = false;
+      isAtBottomRef.current = true;
       flatListRef.current?.scrollToEnd({ animated: true });
+    } else if (!isRunning && prevIsRunningRef.current && isAtBottomRef.current) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 50);
     }
+    prevIsRunningRef.current = isRunning;
   }, [isRunning]);
+
+  const scrollToBottom = React.useCallback(() => {
+    userScrollingRef.current = false;
+    isAtBottomRef.current = true;
+    setIsAtBottom(true);
+    flatListRef.current?.scrollToEnd({ animated: true });
+  }, []);
 
   const footer = React.useMemo(
     () => <RunningFooter bubbleMaxWidth={bubbleMaxWidth} />,
@@ -759,11 +800,13 @@ function ChatThread({
           contentContainerStyle={{
             paddingHorizontal: isLargeScreen ? 8 : Math.max(0, contentPadding - 12),
             paddingVertical: 8,
-            gap: 4,
+            gap: 2,
           }}
           keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
           scrollEventThrottle={16}
+          onLayout={handleLayout}
+          onScrollBeginDrag={handleScrollBeginDrag}
           onScroll={handleScroll}
           onContentSizeChange={handleContentSizeChange}
           ListEmptyComponent={
@@ -773,6 +816,14 @@ function ChatThread({
           }
           ListFooterComponent={footer}
         />
+        {!isAtBottom && (
+          <Pressable
+            onPress={scrollToBottom}
+            className="absolute items-center justify-center bg-background border border-border rounded-full shadow-md"
+            style={{ width: 36, height: 36, right: 16, bottom: 12, elevation: 4 }}>
+            <ChevronDown size={20} color="currentColor" strokeWidth={2} />
+          </Pressable>
+        )}
       </ThreadPrimitive.Root>
     </BubbleWidthCtx.Provider>
   );
