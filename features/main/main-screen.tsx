@@ -57,7 +57,7 @@ export default function IndexScreen() {
                       <Text>{t('main.start_chatting')}</Text>
                     </Button>
                   </Link>
-                  <Link href="/assisant" asChild>
+                  <Link href="/chat" asChild>
                     <Button variant="outline" className="border-primary-foreground/20 bg-primary-foreground/10">
                       <Text className="text-primary-foreground">{t('main.open_auth')}</Text>
                     </Button>

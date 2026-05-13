@@ -1,3 +1,4 @@
+import '@/lib/patch-assistant-ui';
 import '@/global.css';
 
 import { NAV_THEME } from '@/lib/theme';
@@ -58,7 +59,6 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="register" />
             <Stack.Screen name="chat" />
-            <Stack.Screen name="assisant" />
             <Stack.Screen name="components-showcase" />
           </Stack>
           <PortalHost />

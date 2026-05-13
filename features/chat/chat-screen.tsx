@@ -1,5 +1,3 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -8,12 +6,13 @@ import {
   SelectValue,
   type Option,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { ToolUIs } from '@/features/chat/tool-uis';
 import { MIMO_MODELS, useAppRuntime } from '@/hooks/use-app-runtime';
 import { t } from '@/lib/i18n';
-import { THEME } from '@/lib/theme';
+import { ChatErrorBoundary } from '@/components/chat-error-boundary';
+import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { cn } from '@/lib/utils';
 import {
   ActionBarPrimitive,
@@ -30,13 +29,13 @@ import {
 } from '@assistant-ui/react-native';
 import { Stack } from 'expo-router';
 import {
-  ChevronDown,
+  ArrowDown,
   ChevronLeft,
   ChevronRight,
   Copy as CopyIcon,
   FileText,
   Menu,
-  MessageSquarePlus,
+  MessageSquare,
   Paperclip,
   Pencil,
   Plus,
@@ -49,39 +48,16 @@ import {
   Trash2,
   X,
 } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { FlatList, Image, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { Image, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SCREEN_OPTIONS = { headerShown: false };
 
-// ─── Suggestions ────────────────────────────────────────────────────────────
+// ─── Thread List Sidebar ────────────────────────────────────────────────────
 
-function getSuggestions() {
-  return [
-    {
-      id: 'schema',
-      title: t('chat.suggestions.schema_title'),
-      subtitle: t('chat.suggestions.schema_subtitle'),
-    },
-    {
-      id: 'turbulence',
-      title: t('chat.suggestions.turbulence_title'),
-      subtitle: t('chat.suggestions.turbulence_subtitle'),
-    },
-    {
-      id: 'release',
-      title: t('chat.suggestions.release_title'),
-      subtitle: t('chat.suggestions.release_subtitle'),
-    },
-  ];
-}
-
-// ─── Thread List / History Sidebar ──────────────────────────────────────────
-
-function HistorySidebar({
+function Sidebar({
   width,
   isLargeScreen,
   onClose,
@@ -91,50 +67,43 @@ function HistorySidebar({
   onClose: () => void;
 }) {
   return (
-    <View style={{ width }}>
-      <Card className="h-full py-0 border-r rounded-none shadow-2xl border-border bg-card shadow-black/10">
-        <ThreadListPrimitive.Root>
-          <CardHeader className="gap-3 px-4 pt-5 pb-3">
-            <View className="flex-row items-center justify-between">
-              <View className="gap-1">
-                <CardTitle className="text-lg">{t('chat.history_title')}</CardTitle>
-                <Text className="text-sm text-muted-foreground">
-                  {t('chat.history_subtitle')}
-                </Text>
-              </View>
-              {!isLargeScreen ? (
-                <Button variant="ghost" size="icon" onPress={onClose}>
-                  <X size={18} color="currentColor" strokeWidth={2} />
-                </Button>
-              ) : null}
-            </View>
-
-            <ThreadListPrimitive.New
-              style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-              <View className="flex-row items-center justify-center h-10 gap-2 rounded-md bg-primary">
-                <Plus size={16} color="white" strokeWidth={2.4} />
-                <Text className="text-sm font-medium text-primary-foreground">
-                  {t('chat.new_chat')}
-                </Text>
-              </View>
-            </ThreadListPrimitive.New>
-          </CardHeader>
-
-          <Separator />
-
-          <ThreadListPrimitive.Items
-            renderItem={() => (
-              <HistorySidebarItem onSelected={isLargeScreen ? undefined : onClose} />
+    <View style={{ width }} className="h-full border-r border-border bg-secondary/30">
+      <ThreadListPrimitive.Root>
+        <View className="gap-3 px-3 pt-4 pb-3">
+          <View className="flex-row items-center justify-between px-1">
+            <Text className="text-sm font-semibold text-foreground">
+              {t('chat.history_title')}
+            </Text>
+            {!isLargeScreen && (
+              <Pressable hitSlop={8} onPress={onClose}>
+                <X size={18} className="text-muted-foreground" />
+              </Pressable>
             )}
-            contentContainerStyle={{ padding: 12, gap: 8 }}
-          />
-        </ThreadListPrimitive.Root>
-      </Card>
+          </View>
+
+          <ThreadListPrimitive.New
+            style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
+            <View className="flex-row items-center justify-center h-9 gap-2 rounded-lg bg-primary">
+              <Plus size={14} color="white" strokeWidth={2.4} />
+              <Text className="text-xs font-medium text-primary-foreground">
+                {t('chat.new_chat')}
+              </Text>
+            </View>
+          </ThreadListPrimitive.New>
+        </View>
+
+        <View className="mx-3 h-px bg-border" />
+
+        <ThreadListPrimitive.Items
+          renderItem={() => <SidebarItem onSelected={isLargeScreen ? undefined : onClose} />}
+          contentContainerStyle={{ padding: 8, gap: 2 }}
+        />
+      </ThreadListPrimitive.Root>
     </View>
   );
 }
 
-function HistorySidebarItem({ onSelected }: { onSelected?: () => void }) {
+function SidebarItem({ onSelected }: { onSelected?: () => void }) {
   const itemId = useAuiState((s) => s.threadListItem?.id);
   const mainId = useAuiState((s) => s.threads.mainThreadId);
   const title = useAuiState((s) => s.threadListItem?.title);
@@ -147,32 +116,22 @@ function HistorySidebarItem({ onSelected }: { onSelected?: () => void }) {
         style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
         <View
           className={cn(
-            'rounded-xl border px-3 py-3 flex-row items-center gap-3',
-            isActive
-              ? 'border-primary bg-primary/10'
-              : 'border-border bg-background active:bg-accent',
+            'flex-row items-center gap-2.5 rounded-lg px-2.5 py-2.5',
+            isActive ? 'bg-accent' : 'active:bg-accent/50',
           )}>
-          <View
-            className={cn(
-              'h-8 w-8 items-center justify-center rounded-lg',
-              isActive ? 'bg-primary' : 'bg-muted',
-            )}>
-            <MessageSquarePlus
-              size={15}
-              color={isActive ? 'white' : 'currentColor'}
-              strokeWidth={2}
-            />
-          </View>
-
-          <View className="flex-1 gap-0.5">
-            <Text className="text-sm font-medium" numberOfLines={1}>
-              {title || t('chat.untitled_thread')}
-            </Text>
-          </View>
-
+          <MessageSquare
+            size={14}
+            className={isActive ? 'text-foreground' : 'text-muted-foreground'}
+            strokeWidth={2}
+          />
+          <Text
+            className={cn('flex-1 text-sm', isActive ? 'font-medium text-foreground' : 'text-foreground')}
+            numberOfLines={1}>
+            {title || t('chat.untitled_thread')}
+          </Text>
           <ThreadListItemPrimitive.Delete>
-            <View className="items-center justify-center w-8 h-8 rounded-md active:bg-destructive/10">
-              <Trash2 size={14} color="currentColor" strokeWidth={2} />
+            <View className="items-center justify-center w-6 h-6 rounded active:bg-destructive/10">
+              <Trash2 size={12} className="text-muted-foreground" strokeWidth={2} />
             </View>
           </ThreadListItemPrimitive.Delete>
         </View>
@@ -187,28 +146,25 @@ function ChatHeader({
   model,
   onModelChange,
   onMenuPress,
-  isLargeScreen,
 }: {
   model: Option;
   onModelChange: (option: Option) => void;
   onMenuPress: () => void;
-  isLargeScreen: boolean;
 }) {
   return (
-    <View
-      className="flex-row items-center justify-between gap-3 px-4 py-2 border-b border-border bg-background"
-      style={{ paddingTop: 10 }}>
-      <View className="flex-row items-center gap-2">
-        <Button variant="ghost" size="icon" onPress={onMenuPress}>
-          <Menu size={18} color="currentColor" strokeWidth={2} />
-        </Button>
-        {!isLargeScreen ? (
-          <Text className="text-base font-semibold">{t('chat.title')}</Text>
-        ) : null}
+    <View className="flex-row items-center justify-between px-3 py-2 border-b border-border bg-background">
+      <View className="flex-row items-center gap-1">
+        <Pressable
+          hitSlop={8}
+          onPress={onMenuPress}
+          className="items-center justify-center w-9 h-9 rounded-lg active:bg-accent">
+          <Menu size={18} className="text-foreground" strokeWidth={2} />
+        </Pressable>
+        <Text className="text-base font-semibold text-foreground">{t('chat.title')}</Text>
       </View>
 
       <Select value={model} onValueChange={(v) => v && onModelChange(v)}>
-        <SelectTrigger size="sm" className="min-w-[160px]">
+        <SelectTrigger size="sm" className="min-w-[150px]">
           <SelectValue placeholder={t('chat.select_model')} />
         </SelectTrigger>
         <SelectContent side="bottom">
@@ -221,41 +177,33 @@ function ChatHeader({
   );
 }
 
-// ─── Welcome / Empty State ───────────────────────────────────────────────────
+// ─── Welcome / Empty ────────────────────────────────────────────────────────
 
 function WelcomeScreen() {
-  const suggestions = getSuggestions();
-  const tint = THEME[useColorScheme().colorScheme ?? 'light'];
-
   return (
-    <View className="items-center w-full gap-6 py-12">
-      <View className="items-center justify-center w-16 h-16 rounded-full bg-primary">
-        <Sparkles size={24} color={tint.primaryForeground} strokeWidth={2.3} />
+    <View className="items-center w-full gap-5 px-5 py-16">
+      <View className="items-center justify-center w-12 h-12 rounded-full bg-foreground">
+        <Sparkles size={20} color="white" strokeWidth={2.3} />
       </View>
-      <View className="items-center gap-2">
-        <Text className="text-2xl font-semibold tracking-tight">
+      <View className="items-center gap-1.5">
+        <Text className="text-xl font-semibold text-foreground">
           {t('chat.start_title')}
         </Text>
-        <Text className="px-6 text-center text-muted-foreground">
+        <Text className="text-sm text-center text-muted-foreground">
           {t('chat.start_subtitle')}
         </Text>
       </View>
-
-      <View className="w-full max-w-xl gap-3 px-4">
-        {suggestions.map((s) => (
+      <View className="w-full max-w-md gap-2 mt-2">
+        {getSuggestions().map((s) => (
           <ThreadPrimitive.Suggestion
             key={s.id}
             prompt={s.title}
             send
             style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-            <Card className="py-0 border-border bg-card">
-              <CardContent className="gap-1 px-4 py-3">
-                <Text className="text-sm font-semibold leading-5">{s.title}</Text>
-                <Text className="text-xs leading-4 text-muted-foreground">
-                  {s.subtitle}
-                </Text>
-              </CardContent>
-            </Card>
+            <View className="px-4 py-3 border rounded-xl border-border bg-background active:bg-accent/50">
+              <Text className="text-sm font-medium text-foreground">{s.title}</Text>
+              <Text className="text-xs text-muted-foreground mt-0.5">{s.subtitle}</Text>
+            </View>
           </ThreadPrimitive.Suggestion>
         ))}
       </View>
@@ -263,18 +211,26 @@ function WelcomeScreen() {
   );
 }
 
-// ─── Message Part Renderers ──────────────────────────────────────────────────
+function getSuggestions() {
+  return [
+    { id: 'schema', title: t('chat.suggestions.schema_title'), subtitle: t('chat.suggestions.schema_subtitle') },
+    { id: 'turbulence', title: t('chat.suggestions.turbulence_title'), subtitle: t('chat.suggestions.turbulence_subtitle') },
+    { id: 'release', title: t('chat.suggestions.release_title'), subtitle: t('chat.suggestions.release_subtitle') },
+  ];
+}
+
+// ─── Message Part Renderers ─────────────────────────────────────────────────
 
 function TextPart({ text }: { text: string }) {
   if (!text) return null;
-  return <Text className="leading-6 text-foreground">{text}</Text>;
+  return <Text className="text-sm leading-6 text-foreground">{text}</Text>;
 }
 
 function ReasoningPart({ text }: { text: string }) {
   if (!text) return null;
   return (
-    <View className="px-3 py-2 mt-1 rounded-lg bg-muted/60">
-      <Text className="text-[11px] uppercase tracking-[0.6px] text-muted-foreground">
+    <View className="px-3 py-2 mt-1.5 rounded-lg bg-muted/50 border border-border">
+      <Text className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">
         {t('chat.thinking')}
       </Text>
       <Text className="mt-1 text-xs leading-5 text-muted-foreground">{text}</Text>
@@ -286,7 +242,7 @@ function ImagePart({ image }: { image: string }) {
   return (
     <Image
       source={{ uri: image }}
-      style={{ width: 220, height: 160, borderRadius: 8, marginTop: 6 }}
+      style={{ width: 220, height: 160, borderRadius: 10, marginTop: 6 }}
       resizeMode="cover"
     />
   );
@@ -294,105 +250,49 @@ function ImagePart({ image }: { image: string }) {
 
 function FilePart({ name }: { name?: string }) {
   return (
-    <View className="flex-row items-center gap-2 px-3 py-2 mt-1 border rounded-lg border-border bg-muted/40">
-      <FileText size={14} color="currentColor" strokeWidth={2} />
-      <Text className="text-xs text-foreground" numberOfLines={1}>
-        {name ?? 'file'}
-      </Text>
+    <View className="flex-row items-center gap-2 px-3 py-2 mt-1 rounded-lg bg-muted/40 border border-border">
+      <FileText size={14} className="text-muted-foreground" strokeWidth={2} />
+      <Text className="text-xs text-foreground" numberOfLines={1}>{name ?? 'file'}</Text>
     </View>
   );
 }
 
-// ─── Message Components ──────────────────────────────────────────────────────
-
-function AssistantInProgress() {
-  return (
-    <View className="flex-row items-center gap-2 py-1">
-      <View className="h-2.5 w-2.5 rounded-full bg-foreground" />
-      <View className="h-2.5 w-2.5 rounded-full bg-foreground/45" />
-      <View className="h-2.5 w-2.5 rounded-full bg-foreground/20" />
-    </View>
-  );
-}
-
-function BranchPicker() {
-  // Only render when there are multiple branches
-  const branchCount = useAuiState((s) => s.message.branchCount);
-  if (branchCount <= 1) return null;
-
-  return (
-    <View className="flex-row items-center gap-0.5">
-      <BranchPickerPrimitive.Previous
-        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
-        <View className="items-center justify-center w-6 h-6 rounded-md active:bg-accent">
-          <ChevronLeft size={14} color="currentColor" strokeWidth={2} />
-        </View>
-      </BranchPickerPrimitive.Previous>
-
-      <View className="flex-row items-center px-1">
-        <BranchPickerPrimitive.Number className="text-[11px] text-muted-foreground" />
-        <Text className="text-[11px] text-muted-foreground">/</Text>
-        <BranchPickerPrimitive.Count className="text-[11px] text-muted-foreground" />
-      </View>
-
-      <BranchPickerPrimitive.Next
-        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
-        <View className="items-center justify-center w-6 h-6 rounded-md active:bg-accent">
-          <ChevronRight size={14} color="currentColor" strokeWidth={2} />
-        </View>
-      </BranchPickerPrimitive.Next>
-    </View>
-  );
-}
+// ─── User Message ───────────────────────────────────────────────────────────
 
 function UserAttachment() {
   return (
-    <View className="flex-row items-center gap-2 px-2 py-1.5 mt-1 rounded-md bg-primary-foreground/10">
-      <AttachmentPrimitive.Thumb style={{ width: 24, height: 24, borderRadius: 4 }} />
+    <View className="flex-row items-center gap-2 px-2 py-1 mt-1 rounded-md bg-primary-foreground/15">
+      <AttachmentPrimitive.Thumb style={{ width: 20, height: 20, borderRadius: 4 }} />
       <AttachmentPrimitive.Name
-        style={{ color: 'white', fontSize: 12, flexShrink: 1 }}
+        style={{ color: 'white', fontSize: 11, flexShrink: 1 }}
         numberOfLines={1}
       />
     </View>
   );
 }
 
-// Combined user message: shows read view or edit composer based on editing state.
-// Uses ComposerPrimitive.If (checking s.composer.isEditing) — MessagePrimitive.If
-// does not support the editing prop in @assistant-ui/react-native.
-function UserMessageItem() {
-  const bubbleMaxWidth = useBubbleMaxWidth();
-
+function UserMessage() {
   return (
     <>
-      {/* Normal (read) view — hidden while editing */}
       <ComposerPrimitive.If editing={false}>
-        <View className="items-end w-full px-3 py-1">
-          <View style={{ maxWidth: bubbleMaxWidth }} className="gap-1">
-            <Card className="py-0 border bg-primary border-primary">
-              <CardContent className="gap-2 px-4 py-3">
-                <MessagePrimitive.Parts
-                  components={{
-                    Text: ({ text }) => (
-                      <Text className="text-primary-foreground leading-6">{text}</Text>
-                    ),
-                  }}
-                />
-                <MessagePrimitive.Attachments
-                  components={{ Attachment: UserAttachment }}
-                />
-              </CardContent>
-            </Card>
-
-            <View className="flex-row items-center justify-end gap-1">
+        <View className="items-end w-full py-1">
+          <View className="max-w-[85%] gap-1">
+            <View className="px-4 py-2.5 rounded-2xl bg-primary">
+              <MessagePrimitive.Parts
+                components={{
+                  Text: ({ text }) => (
+                    <Text className="text-sm leading-6 text-primary-foreground">{text}</Text>
+                  ),
+                }}
+              />
+              <MessagePrimitive.Attachments components={{ Attachment: UserAttachment }} />
+            </View>
+            <View className="flex-row items-center justify-end gap-0.5">
               <BranchPicker />
               <ActionBarPrimitive.Edit
-                style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-                <View className="flex-row items-center gap-1 px-2 py-1 rounded-md active:bg-accent">
-                  <Pencil size={12} color="currentColor" strokeWidth={2} />
-                  <Text className="text-[11px] text-muted-foreground">
-                    {t('chat.actions.edit')}
-                  </Text>
+                style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+                <View className="px-1.5 py-1 rounded active:bg-accent">
+                  <Pencil size={12} className="text-muted-foreground" strokeWidth={2} />
                 </View>
               </ActionBarPrimitive.Edit>
             </View>
@@ -400,37 +300,29 @@ function UserMessageItem() {
         </View>
       </ComposerPrimitive.If>
 
-      {/* Edit composer — visible while editing */}
       <ComposerPrimitive.If editing>
-        <View className="items-end w-full px-3 py-1">
-          <View style={{ width: '92%' }}>
+        <View className="items-end w-full py-1">
+          <View style={{ width: '90%' }}>
             <ComposerPrimitive.Root>
-              <Card className="py-0 border-border bg-card">
-                <CardContent className="gap-2 px-3 py-3">
-                  <NativeComposerInput
-                    multiline
-                    autoFocus
-                    className="min-h-[48px] text-foreground"
-                    placeholder={t('chat.message_short_placeholder')}
-                  />
-                  <View className="flex-row justify-end gap-2">
-                    <ComposerPrimitive.Cancel>
-                      <View className="px-3 py-1.5 rounded-md border border-border active:bg-accent">
-                        <Text className="text-xs font-medium">
-                          {t('chat.actions.cancel')}
-                        </Text>
-                      </View>
-                    </ComposerPrimitive.Cancel>
-                    <ComposerPrimitive.Send>
-                      <View className="px-3 py-1.5 rounded-md bg-primary active:opacity-85">
-                        <Text className="text-xs font-medium text-primary-foreground">
-                          {t('chat.actions.save')}
-                        </Text>
-                      </View>
-                    </ComposerPrimitive.Send>
-                  </View>
-                </CardContent>
-              </Card>
+              <View className="gap-2 p-3 border rounded-2xl border-border bg-muted/30">
+                <ComposerInput
+                  autoFocus
+                  className="text-foreground min-h-[60px] w-full rounded-lg bg-background px-3 py-2 text-sm"
+                  placeholder={t('chat.message_short_placeholder')}
+                />
+                <View className="flex-row justify-end gap-2">
+                  <ComposerPrimitive.Cancel>
+                    <View className="px-3 py-1.5 rounded-lg border border-border active:bg-accent">
+                      <Text className="text-xs font-medium text-foreground">{t('chat.actions.cancel')}</Text>
+                    </View>
+                  </ComposerPrimitive.Cancel>
+                  <ComposerPrimitive.Send>
+                    <View className="px-3 py-1.5 rounded-lg bg-primary active:opacity-85">
+                      <Text className="text-xs font-medium text-primary-foreground">{t('chat.actions.save')}</Text>
+                    </View>
+                  </ComposerPrimitive.Send>
+                </View>
+              </View>
             </ComposerPrimitive.Root>
           </View>
         </View>
@@ -439,101 +331,130 @@ function UserMessageItem() {
   );
 }
 
-function AssistantMessage() {
-  const bubbleMaxWidth = useBubbleMaxWidth();
+// ─── Assistant Message ──────────────────────────────────────────────────────
 
+function LoadingIndicator() {
   return (
-    <View className="items-start w-full px-3 py-1">
-      <View style={{ maxWidth: bubbleMaxWidth }} className="gap-1">
-        <Card className="py-0 border-border bg-card">
-          <CardContent className="gap-1 px-4 py-3">
-            <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
-              {t('chat.assistant')}
-            </Text>
-            <MessagePrimitive.Parts
-              components={{
-                Text: ({ text }) => <TextPart text={text} />,
-                Reasoning: ({ text }) => <ReasoningPart text={text} />,
-                Image: ({ image }) => <ImagePart image={image} />,
-                File: ({ filename }) => <FilePart name={filename} />,
-                Empty: AssistantInProgress,
-              }}
-            />
-          </CardContent>
-        </Card>
+    <View className="flex-row items-center gap-2 py-2">
+      <Skeleton className="h-3 w-16 rounded-full" />
+      <Skeleton className="h-3 w-24 rounded-full" />
+      <Skeleton className="h-3 w-10 rounded-full" />
+    </View>
+  );
+}
 
-        <View className="flex-row items-center gap-1">
-          <ActionBarPrimitive.Copy
-            style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-            {({ isCopied }) => (
-              <View className="flex-row items-center gap-1 px-2 py-1 rounded-md active:bg-accent">
-                <CopyIcon size={12} color="currentColor" strokeWidth={2} />
-                <Text className="text-[11px] text-muted-foreground">
-                  {isCopied ? t('chat.actions.copied') : t('chat.actions.copy')}
-                </Text>
-              </View>
-            )}
-          </ActionBarPrimitive.Copy>
-
-          <ActionBarPrimitive.Reload
-            style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-            <View className="flex-row items-center gap-1 px-2 py-1 rounded-md active:bg-accent">
-              <RefreshCw size={12} color="currentColor" strokeWidth={2} />
-              <Text className="text-[11px] text-muted-foreground">
-                {t('chat.actions.regenerate')}
-              </Text>
-            </View>
-          </ActionBarPrimitive.Reload>
-
-          <ActionBarPrimitive.FeedbackPositive
-            style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-            {({ isSubmitted }) => (
-              <View
-                className={cn(
-                  'flex-row items-center gap-1 px-2 py-1 rounded-md active:bg-accent',
-                  isSubmitted && 'bg-accent',
-                )}>
-                <ThumbsUp size={12} color="currentColor" strokeWidth={2} />
-              </View>
-            )}
-          </ActionBarPrimitive.FeedbackPositive>
-
-          <ActionBarPrimitive.FeedbackNegative
-            style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-            {({ isSubmitted }) => (
-              <View
-                className={cn(
-                  'flex-row items-center gap-1 px-2 py-1 rounded-md active:bg-accent',
-                  isSubmitted && 'bg-accent',
-                )}>
-                <ThumbsDown size={12} color="currentColor" strokeWidth={2} />
-              </View>
-            )}
-          </ActionBarPrimitive.FeedbackNegative>
-
-          <BranchPicker />
-        </View>
+function AssistantMessage() {
+  return (
+    <View className="w-full py-1">
+      <View className="max-w-[85%]">
+        <MessagePrimitive.Parts
+          components={{
+            Text: ({ text }) => <TextPart text={text} />,
+            Reasoning: ({ text }) => <ReasoningPart text={text} />,
+            Image: ({ image }) => <ImagePart image={image} />,
+            File: ({ filename }) => <FilePart name={filename} />,
+            Empty: LoadingIndicator,
+          }}
+        />
+        <AssistantActions />
       </View>
     </View>
   );
 }
 
-// ─── Attachment Chips ────────────────────────────────────────────────────────
+function AssistantActions() {
+  return (
+    <View className="flex-row items-center gap-0.5 mt-1">
+      <ActionBarPrimitive.Copy
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        {({ isCopied }) => (
+          <View className="p-1.5 rounded active:bg-accent">
+            <CopyIcon
+              size={13}
+              className={isCopied ? 'text-foreground' : 'text-muted-foreground'}
+              strokeWidth={2}
+            />
+          </View>
+        )}
+      </ActionBarPrimitive.Copy>
+
+      <ActionBarPrimitive.Reload
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        <View className="p-1.5 rounded active:bg-accent">
+          <RefreshCw size={13} className="text-muted-foreground" strokeWidth={2} />
+        </View>
+      </ActionBarPrimitive.Reload>
+
+      <ActionBarPrimitive.FeedbackPositive
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        {({ isSubmitted }) => (
+          <View className={cn('p-1.5 rounded active:bg-accent', isSubmitted && 'bg-accent')}>
+            <ThumbsUp size={13} className={isSubmitted ? 'text-foreground' : 'text-muted-foreground'} strokeWidth={2} />
+          </View>
+        )}
+      </ActionBarPrimitive.FeedbackPositive>
+
+      <ActionBarPrimitive.FeedbackNegative
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        {({ isSubmitted }) => (
+          <View className={cn('p-1.5 rounded active:bg-accent', isSubmitted && 'bg-accent')}>
+            <ThumbsDown size={13} className={isSubmitted ? 'text-foreground' : 'text-muted-foreground'} strokeWidth={2} />
+          </View>
+        )}
+      </ActionBarPrimitive.FeedbackNegative>
+
+      <BranchPicker />
+    </View>
+  );
+}
+
+// ─── Branch Picker ──────────────────────────────────────────────────────────
+
+function BranchPicker() {
+  const branchCount = useAuiState((s) => s.message.branchCount);
+  if (branchCount <= 1) return null;
+
+  return (
+    <View className="flex-row items-center gap-0.5 ml-1">
+      <BranchPickerPrimitive.Previous
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        <View className="p-1 rounded active:bg-accent">
+          <ChevronLeft size={13} className="text-muted-foreground" strokeWidth={2} />
+        </View>
+      </BranchPickerPrimitive.Previous>
+
+      <View className="flex-row items-center">
+        <BranchPickerPrimitive.Number className="text-[11px] text-muted-foreground" />
+        <Text className="text-[11px] text-muted-foreground">/</Text>
+        <BranchPickerPrimitive.Count className="text-[11px] text-muted-foreground" />
+      </View>
+
+      <BranchPickerPrimitive.Next
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        <View className="p-1 rounded active:bg-accent">
+          <ChevronRight size={13} className="text-muted-foreground" strokeWidth={2} />
+        </View>
+      </BranchPickerPrimitive.Next>
+    </View>
+  );
+}
+
+// ─── Composer Attachments ───────────────────────────────────────────────────
 
 function ComposerAttachmentChip() {
   return (
     <AttachmentPrimitive.Root>
-      <View className="flex-row items-center gap-2 px-2 py-1.5 border rounded-md border-border bg-muted">
-        <AttachmentPrimitive.Thumb style={{ width: 28, height: 28, borderRadius: 4 }} />
+      <View className="flex-row items-center gap-2 px-2 py-1.5 rounded-lg border border-border bg-muted">
+        <AttachmentPrimitive.Thumb style={{ width: 24, height: 24, borderRadius: 4 }} />
         <AttachmentPrimitive.Name
           className="text-xs text-foreground"
-          style={{ maxWidth: 140 }}
+          style={{ maxWidth: 120 }}
           numberOfLines={1}
         />
         <AttachmentPrimitive.Remove
-          style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-          <View className="items-center justify-center w-5 h-5 rounded-full bg-foreground/10">
-            <X size={10} color="currentColor" strokeWidth={2.5} />
+          style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+          <View className="items-center justify-center w-4 h-4 rounded-full bg-foreground/10">
+            <X size={8} className="text-muted-foreground" strokeWidth={3} />
           </View>
         </AttachmentPrimitive.Remove>
       </View>
@@ -541,34 +462,18 @@ function ComposerAttachmentChip() {
   );
 }
 
-// ─── Composer ────────────────────────────────────────────────────────────────
+// ─── Composer Input (uncontrolled, IME-safe) ───────────────────────────────
 
-// Uncontrolled TextInput wrapper that avoids the controlled-input / Chinese IME
-// conflict. Uses defaultValue for the initial text (handles the edit-composer
-// case where the store starts with existing message text), then syncs via
-// setNativeProps when the store text changes externally (e.g. after send → "").
-function NativeComposerInput({
-  placeholder,
+function ComposerInput({
   className,
-  style,
-  multiline,
+  placeholder,
+  autoFocus,
   ...rest
-}: {
-  placeholder?: string;
-  className?: string;
-  style?: any;
-  multiline?: boolean;
-  [key: string]: any;
-}) {
+}: Omit<React.ComponentProps<typeof TextInput>, 'value' | 'onChangeText'>) {
   const aui = useAui();
   const storeText = useAuiState((s) => s.composer.text);
   const inputRef = React.useRef<TextInput>(null);
-  // Snapshot on first render — used as defaultValue so the native input
-  // starts with the correct text (empty for the main composer, existing
-  // message text for the edit composer).
   const initialTextRef = React.useRef(storeText);
-  // Track what we last pushed into the store so we can skip spurious
-  // setNativeProps calls for changes we originated ourselves.
   const lastTextRef = React.useRef(storeText);
 
   React.useEffect(() => {
@@ -586,7 +491,6 @@ function NativeComposerInput({
     [aui],
   );
 
-  // On web, Enter (without Shift) submits the message.
   const handleKeyPress = React.useCallback(
     (e: any) => {
       if (Platform.OS !== 'web') return;
@@ -606,40 +510,20 @@ function NativeComposerInput({
       onChangeText={handleChangeText}
       onKeyPress={handleKeyPress}
       placeholder={placeholder}
+      autoFocus={autoFocus}
+      multiline
+      textAlignVertical="top"
       className={className}
-      style={style}
-      multiline={multiline}
       {...rest}
     />
   );
 }
 
-function SendOrCancelButton() {
-  const isRunning = useAuiState((s) => s.thread.isRunning);
+// ─── Composer ───────────────────────────────────────────────────────────────
 
-  if (isRunning) {
-    return (
-      <ComposerPrimitive.Cancel
-        style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-        <View className="items-center justify-center rounded-full h-9 w-9 bg-destructive">
-          <Square size={14} color="white" strokeWidth={2.4} fill="white" />
-        </View>
-      </ComposerPrimitive.Cancel>
-    );
-  }
-
-  return (
-    <ComposerPrimitive.Send
-      style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-      <View className="items-center justify-center rounded-full h-9 w-9 bg-primary">
-        <Send size={14} color="white" strokeWidth={2.4} />
-      </View>
-    </ComposerPrimitive.Send>
-  );
-}
-
-function ComposerBar() {
+function Composer() {
   const insets = useSafeAreaInsets();
+  const isRunning = useAuiState((s) => s.thread.isRunning);
 
   return (
     <View
@@ -650,24 +534,36 @@ function ComposerBar() {
           <ComposerPrimitive.Attachments
             components={{ Attachment: ComposerAttachmentChip }}
           />
-
           <View className="flex-row items-end gap-2">
             <ComposerPrimitive.AddAttachment
               style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-              <View className="items-center justify-center border rounded-full h-9 w-9 border-border bg-background active:bg-accent">
-                <Paperclip size={16} color="currentColor" strokeWidth={2} />
+              <View className="items-center justify-center w-9 h-9 rounded-full border border-border active:bg-accent">
+                <Paperclip size={15} className="text-muted-foreground" strokeWidth={2} />
               </View>
             </ComposerPrimitive.AddAttachment>
 
-            <View className="flex-1 px-3 py-1.5 border rounded-2xl border-border bg-background">
-              <NativeComposerInput
-                multiline
+            <View className="flex-1">
+              <ComposerInput
                 placeholder={t('chat.message_placeholder')}
-                className="min-h-[36px] max-h-[120px] text-foreground"
+                className="text-foreground min-h-[40px] max-h-[120px] w-full rounded-2xl border border-border bg-background px-4 py-2.5 text-sm"
               />
             </View>
 
-            <SendOrCancelButton />
+            {isRunning ? (
+              <ComposerPrimitive.Cancel
+                style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
+                <View className="items-center justify-center w-9 h-9 rounded-full bg-destructive">
+                  <Square size={13} color="white" strokeWidth={2.4} fill="white" />
+                </View>
+              </ComposerPrimitive.Cancel>
+            ) : (
+              <ComposerPrimitive.Send
+                style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
+                <View className="items-center justify-center w-9 h-9 rounded-full bg-primary">
+                  <Send size={13} color="white" strokeWidth={2.4} />
+                </View>
+              </ComposerPrimitive.Send>
+            )}
           </View>
         </View>
       </ComposerPrimitive.Root>
@@ -675,161 +571,61 @@ function ComposerBar() {
   );
 }
 
-// ─── Thread ──────────────────────────────────────────────────────────────────
+// ─── Typing Footer ──────────────────────────────────────────────────────────
 
-const BubbleWidthCtx = React.createContext(320);
-function useBubbleMaxWidth() {
-  return React.useContext(BubbleWidthCtx);
-}
-
-// Shows a typing indicator at the bottom of the list when the AI is generating
-// a response but the first assistant token hasn't arrived yet.
-function RunningFooter({ bubbleMaxWidth }: { bubbleMaxWidth: number }) {
+function RunningFooter() {
   const isRunning = useAuiState((s) => s.thread.isRunning);
-  const lastMessageRole = useAuiState((s) => {
+  const lastRole = useAuiState((s) => {
     const msgs = s.thread.messages;
     return msgs.length ? msgs[msgs.length - 1].role : undefined;
   });
 
-  if (!isRunning || lastMessageRole === 'assistant') return null;
-
+  if (!isRunning || lastRole === 'assistant') return null;
   return (
-    <View className="items-start w-full px-3 py-1">
-      <View style={{ maxWidth: bubbleMaxWidth }}>
-        <Card className="py-0 border-border bg-card">
-          <CardContent className="gap-2 px-4 py-3">
-            <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
-              {t('chat.assistant')}
-            </Text>
-            <AssistantInProgress />
-          </CardContent>
-        </Card>
-      </View>
+    <View className="py-1">
+      <LoadingIndicator />
     </View>
   );
 }
 
-function ChatThread({
-  bubbleMaxWidth,
-  isLargeScreen,
-  contentPadding,
-}: {
-  bubbleMaxWidth: number;
-  isLargeScreen: boolean;
-  contentPadding: number;
-}) {
-  const flatListRef = React.useRef<FlatList>(null);
+// ─── Thread ─────────────────────────────────────────────────────────────────
+
+function ChatThread() {
   const isRunning = useAuiState((s) => s.thread.isRunning);
-  const isAtBottomRef = React.useRef(true);
-  const prevIsRunningRef = React.useRef(isRunning);
-  const userScrollingRef = React.useRef(false);
-  const layoutHeightRef = React.useRef(0);
-  const [isAtBottom, setIsAtBottom] = React.useState(true);
-
-  const handleScrollBeginDrag = React.useCallback(() => {
-    userScrollingRef.current = true;
-    isAtBottomRef.current = false;
-  }, []);
-
-  const handleScroll = React.useCallback((event: any) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const distanceFromBottom =
-      contentSize.height - contentOffset.y - layoutMeasurement.height;
-
-    if (userScrollingRef.current) {
-      if (distanceFromBottom < 20) {
-        isAtBottomRef.current = true;
-        userScrollingRef.current = false;
-        setIsAtBottom(true);
-      } else if (distanceFromBottom > 80) {
-        setIsAtBottom(false);
-      }
-    } else if (distanceFromBottom < 20) {
-      isAtBottomRef.current = true;
-      setIsAtBottom(true);
-    }
-  }, []);
-
-  const handleLayout = React.useCallback((event: any) => {
-    layoutHeightRef.current = event.nativeEvent.layout.height;
-  }, []);
-
-  const handleContentSizeChange = React.useCallback((_w: number, h: number) => {
-    if (isAtBottomRef.current) {
-      const offset = Math.max(0, h - layoutHeightRef.current);
-      flatListRef.current?.scrollToOffset({ offset, animated: true });
-    } else if (userScrollingRef.current) {
-      setIsAtBottom(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    if (isRunning && !prevIsRunningRef.current) {
-      userScrollingRef.current = false;
-      isAtBottomRef.current = true;
-      flatListRef.current?.scrollToEnd({ animated: true });
-    } else if (!isRunning && prevIsRunningRef.current && isAtBottomRef.current) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 50);
-    }
-    prevIsRunningRef.current = isRunning;
-  }, [isRunning]);
-
-  const scrollToBottom = React.useCallback(() => {
-    userScrollingRef.current = false;
-    isAtBottomRef.current = true;
-    setIsAtBottom(true);
-    flatListRef.current?.scrollToEnd({ animated: true });
-  }, []);
-
-  const footer = React.useMemo(
-    () => <RunningFooter bubbleMaxWidth={bubbleMaxWidth} />,
-    [bubbleMaxWidth],
-  );
+  const { flatListRef, showScrollButton, scrollToBottom, scrollProps } = useAutoScroll(isRunning);
 
   return (
-    <BubbleWidthCtx.Provider value={bubbleMaxWidth}>
-      <ThreadPrimitive.Root style={{ flex: 1 }}>
-        <ThreadPrimitive.Messages
-          {...({ ref: flatListRef } as any)}
-          components={{
-            UserMessage: UserMessageItem,
-            AssistantMessage,
-          }}
-          contentContainerStyle={{
-            paddingHorizontal: isLargeScreen ? 8 : Math.max(0, contentPadding - 12),
-            paddingVertical: 8,
-            gap: 2,
-          }}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-          scrollEventThrottle={16}
-          onLayout={handleLayout}
-          onScrollBeginDrag={handleScrollBeginDrag}
-          onScroll={handleScroll}
-          onContentSizeChange={handleContentSizeChange}
-          ListEmptyComponent={
-            <ThreadPrimitive.Empty>
-              <WelcomeScreen />
-            </ThreadPrimitive.Empty>
-          }
-          ListFooterComponent={footer}
-        />
-        {!isAtBottom && (
-          <Pressable
-            onPress={scrollToBottom}
-            className="absolute items-center justify-center bg-background border border-border rounded-full shadow-md"
-            style={{ width: 36, height: 36, right: 16, bottom: 12, elevation: 4 }}>
-            <ChevronDown size={20} color="currentColor" strokeWidth={2} />
-          </Pressable>
-        )}
-      </ThreadPrimitive.Root>
-    </BubbleWidthCtx.Provider>
+    <ThreadPrimitive.Root style={{ flex: 1 }}>
+      <ThreadPrimitive.Messages
+        {...({ ref: flatListRef } as any)}
+        components={{
+          UserMessage,
+          AssistantMessage,
+        }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 4 }}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        {...scrollProps}
+        ListEmptyComponent={
+          <ThreadPrimitive.Empty>
+            <WelcomeScreen />
+          </ThreadPrimitive.Empty>
+        }
+        ListFooterComponent={<RunningFooter />}
+      />
+      {showScrollButton && (
+        <Pressable
+          onPress={scrollToBottom}
+          className="absolute items-center justify-center bg-background border border-border rounded-full shadow-sm"
+          style={{ width: 32, height: 32, right: 16, bottom: 10, elevation: 3 }}>
+          <ArrowDown size={16} className="text-foreground" strokeWidth={2} />
+        </Pressable>
+      )}
+    </ThreadPrimitive.Root>
   );
 }
 
-// ─── Screen Layout ───────────────────────────────────────────────────────────
+// ─── Screen Layout ──────────────────────────────────────────────────────────
 
 function ChatScreenInner({
   model,
@@ -839,13 +635,10 @@ function ChatScreenInner({
   onModelChange: (option: Option) => void;
 }) {
   const { width } = useWindowDimensions();
-  const isCompact = width < 390;
   const isLargeScreen = width >= 768;
-  const contentPadding = isCompact ? 12 : 16;
-  const bubbleMaxWidth = Math.min(width - contentPadding * 2 - 12, width * 0.9);
   const sidebarWidth = isLargeScreen
-    ? Math.min(Math.max(width * 0.28, 280), 340)
-    : Math.min(Math.max(width * 0.78, 260), 340);
+    ? Math.min(Math.max(width * 0.25, 260), 320)
+    : Math.min(Math.max(width * 0.75, 260), 320);
 
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
@@ -857,74 +650,61 @@ function ChatScreenInner({
     }
   }, [isLargeScreen]);
 
-  function onMenuPress() {
+  const onMenuPress = React.useCallback(() => {
     if (!isLargeScreen) {
       setDrawerOpen(true);
-      return;
+    } else {
+      setSidebarVisible((v) => !v);
     }
-    setSidebarVisible((v) => !v);
-  }
+  }, [isLargeScreen]);
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
       <Stack.Screen options={SCREEN_OPTIONS} />
+      <View className="flex-row flex-1">
+        {isLargeScreen && sidebarVisible && (
+          <Sidebar width={sidebarWidth} isLargeScreen onClose={() => setSidebarVisible(false)} />
+        )}
 
-      <View className="flex-row flex-1 bg-background">
-        {isLargeScreen && sidebarVisible ? (
-          <HistorySidebar
-            width={sidebarWidth}
-            isLargeScreen
-            onClose={() => setSidebarVisible(false)}
-          />
-        ) : null}
-
-        <View className="flex-1 bg-background">
-          <ChatHeader
-            model={model}
-            onModelChange={onModelChange}
-            onMenuPress={onMenuPress}
-            isLargeScreen={isLargeScreen}
-          />
-
-          <ChatThread
-            bubbleMaxWidth={bubbleMaxWidth}
-            isLargeScreen={isLargeScreen}
-            contentPadding={contentPadding}
-          />
-
+        <View className="flex-1">
+          <ChatHeader model={model} onModelChange={onModelChange} onMenuPress={onMenuPress} />
+          <ChatThread />
           <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-            <ComposerBar />
+            <Composer />
           </KeyboardStickyView>
         </View>
 
-        {!isLargeScreen && drawerOpen ? (
+        {!isLargeScreen && drawerOpen && (
           <View className="absolute inset-0 z-50 flex-row">
-            <HistorySidebar
+            <Sidebar
               width={sidebarWidth}
               isLargeScreen={false}
               onClose={() => setDrawerOpen(false)}
             />
-            <Pressable
-              className="flex-1 bg-black/35"
-              onPress={() => setDrawerOpen(false)}
-            />
+            <Pressable className="flex-1 bg-black/40" onPress={() => setDrawerOpen(false)} />
           </View>
-        ) : null}
+        )}
       </View>
     </SafeAreaView>
   );
 }
 
-// ─── Root ────────────────────────────────────────────────────────────────────
+// ─── Root ───────────────────────────────────────────────────────────────────
 
 export default function ChatScreen() {
+  const [resetKey, setResetKey] = React.useState(0);
+  return (
+    <ChatErrorBoundary onReset={() => setResetKey((k) => k + 1)}>
+      <ChatScreenRoot key={resetKey} />
+    </ChatErrorBoundary>
+  );
+}
+
+function ChatScreenRoot() {
   const [model, setModel] = React.useState<Option>({
     label: 'MiMo-V2.5-Pro',
     value: 'mimo-v2.5-pro',
   });
-
-  // useAppRuntime creates the transport once (stable ref via prepareCall + ref),
-  // so model switching never recreates the runtime or loses conversation history.
   const runtime = useAppRuntime(model?.value ?? 'mimo-v2.5-pro');
 
   return (
