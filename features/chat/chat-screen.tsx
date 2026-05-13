@@ -36,7 +36,6 @@ import {
   FileText,
   Menu,
   MessageSquare,
-  Paperclip,
   Pencil,
   Plus,
   RefreshCw,
@@ -152,19 +151,16 @@ function ChatHeader({
   onMenuPress: () => void;
 }) {
   return (
-    <View className="flex-row items-center justify-between px-3 py-2 border-b border-border bg-background">
-      <View className="flex-row items-center gap-1">
-        <Pressable
-          hitSlop={8}
-          onPress={onMenuPress}
-          className="items-center justify-center w-9 h-9 rounded-lg active:bg-accent">
-          <Menu size={18} className="text-foreground" strokeWidth={2} />
-        </Pressable>
-        <Text className="text-base font-semibold text-foreground">{t('chat.title')}</Text>
-      </View>
+    <View className="flex-row items-center justify-between px-2 py-2 bg-background">
+      <Pressable
+        hitSlop={8}
+        onPress={onMenuPress}
+        className="items-center justify-center w-10 h-10 rounded-xl active:bg-accent">
+        <Menu size={20} className="text-foreground" strokeWidth={1.8} />
+      </Pressable>
 
       <Select value={model} onValueChange={(v) => v && onModelChange(v)}>
-        <SelectTrigger size="sm" className="min-w-[150px]">
+        <SelectTrigger size="sm" className="min-w-[140px] border-0 bg-transparent">
           <SelectValue placeholder={t('chat.select_model')} />
         </SelectTrigger>
         <SelectContent side="bottom">
@@ -173,6 +169,12 @@ function ChatHeader({
           ))}
         </SelectContent>
       </Select>
+
+      <Pressable
+        hitSlop={8}
+        className="items-center justify-center w-10 h-10 rounded-xl active:bg-accent">
+        <Pencil size={18} className="text-foreground" strokeWidth={1.8} />
+      </Pressable>
     </View>
   );
 }
@@ -181,28 +183,28 @@ function ChatHeader({
 
 function WelcomeScreen() {
   return (
-    <View className="items-center w-full gap-5 px-5 py-16">
-      <View className="items-center justify-center w-12 h-12 rounded-full bg-foreground">
-        <Sparkles size={20} color="white" strokeWidth={2.3} />
+    <View className="items-center w-full gap-6 px-5 py-20">
+      <View className="items-center justify-center w-14 h-14 rounded-full bg-foreground">
+        <Sparkles size={22} color="white" strokeWidth={2.2} />
       </View>
-      <View className="items-center gap-1.5">
-        <Text className="text-xl font-semibold text-foreground">
+      <View className="items-center gap-2">
+        <Text className="text-2xl font-semibold text-foreground">
           {t('chat.start_title')}
         </Text>
-        <Text className="text-sm text-center text-muted-foreground">
+        <Text className="text-sm text-center text-muted-foreground leading-5">
           {t('chat.start_subtitle')}
         </Text>
       </View>
-      <View className="w-full max-w-md gap-2 mt-2">
+      <View className="w-full max-w-md gap-2.5 mt-3">
         {getSuggestions().map((s) => (
           <ThreadPrimitive.Suggestion
             key={s.id}
             prompt={s.title}
             send
             style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-            <View className="px-4 py-3 border rounded-xl border-border bg-background active:bg-accent/50">
-              <Text className="text-sm font-medium text-foreground">{s.title}</Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">{s.subtitle}</Text>
+            <View className="px-4 py-3.5 border rounded-2xl border-border bg-background active:bg-accent/50">
+              <Text className="text-[15px] font-medium text-foreground">{s.title}</Text>
+              <Text className="text-xs text-muted-foreground mt-1">{s.subtitle}</Text>
             </View>
           </ThreadPrimitive.Suggestion>
         ))}
@@ -223,7 +225,7 @@ function getSuggestions() {
 
 function TextPart({ text }: { text: string }) {
   if (!text) return null;
-  return <Text className="text-sm leading-6 text-foreground">{text}</Text>;
+  return <Text className="text-[15px] leading-7 text-foreground">{text}</Text>;
 }
 
 function ReasoningPart({ text }: { text: string }) {
@@ -261,11 +263,12 @@ function FilePart({ name }: { name?: string }) {
 
 function UserAttachment() {
   return (
-    <View className="flex-row items-center gap-2 px-2 py-1 mt-1 rounded-md bg-primary-foreground/15">
+    <View className="flex-row items-center gap-2 px-2 py-1 mt-1 rounded-md bg-foreground/10">
       <AttachmentPrimitive.Thumb style={{ width: 20, height: 20, borderRadius: 4 }} />
       <AttachmentPrimitive.Name
-        style={{ color: 'white', fontSize: 11, flexShrink: 1 }}
+        style={{ fontSize: 11, flexShrink: 1 }}
         numberOfLines={1}
+        className="text-foreground"
       />
     </View>
   );
@@ -275,13 +278,13 @@ function UserMessage() {
   return (
     <>
       <ComposerPrimitive.If editing={false}>
-        <View className="items-end w-full py-1">
-          <View className="max-w-[85%] gap-1">
-            <View className="px-4 py-2.5 rounded-2xl bg-primary">
+        <View className="items-end w-full py-1.5">
+          <View className="max-w-[80%] gap-1">
+            <View className="px-4 py-3 rounded-2xl bg-muted">
               <MessagePrimitive.Parts
                 components={{
                   Text: ({ text }) => (
-                    <Text className="text-sm leading-6 text-primary-foreground">{text}</Text>
+                    <Text className="text-[15px] leading-6 text-foreground">{text}</Text>
                   ),
                 }}
               />
@@ -345,8 +348,8 @@ function LoadingIndicator() {
 
 function AssistantMessage() {
   return (
-    <View className="w-full py-1">
-      <View className="max-w-[85%]">
+    <View className="w-full py-2">
+      <View className="pr-8">
         <MessagePrimitive.Parts
           components={{
             Text: ({ text }) => <TextPart text={text} />,
@@ -364,7 +367,7 @@ function AssistantMessage() {
 
 function AssistantActions() {
   return (
-    <View className="flex-row items-center gap-0.5 mt-1">
+    <View className="flex-row items-center gap-1 mt-2 pt-1">
       <ActionBarPrimitive.Copy
         style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
         {({ isCopied }) => (
@@ -527,7 +530,7 @@ function Composer() {
 
   return (
     <View
-      className="px-3 pt-2 border-t bg-background border-border"
+      className="px-3 pt-2 bg-background"
       style={{ paddingBottom: Math.max(insets.bottom, 8) }}>
       <ComposerPrimitive.Root>
         <View className="gap-2">
@@ -538,32 +541,31 @@ function Composer() {
             <ComposerPrimitive.AddAttachment
               style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
               <View className="items-center justify-center w-9 h-9 rounded-full border border-border active:bg-accent">
-                <Paperclip size={15} className="text-muted-foreground" strokeWidth={2} />
+                <Plus size={18} className="text-muted-foreground" strokeWidth={2} />
               </View>
             </ComposerPrimitive.AddAttachment>
 
-            <View className="flex-1">
+            <View className="flex-1 flex-row items-end rounded-3xl border border-border bg-muted/30 px-4 py-1">
               <ComposerInput
                 placeholder={t('chat.message_placeholder')}
-                className="text-foreground min-h-[40px] max-h-[120px] w-full rounded-2xl border border-border bg-background px-4 py-2.5 text-sm"
+                className="text-foreground flex-1 min-h-[36px] max-h-[120px] text-[15px] py-1.5"
               />
+              {isRunning ? (
+                <ComposerPrimitive.Cancel
+                  style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
+                  <View className="items-center justify-center w-8 h-8 mb-0.5 rounded-full bg-foreground">
+                    <Square size={12} color="white" strokeWidth={2.4} fill="white" />
+                  </View>
+                </ComposerPrimitive.Cancel>
+              ) : (
+                <ComposerPrimitive.Send
+                  style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
+                  <View className="items-center justify-center w-8 h-8 mb-0.5 rounded-full bg-foreground">
+                    <Send size={14} color="white" strokeWidth={2.4} />
+                  </View>
+                </ComposerPrimitive.Send>
+              )}
             </View>
-
-            {isRunning ? (
-              <ComposerPrimitive.Cancel
-                style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-                <View className="items-center justify-center w-9 h-9 rounded-full bg-destructive">
-                  <Square size={13} color="white" strokeWidth={2.4} fill="white" />
-                </View>
-              </ComposerPrimitive.Cancel>
-            ) : (
-              <ComposerPrimitive.Send
-                style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-                <View className="items-center justify-center w-9 h-9 rounded-full bg-primary">
-                  <Send size={13} color="white" strokeWidth={2.4} />
-                </View>
-              </ComposerPrimitive.Send>
-            )}
           </View>
         </View>
       </ComposerPrimitive.Root>
@@ -602,7 +604,7 @@ function ChatThread() {
           UserMessage,
           AssistantMessage,
         }}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 4 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
         {...scrollProps}
@@ -616,9 +618,9 @@ function ChatThread() {
       {showScrollButton && (
         <Pressable
           onPress={scrollToBottom}
-          className="absolute items-center justify-center bg-background border border-border rounded-full shadow-sm"
-          style={{ width: 32, height: 32, right: 16, bottom: 10, elevation: 3 }}>
-          <ArrowDown size={16} className="text-foreground" strokeWidth={2} />
+          className="absolute items-center justify-center bg-foreground rounded-full shadow-md"
+          style={{ width: 36, height: 36, alignSelf: 'center', bottom: 12, left: '50%', marginLeft: -18, elevation: 4 }}>
+          <ArrowDown size={18} color="white" strokeWidth={2.2} />
         </Pressable>
       )}
     </ThreadPrimitive.Root>
