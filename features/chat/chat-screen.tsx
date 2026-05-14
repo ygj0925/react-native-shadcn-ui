@@ -6,7 +6,6 @@ import {
   SelectValue,
   type Option,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { ToolUIs } from '@/features/chat/tool-uis';
 import { MIMO_MODELS, useAppRuntime } from '@/hooks/use-app-runtime';
@@ -30,8 +29,11 @@ import {
 import { Stack } from 'expo-router';
 import {
   ArrowDown,
+  Brain,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Copy as CopyIcon,
   FileText,
   Menu,
@@ -48,7 +50,7 @@ import {
   X,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { Image, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { Animated, Image, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -228,15 +230,51 @@ function TextPart({ text }: { text: string }) {
   return <Text className="text-[15px] leading-7 text-foreground">{text}</Text>;
 }
 
-function ReasoningPart({ text }: { text: string }) {
-  if (!text) return null;
+function ReasoningPart({ text, status }: { text: string; status: { type: string } }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const isThinking = status?.type === 'running';
+
   return (
-    <View className="px-3 py-2 mt-1.5 rounded-lg bg-muted/50 border border-border">
-      <Text className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">
-        {t('chat.thinking')}
-      </Text>
-      <Text className="mt-1 text-xs leading-5 text-muted-foreground">{text}</Text>
-    </View>
+    <Pressable onPress={() => setExpanded((v) => !v)} className="mt-1.5 mb-1">
+      <View className="flex-row items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+        <Brain size={13} className="text-muted-foreground" strokeWidth={2} />
+        <Text className="flex-1 text-xs font-medium text-muted-foreground">
+          {isThinking ? t('chat.thinking') + '...' : t('chat.thinking')}
+        </Text>
+        {isThinking && <PulsingDot />}
+        {!isThinking && (
+          expanded
+            ? <ChevronUp size={13} className="text-muted-foreground" strokeWidth={2} />
+            : <ChevronDown size={13} className="text-muted-foreground" strokeWidth={2} />
+        )}
+      </View>
+      {(expanded || isThinking) && !!text && (
+        <View className="px-3 pt-2 pb-1">
+          <Text className="text-xs leading-5 text-muted-foreground">{text}</Text>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+function PulsingDot() {
+  const opacity = React.useRef(new Animated.Value(0.3)).current;
+
+  React.useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 600, useNativeDriver: true }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{ opacity, width: 6, height: 6, borderRadius: 3, backgroundColor: '#888' }}
+    />
   );
 }
 
@@ -337,11 +375,40 @@ function UserMessage() {
 // ─── Assistant Message ──────────────────────────────────────────────────────
 
 function LoadingIndicator() {
+  const dot1 = React.useRef(new Animated.Value(0.2)).current;
+  const dot2 = React.useRef(new Animated.Value(0.2)).current;
+  const dot3 = React.useRef(new Animated.Value(0.2)).current;
+
+  React.useEffect(() => {
+    const animate = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.timing(dot, { toValue: 0.2, duration: 400, useNativeDriver: true }),
+        ]),
+      );
+    const a1 = animate(dot1, 0);
+    const a2 = animate(dot2, 200);
+    const a3 = animate(dot3, 400);
+    a1.start(); a2.start(); a3.start();
+    return () => { a1.stop(); a2.stop(); a3.stop(); };
+  }, [dot1, dot2, dot3]);
+
   return (
-    <View className="flex-row items-center gap-2 py-2">
-      <Skeleton className="h-3 w-16 rounded-full" />
-      <Skeleton className="h-3 w-24 rounded-full" />
-      <Skeleton className="h-3 w-10 rounded-full" />
+    <View className="flex-row items-center gap-1.5 py-3">
+      {[dot1, dot2, dot3].map((dot, i) => (
+        <Animated.View
+          key={i}
+          style={{
+            opacity: dot,
+            width: 7,
+            height: 7,
+            borderRadius: 4,
+            backgroundColor: '#999',
+          }}
+        />
+      ))}
     </View>
   );
 }
@@ -353,13 +420,15 @@ function AssistantMessage() {
         <MessagePrimitive.Parts
           components={{
             Text: ({ text }) => <TextPart text={text} />,
-            Reasoning: ({ text }) => <ReasoningPart text={text} />,
+            Reasoning: ({ text, status }) => <ReasoningPart text={text} status={status} />,
             Image: ({ image }) => <ImagePart image={image} />,
             File: ({ filename }) => <FilePart name={filename} />,
             Empty: LoadingIndicator,
           }}
         />
-        <AssistantActions />
+        <MessagePrimitive.If running={false}>
+          <AssistantActions />
+        </MessagePrimitive.If>
       </View>
     </View>
   );
@@ -471,6 +540,8 @@ function ComposerInput({
   className,
   placeholder,
   autoFocus,
+  onFocus: onFocusProp,
+  onBlur: onBlurProp,
   ...rest
 }: Omit<React.ComponentProps<typeof TextInput>, 'value' | 'onChangeText'>) {
   const aui = useAui();
@@ -482,7 +553,18 @@ function ComposerInput({
   React.useEffect(() => {
     if (storeText !== lastTextRef.current) {
       lastTextRef.current = storeText;
-      inputRef.current?.setNativeProps?.({ text: storeText });
+      const node = inputRef.current;
+      if (!node) return;
+      if (node.setNativeProps) {
+        node.setNativeProps({ text: storeText });
+      } else if (Platform.OS === 'web') {
+        // Web fallback: directly set the DOM value
+        const el = node as unknown as { _node?: HTMLTextAreaElement };
+        const dom = el._node ?? (node as any);
+        if (dom && 'value' in dom) {
+          (dom as HTMLTextAreaElement).value = storeText;
+        }
+      }
     }
   }, [storeText]);
 
@@ -512,6 +594,8 @@ function ComposerInput({
       defaultValue={initialTextRef.current}
       onChangeText={handleChangeText}
       onKeyPress={handleKeyPress}
+      onFocus={onFocusProp}
+      onBlur={onBlurProp}
       placeholder={placeholder}
       autoFocus={autoFocus}
       multiline
@@ -527,6 +611,7 @@ function ComposerInput({
 function Composer() {
   const insets = useSafeAreaInsets();
   const isRunning = useAuiState((s) => s.thread.isRunning);
+  const [isFocused, setIsFocused] = React.useState(false);
 
   return (
     <View
@@ -545,10 +630,18 @@ function Composer() {
               </View>
             </ComposerPrimitive.AddAttachment>
 
-            <View className="flex-1 flex-row items-end rounded-3xl border border-border bg-muted/30 px-4 py-1">
+            <View
+              className={cn(
+                'flex-1 flex-row items-end rounded-3xl px-4 py-1',
+                isFocused
+                  ? 'border border-border bg-background'
+                  : 'bg-muted/40',
+              )}>
               <ComposerInput
                 placeholder={t('chat.message_placeholder')}
                 className="text-foreground flex-1 min-h-[36px] max-h-[120px] text-[15px] py-1.5"
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
               />
               {isRunning ? (
                 <ComposerPrimitive.Cancel

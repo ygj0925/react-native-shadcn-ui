@@ -9,10 +9,12 @@ export function useAutoScroll(isRunning: boolean) {
   const isDraggingRef = useRef(false);
   const layoutHeightRef = useRef(0);
   const prevIsRunningRef = useRef(isRunning);
+  const scrollLockRef = useRef(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
   const updateBottomState = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (scrollLockRef.current) return;
       const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
       const dist = contentSize.height - contentOffset.y - layoutMeasurement.height;
       const atBottom = dist <= BOTTOM_THRESHOLD;
@@ -26,6 +28,7 @@ export function useAutoScroll(isRunning: boolean) {
 
   const handleScrollBeginDrag = useCallback(() => {
     isDraggingRef.current = true;
+    scrollLockRef.current = false;
   }, []);
 
   const handleScrollEndDrag = useCallback(
@@ -57,8 +60,12 @@ export function useAutoScroll(isRunning: boolean) {
   const scrollToBottom = useCallback(() => {
     isDraggingRef.current = false;
     isAtBottomRef.current = true;
+    scrollLockRef.current = true;
     setShowScrollButton(false);
     flatListRef.current?.scrollToEnd({ animated: true });
+    setTimeout(() => {
+      scrollLockRef.current = false;
+    }, 400);
   }, []);
 
   return {

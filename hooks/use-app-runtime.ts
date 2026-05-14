@@ -5,7 +5,13 @@ import {
   type FeedbackAdapter,
 } from "@assistant-ui/react-native";
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
-import { DirectChatTransport, ToolLoopAgent, tool, jsonSchema } from "ai";
+import {
+  DirectChatTransport,
+  ToolLoopAgent,
+  tool,
+  jsonSchema,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { useMemo, useRef } from "react";
 import { Platform } from "react-native";
@@ -166,7 +172,11 @@ export function useAppRuntime(modelId: string = "mimo-v2.5-pro") {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return useChatRuntime({ transport, adapters });
+  return useChatRuntime({
+    transport,
+    adapters,
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+  });
 }
 
 const feedbackAdapter: FeedbackAdapter = {
