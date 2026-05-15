@@ -26,7 +26,16 @@
       "Bash(eas --version)",
       "Bash(npx eas *)",
       "Bash(where eas *)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "PowerShell(npm ls *)",
+      "PowerShell(npm view *)",
+      "PowerShell(npx tsc --noEmit --pretty 2>&1 | Select-Object -First 80)",
+      "PowerShell(node -e \"const m = require\\('@assistant-ui/react-native'\\); console.log\\(typeof m.makeAssistantToolUI\\)\" 2>$null)",
+      "PowerShell(npx tsc --noEmit --pretty 2>&1 | Select-Object -First 40)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 15)",
+      "PowerShell(git *)"
     ]
   }
 }
