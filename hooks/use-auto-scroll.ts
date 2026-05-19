@@ -11,6 +11,7 @@ export function useAutoScroll(isRunning: boolean) {
   const layoutHeightRef = useRef(0);
   const prevIsRunningRef = useRef(isRunning);
   const scrollLockRef = useRef(false);
+  const showRef = useRef(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
   const updateBottomState = useCallback(
@@ -19,9 +20,12 @@ export function useAutoScroll(isRunning: boolean) {
       const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
       const dist = contentSize.height - contentOffset.y - layoutMeasurement.height;
       const atBottom = dist <= BOTTOM_THRESHOLD;
-      if (isAtBottomRef.current !== atBottom) {
-        isAtBottomRef.current = atBottom;
-        setShowScrollButton(!atBottom);
+      isAtBottomRef.current = atBottom;
+
+      const shouldShow = !atBottom && userScrolledAwayRef.current;
+      if (shouldShow !== showRef.current) {
+        showRef.current = shouldShow;
+        setShowScrollButton(shouldShow);
       }
     },
     [],
@@ -38,10 +42,17 @@ export function useAutoScroll(isRunning: boolean) {
       const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
       const dist = contentSize.height - contentOffset.y - layoutMeasurement.height;
       const atBottom = dist <= BOTTOM_THRESHOLD;
+      isAtBottomRef.current = atBottom;
       userScrolledAwayRef.current = !atBottom;
-      updateBottomState(e);
+      if (!atBottom && !showRef.current) {
+        showRef.current = true;
+        setShowScrollButton(true);
+      } else if (atBottom && showRef.current) {
+        showRef.current = false;
+        setShowScrollButton(false);
+      }
     },
-    [updateBottomState],
+    [],
   );
 
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
@@ -67,6 +78,7 @@ export function useAutoScroll(isRunning: boolean) {
     isDraggingRef.current = false;
     isAtBottomRef.current = true;
     scrollLockRef.current = true;
+    showRef.current = false;
     setShowScrollButton(false);
     flatListRef.current?.scrollToEnd({ animated: true });
     setTimeout(() => {
