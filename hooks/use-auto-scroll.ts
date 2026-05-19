@@ -55,6 +55,25 @@ export function useAutoScroll(isRunning: boolean) {
     [],
   );
 
+  const handleMomentumScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+      const dist = contentSize.height - contentOffset.y - layoutMeasurement.height;
+      const atBottom = dist <= BOTTOM_THRESHOLD;
+      isAtBottomRef.current = atBottom;
+      if (!atBottom && !userScrolledAwayRef.current) {
+        userScrolledAwayRef.current = true;
+        showRef.current = true;
+        setShowScrollButton(true);
+      } else if (atBottom && userScrolledAwayRef.current) {
+        userScrolledAwayRef.current = false;
+        showRef.current = false;
+        setShowScrollButton(false);
+      }
+    },
+    [],
+  );
+
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
     layoutHeightRef.current = e.nativeEvent.layout.height;
   }, []);
@@ -96,7 +115,7 @@ export function useAutoScroll(isRunning: boolean) {
       onScrollBeginDrag: handleScrollBeginDrag,
       onScrollEndDrag: handleScrollEndDrag,
       onScroll: updateBottomState,
-      onMomentumScrollEnd: updateBottomState,
+      onMomentumScrollEnd: handleMomentumScrollEnd,
       onContentSizeChange: handleContentSizeChange,
     },
   };

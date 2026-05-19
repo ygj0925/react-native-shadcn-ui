@@ -86,6 +86,7 @@ function injectReasoningContent(body: string): string {
           const cached = reasoningCache.get(tc.id);
           if (cached !== undefined) {
             msg.reasoning_content = cached;
+            reasoningCache.delete(tc.id);
             modified = true;
             break;
           }
@@ -117,6 +118,7 @@ const customFetch: typeof fetch = async (input, init) => {
       const res = await fetch(input, { ...init, headers });
 
       if (!res.ok && res.status >= 500 && attempt < MAX_RETRIES) {
+        res.body?.cancel();
         await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (attempt + 1)));
         continue;
       }

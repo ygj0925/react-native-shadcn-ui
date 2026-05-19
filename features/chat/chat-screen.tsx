@@ -253,6 +253,14 @@ function TextPart({ text }: { text: string }) {
 function ReasoningPart({ text, status }: { text: string; status: { type: string } }) {
   const [expanded, setExpanded] = React.useState(false);
   const isThinking = status?.type === 'running';
+  const wasThinkingRef = React.useRef(isThinking);
+
+  React.useEffect(() => {
+    if (wasThinkingRef.current && !isThinking && text) {
+      setExpanded(true);
+    }
+    wasThinkingRef.current = isThinking;
+  }, [isThinking, text]);
 
   return (
     <Pressable onPress={() => setExpanded((v) => !v)} className="mt-1.5 mb-1">
