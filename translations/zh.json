@@ -291,14 +291,16 @@
       "stop": "停止",
       "send": "发送",
       "attach": "附件",
-      "remove": "移除"
+      "remove": "移除",
+      "retry": "重试"
     },
     "branch": {
       "previous": "上一条",
       "next": "下一条"
     },
     "thinking": "思考中",
-    "untitled_thread": "新会话"
+    "untitled_thread": "新会话",
+    "offline_notice": "网络已断开，消息将在恢复连接后发送"
   },
   "auth": {
     "sign_in": "登录",

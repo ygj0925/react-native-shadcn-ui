@@ -291,14 +291,16 @@
       "stop": "Stop",
       "send": "Send",
       "attach": "Attach",
-      "remove": "Remove"
+      "remove": "Remove",
+      "retry": "Retry"
     },
     "branch": {
       "previous": "Previous variant",
       "next": "Next variant"
     },
     "thinking": "Thinking",
-    "untitled_thread": "New conversation"
+    "untitled_thread": "New conversation",
+    "offline_notice": "You're offline. Messages will be sent when connection resumes."
   },
   "auth": {
     "sign_in": "Sign in",

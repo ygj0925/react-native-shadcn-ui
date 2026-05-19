@@ -12,6 +12,7 @@ import { MIMO_MODELS, useAppRuntime } from '@/hooks/use-app-runtime';
 import { t } from '@/lib/i18n';
 import { ChatErrorBoundary } from '@/components/chat-error-boundary';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
+import { useNetworkStatus } from '@/hooks/use-network-status';
 import { cn } from '@/lib/utils';
 import {
   ActionBarPrimitive,
@@ -19,6 +20,7 @@ import {
   AttachmentPrimitive,
   BranchPickerPrimitive,
   ComposerPrimitive,
+  ErrorPrimitive,
   MessagePrimitive,
   ThreadListItemPrimitive,
   ThreadListPrimitive,
@@ -29,6 +31,7 @@ import {
 import { Stack } from 'expo-router';
 import {
   ArrowDown,
+  AlertTriangle,
   Brain,
   ChevronDown,
   ChevronLeft,
@@ -47,6 +50,7 @@ import {
   ThumbsDown,
   ThumbsUp,
   Trash2,
+  WifiOff,
   X,
 } from 'lucide-react-native';
 import * as React from 'react';
@@ -183,6 +187,22 @@ function ChatHeader({
 
 // ─── Welcome / Empty ────────────────────────────────────────────────────────
 
+function OfflineBanner() {
+  const { isConnected } = useNetworkStatus();
+  if (isConnected !== false) return null;
+
+  return (
+    <View
+      className="flex-row items-center justify-center gap-2 px-4 py-2"
+      style={{ backgroundColor: 'rgba(239,68,68,0.08)' }}>
+      <WifiOff size={14} color="#ef4444" strokeWidth={2} />
+      <Text className="text-xs font-medium" style={{ color: '#ef4444' }}>
+        {t('chat.offline_notice')}
+      </Text>
+    </View>
+  );
+}
+
 function WelcomeScreen() {
   return (
     <View className="items-center w-full gap-6 px-5 py-20">
@@ -227,7 +247,7 @@ function getSuggestions() {
 
 function TextPart({ text }: { text: string }) {
   if (!text) return null;
-  return <Text className="text-[15px] leading-7 text-foreground">{text}</Text>;
+  return <Text selectable className="text-[15px] leading-7 text-foreground">{text}</Text>;
 }
 
 function ReasoningPart({ text, status }: { text: string; status: { type: string } }) {
@@ -250,7 +270,7 @@ function ReasoningPart({ text, status }: { text: string; status: { type: string 
       </View>
       {(expanded || isThinking) && !!text && (
         <View className="px-3 pt-2 pb-1">
-          <Text className="text-xs leading-5 text-muted-foreground">{text}</Text>
+          <Text selectable className="text-xs leading-5 text-muted-foreground">{text}</Text>
         </View>
       )}
     </Pressable>
@@ -322,7 +342,7 @@ function UserMessage() {
               <MessagePrimitive.Parts
                 components={{
                   Text: ({ text }) => (
-                    <Text className="text-[15px] leading-6 text-foreground">{text}</Text>
+                    <Text selectable className="text-[15px] leading-6 text-foreground">{text}</Text>
                   ),
                 }}
               />
@@ -426,6 +446,25 @@ function AssistantMessage() {
             Empty: LoadingIndicator,
           }}
         />
+        <ErrorPrimitive.Root
+          className="mt-2 flex-row items-start gap-2 rounded-lg border px-3 py-2.5"
+          style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.2)' }}>
+          <AlertTriangle size={14} color="#ef4444" strokeWidth={2} style={{ marginTop: 2 }} />
+          <View className="flex-1 gap-1.5">
+            <ErrorPrimitive.Message className="text-sm leading-5" style={{ color: '#ef4444' }} />
+            <ActionBarPrimitive.Reload
+              style={({ pressed }: any) => ({ opacity: pressed ? 0.7 : 1 })}>
+              <View
+                className="self-start flex-row items-center gap-1 px-2.5 py-1 rounded-md"
+                style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
+                <RefreshCw size={11} color="#ef4444" strokeWidth={2.2} />
+                <Text className="text-xs font-medium" style={{ color: '#ef4444' }}>
+                  {t('chat.actions.retry')}
+                </Text>
+              </View>
+            </ActionBarPrimitive.Reload>
+          </View>
+        </ErrorPrimitive.Root>
         <MessagePrimitive.If running={false}>
           <AssistantActions />
         </MessagePrimitive.If>
@@ -763,6 +802,7 @@ function ChatScreenInner({
 
         <View className="flex-1">
           <ChatHeader model={model} onModelChange={onModelChange} onMenuPress={onMenuPress} />
+          <OfflineBanner />
           <ChatThread />
           <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
             <Composer />

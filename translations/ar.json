@@ -291,14 +291,16 @@
       "stop": "إيقاف",
       "send": "إرسال",
       "attach": "إرفاق",
-      "remove": "إزالة"
+      "remove": "إزالة",
+      "retry": "إعادة المحاولة"
     },
     "branch": {
       "previous": "السابق",
       "next": "التالي"
     },
     "thinking": "يفكر",
-    "untitled_thread": "محادثة جديدة"
+    "untitled_thread": "محادثة جديدة",
+    "offline_notice": "أنت غير متصل بالإنترنت. سيتم إرسال الرسائل عند استعادة الاتصال."
   },
   "auth": {
     "sign_in": "Sign in",
