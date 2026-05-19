@@ -7,6 +7,7 @@ export function useAutoScroll(isRunning: boolean) {
   const flatListRef = useRef<FlatList>(null);
   const isAtBottomRef = useRef(true);
   const isDraggingRef = useRef(false);
+  const userScrolledAwayRef = useRef(false);
   const layoutHeightRef = useRef(0);
   const prevIsRunningRef = useRef(isRunning);
   const scrollLockRef = useRef(false);
@@ -34,6 +35,10 @@ export function useAutoScroll(isRunning: boolean) {
   const handleScrollEndDrag = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       isDraggingRef.current = false;
+      const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
+      const dist = contentSize.height - contentOffset.y - layoutMeasurement.height;
+      const atBottom = dist <= BOTTOM_THRESHOLD;
+      userScrolledAwayRef.current = !atBottom;
       updateBottomState(e);
     },
     [updateBottomState],
@@ -44,20 +49,21 @@ export function useAutoScroll(isRunning: boolean) {
   }, []);
 
   const handleContentSizeChange = useCallback((_w: number, h: number) => {
-    if (isAtBottomRef.current && !isDraggingRef.current) {
+    if (!userScrolledAwayRef.current && !isDraggingRef.current) {
       const offset = Math.max(0, h - layoutHeightRef.current);
       flatListRef.current?.scrollToOffset({ offset, animated: false });
     }
   }, []);
 
   useEffect(() => {
-    if (!isRunning && prevIsRunningRef.current && isAtBottomRef.current) {
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+    if (!isRunning && prevIsRunningRef.current && !userScrolledAwayRef.current) {
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 150);
     }
     prevIsRunningRef.current = isRunning;
   }, [isRunning]);
 
   const scrollToBottom = useCallback(() => {
+    userScrolledAwayRef.current = false;
     isDraggingRef.current = false;
     isAtBottomRef.current = true;
     scrollLockRef.current = true;
