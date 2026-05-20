@@ -1,12 +1,20 @@
+const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const config = getDefaultConfig(__dirname);
 
-// Disabled: causes massive memory pressure during graph resolution.
-// ai/assistant-ui packages work fine via 'main' field resolution.
-// config.resolver.unstable_enablePackageExports = true;
+config.resolver.unstable_enablePackageExports = true;
+
+// Exclude server-side packages from web bundle to reduce memory pressure.
+// ai@6 pulls in gateway/otel/oidc which are Node-only and unused client-side.
+const emptyModule = path.resolve(__dirname, 'lib/empty-module.js');
+config.resolver.extraNodeModules = {
+  '@ai-sdk/gateway': emptyModule,
+  '@opentelemetry/api': emptyModule,
+  '@vercel/oidc': emptyModule,
+};
 
 const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX || 'api/';
 const API_TARGET = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
