@@ -4,7 +4,9 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const config = getDefaultConfig(__dirname);
 
-config.resolver.unstable_enablePackageExports = true;
+// Disabled: causes massive memory pressure during graph resolution.
+// ai/assistant-ui packages work fine via 'main' field resolution.
+// config.resolver.unstable_enablePackageExports = true;
 
 const API_PREFIX = process.env.EXPO_PUBLIC_API_PREFIX || 'api/';
 const API_TARGET = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';

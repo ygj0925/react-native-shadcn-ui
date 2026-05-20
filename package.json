@@ -8,7 +8,7 @@
     "dev:prod": "dotenv -e .env.production -- expo start -c --host lan",
     "android": "dotenv -e .env.development -- expo start -c --android",
     "ios": "dotenv -e .env.development -- expo start -c --ios",
-    "web": "dotenv -e .env.development -- cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start -c --web",
+    "web": "cross-env NODE_OPTIONS=--max-old-space-size=8192 dotenv -e .env.development -- expo start -c --web",
     "build:android:dev": "dotenv -e .env.development -- npx eas build --platform android --profile development",
     "build:ios:dev": "dotenv -e .env.development -- npx eas build --platform ios --profile development",
     "build:ios:simulator": "dotenv -e .env.development -- npx eas build --platform ios --profile ios-simulator",
