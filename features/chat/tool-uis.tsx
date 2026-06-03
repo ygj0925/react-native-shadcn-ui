@@ -202,6 +202,8 @@ type SelectResult = {
 export const SelectToolUI = makeAssistantToolUI<SelectArgs, SelectResult>({
   toolName: 'show_select',
   render: ({ args, result, addResult }) => {
+    if (!args) return null;
+
     if (result) {
       return (
         <ToolCard>
@@ -249,7 +251,7 @@ function SelectToolInput({
             <SelectValue placeholder="请选择..." />
           </SelectTrigger>
           <SelectContent side="bottom">
-            {args.options.map((opt) => (
+            {(args.options ?? []).map((opt) => (
               <SelectItem key={opt.value} label={opt.label} value={opt.value} />
             ))}
           </SelectContent>
@@ -279,6 +281,8 @@ type ConfirmResult = {
 export const ConfirmToolUI = makeAssistantToolUI<ConfirmArgs, ConfirmResult>({
   toolName: 'show_confirm',
   render: ({ args, result, addResult }) => {
+    if (!args) return null;
+
     if (result) {
       return (
         <ToolCard>
@@ -335,8 +339,10 @@ type MultiSelectResult = {
 export const MultiSelectToolUI = makeAssistantToolUI<MultiSelectArgs, MultiSelectResult>({
   toolName: 'show_multi_select',
   render: ({ args, result, addResult }) => {
+    if (!args) return null;
+
     if (result) {
-      const labels = args.options
+      const labels = (args.options ?? [])
         .filter((opt) => result.values.includes(opt.value))
         .map((opt) => opt.label);
       return (
@@ -382,7 +388,7 @@ function MultiSelectToolInput({
       />
 
       <View style={{ gap: 4, marginBottom: 12 }}>
-        {args.options.map((opt) => {
+        {(args.options ?? []).map((opt) => {
           const checked = selected.has(opt.value);
           return (
             <Pressable
