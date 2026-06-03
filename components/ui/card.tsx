@@ -1,13 +1,39 @@
 import { Text, TextClassContext } from '@/components/ui/text';
+import { GlassCard } from '@/components/ui/glass-view';
 import { cn } from '@/lib/utils';
 import { View, type ViewProps } from 'react-native';
 
-function Card({ className, ...props }: ViewProps & React.RefAttributes<View>) {
+type CardVariant = 'default' | 'glass' | 'ghost';
+
+interface CardProps extends ViewProps {
+  variant?: CardVariant;
+  glassIntensity?: number;
+}
+
+function Card({
+  className,
+  variant = 'default',
+  glassIntensity = 25,
+  ...props
+}: CardProps & React.RefAttributes<View>) {
+  if (variant === 'glass') {
+    return (
+      <TextClassContext.Provider value="text-card-foreground">
+        <GlassCard
+          intensity={glassIntensity}
+          className={cn('flex flex-col gap-6 py-6', className)}
+          {...props}
+        />
+      </TextClassContext.Provider>
+    );
+  }
+
   return (
     <TextClassContext.Provider value="text-card-foreground">
       <View
         className={cn(
-          'bg-card border-border flex flex-col gap-6 rounded-xl border py-6 shadow-sm shadow-black/5',
+          'bg-card border-border flex flex-col gap-6 rounded-xl border py-6',
+          variant === 'ghost' ? 'shadow-none' : 'shadow-sm shadow-black/5',
           className
         )}
         {...props}
@@ -50,3 +76,4 @@ function CardFooter({ className, ...props }: ViewProps & React.RefAttributes<Vie
 }
 
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };
+export type { CardProps, CardVariant };

@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
+import { useColorScheme } from 'nativewind';
 import {
   Archive,
   ChevronRight,
@@ -95,15 +96,20 @@ function SettingsRow({
 }) {
   const Icon = item.icon;
   const showValueBelowLabel = compact && !!item.value && !item.withToggle;
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
-    <Pressable className="flex-row items-center px-4 py-2.5 active:bg-accent/50">
-      <View className="items-center justify-center w-8 h-8 mr-3 rounded-md bg-muted">
-        <Icon size={15} color="currentColor" strokeWidth={2} />
+    <Pressable className="flex-row items-center px-5 py-3.5 active:bg-accent/50">
+      <View className={cn(
+        'items-center justify-center w-9 h-9 mr-4 rounded-xl',
+        isDark ? 'bg-white/8' : 'bg-black/4'
+      )}>
+        <Icon size={16} color={isDark ? '#a1a1aa' : '#71717a'} strokeWidth={1.8} />
       </View>
 
       <View className="flex-1 gap-0.5">
-        <Text className="text-base">{item.label}</Text>
+        <Text className="text-[15px] text-foreground">{item.label}</Text>
         {showValueBelowLabel ? (
           <Text className="text-xs text-muted-foreground" numberOfLines={1}>
             {item.value}
@@ -124,7 +130,7 @@ function SettingsRow({
             </Text>
           ) : null}
           {item.withChevron ? (
-            <ChevronRight size={16} color="currentColor" strokeWidth={2} />
+            <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
           ) : null}
         </View>
       )}
@@ -138,6 +144,8 @@ export default function MyScreen() {
   const isCompact = width < 390;
   const router = useRouter();
   const sections = getSections();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   const logout = () => {
     router.push('/login');
@@ -145,99 +153,117 @@ export default function MyScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className={cn('pt-2.5 pb-5', isCompact ? 'px-3' : 'px-4')}>
-        <View className="gap-1 px-1 mb-4">
-          <Text className={cn('font-semibold tracking-tight', isCompact ? 'text-2xl' : 'text-3xl')}>
-            {t('settings.title')}
-          </Text>
-          <Text className="text-xs text-muted-foreground">
-            {t('settings.subtitle')}
-          </Text>
-        </View>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        <View className={cn('pt-4 pb-6', isCompact ? 'px-4' : 'px-5')}>
+          {/* ─── Page Title ─── */}
+          <View className="gap-1 px-1 mb-6">
+            <Text className={cn('font-bold tracking-tight', isCompact ? 'text-2xl' : 'text-[28px]')}>
+              {t('settings.title')}
+            </Text>
+            <Text className="text-sm text-muted-foreground">
+              {t('settings.subtitle')}
+            </Text>
+          </View>
 
-        <Card className="mb-3.5 overflow-hidden border-border bg-card py-0 shadow-sm shadow-black/5">
-          <View className="px-4 pt-5 pb-4 bg-primary/10">
-            <Pressable className="active:opacity-90">
-              <View className="flex-row items-center">
-                <View className="items-center justify-center border rounded-full shadow-sm h-14 w-14 border-primary/20 bg-primary shadow-black/5">
-                  <Text className="text-lg font-semibold text-primary-foreground">RE</Text>
-                </View>
-
-                <View className="flex-1 gap-1 ml-3">
-                  <View className="flex-row items-center gap-2">
-                    <Text className="text-lg font-semibold tracking-tight">Rey Zhang</Text>
-                    <View className="rounded-full border border-primary/15 bg-primary px-2 py-0.5">
-                      <Text className="text-xs font-medium text-primary-foreground">{t('settings.profile.plus')}</Text>
-                    </View>
+          {/* ─── Profile Card ─── */}
+          <Card className="mb-5 overflow-hidden border-border/60 bg-card py-0">
+            <View className={cn('px-5 pt-6 pb-5', isDark ? 'bg-primary/15' : 'bg-primary/8')}>
+              <Pressable className="active:opacity-95">
+                <View className="flex-row items-center gap-4">
+                  <View className="items-center justify-center border-[2px] rounded-full shadow-sm h-16 w-16 border-primary/30 bg-primary">
+                    <Text className="text-xl font-bold text-primary-foreground">RE</Text>
                   </View>
-                  <Text className="text-xs text-muted-foreground">{t('settings.profile.member_id', { id: '20240318' })}</Text>
-                  <Text className="text-xs leading-4 text-muted-foreground">
-                    {t('settings.profile.ai_points', { points: '1,286', growth: 92 })}
-                  </Text>
-                </View>
 
-                <View className="items-center justify-center w-8 h-8 rounded-full bg-background/70">
-                  <ChevronRight size={16} color="currentColor" strokeWidth={2} />
-                </View>
-              </View>
-            </Pressable>
+                  <View className="flex-1 gap-1.5">
+                    <View className="flex-row items-center gap-2.5">
+                      <Text className="text-lg font-bold tracking-tight text-foreground">Rey Zhang</Text>
+                      <View className={cn(
+                        'rounded-full px-2.5 py-0.5',
+                        isDark ? 'bg-white/12 border border-white/15' : 'bg-primary/12 border border-primary/15'
+                      )}>
+                        <Text className="text-xs font-semibold text-primary">{t('settings.profile.plus')}</Text>
+                      </View>
+                    </View>
+                    <Text className="text-xs text-muted-foreground">{t('settings.profile.member_id', { id: '20240318' })}</Text>
+                    <Text className="text-xs leading-4 text-muted-foreground">
+                      {t('settings.profile.ai_points', { points: '1,286', growth: 92 })}
+                    </Text>
+                  </View>
 
-            <View className="mt-4 rounded-xl border border-border/60 bg-background/70 px-3 py-2.5">
-              <View className="flex-row items-center justify-between">
-                <View className="gap-1">
-                  <Text className="text-xs font-medium uppercase tracking-[0.8px] text-muted-foreground">
-                    {t('settings.profile.membership')}
-                  </Text>
-                  <Text className="text-sm font-medium">{t('settings.profile.plan_name')}</Text>
+                  <View className={cn(
+                    'items-center justify-center w-9 h-9 rounded-full',
+                    isDark ? 'bg-white/8' : 'bg-black/5'
+                  )}>
+                    <ChevronRight size={16} className="text-muted-foreground" strokeWidth={2} />
+                  </View>
                 </View>
-                <Text className="text-xs text-muted-foreground">{t('settings.profile.renews_in', { days: 28 })}</Text>
+              </Pressable>
+
+              {/* Membership Badge */}
+              <View className={cn(
+                'mt-5 rounded-2xl border px-4 py-3.5',
+                isDark ? 'border-white/10 bg-white/5' : 'border-black/5 bg-white/60'
+              )}>
+                <View className="flex-row items-center justify-between">
+                  <View className="gap-1">
+                    <Text className="text-[10px] font-semibold uppercase tracking-[1px] text-muted-foreground">
+                      {t('settings.profile.membership')}
+                    </Text>
+                    <Text className="text-sm font-semibold text-foreground">{t('settings.profile.plan_name')}</Text>
+                  </View>
+                  <Text className="text-xs text-muted-foreground">{t('settings.profile.renews_in', { days: 28 })}</Text>
+                </View>
               </View>
             </View>
-          </View>
-        </Card>
+          </Card>
 
-        {sections.map((section) => (
-          <View key={section.title} className="mb-3.5">
-            <Card className="py-0 shadow-sm border-border bg-card shadow-black/5">
-              <CardHeader className="px-4 pt-4 pb-2">
-                <CardTitle className="text-base">{section.title}</CardTitle>
-                {section.description ? (
-                  <Text className="text-xs leading-4 text-muted-foreground">
-                    {section.description}
-                  </Text>
-                ) : null}
-              </CardHeader>
+          {/* ─── Settings Sections ─── */}
+          {sections.map((section) => (
+            <View key={section.title} className="mb-5">
+              <Card className="py-0 border-border/60">
+                <CardHeader className="px-5 pt-5 pb-3">
+                  <CardTitle className="text-[15px] font-semibold">{section.title}</CardTitle>
+                  {section.description ? (
+                    <Text className="text-xs leading-4 text-muted-foreground mt-0.5">
+                      {section.description}
+                    </Text>
+                  ) : null}
+                </CardHeader>
 
-              <Separator />
+                <Separator className="opacity-50" />
 
-              <CardContent className="px-0 py-0">
-                {section.items.map((item, index) => (
-                  <View key={item.id}>
-                    <SettingsRow
-                      item={item}
-                      compact={isCompact}
-                      toggleValue={hapticsEnabled}
-                      onToggleChange={setHapticsEnabled}
-                    />
-                    {index < section.items.length - 1 ? (
-                      <Separator className="mx-4 ml-[60px] w-auto" />
-                    ) : null}
-                  </View>
-                ))}
-              </CardContent>
-            </Card>
-          </View>
-        ))}
+                <CardContent className="px-0 py-1">
+                  {section.items.map((item, index) => (
+                    <View key={item.id}>
+                      <SettingsRow
+                        item={item}
+                        compact={isCompact}
+                        toggleValue={hapticsEnabled}
+                        onToggleChange={setHapticsEnabled}
+                      />
+                      {index < section.items.length - 1 ? (
+                        <Separator className="mx-5 ml-[68px] opacity-30" />
+                      ) : null}
+                    </View>
+                  ))}
+                </CardContent>
+              </Card>
+            </View>
+          ))}
 
-        <Card className="py-0 shadow-sm border-border bg-card shadow-black/5">
-          <CardContent className="px-4 py-3">
-            <Button onPress={logout} variant="outline" className="justify-start w-full">
-              <LogOut size={16} color="currentColor" strokeWidth={2} />
-              <Text>{t('settings.logout')}</Text>
-            </Button>
-          </CardContent>
-        </Card>
+          {/* ─── Logout Button ─── */}
+          <Card className="py-0 border-border/60">
+            <CardContent className="px-4 py-4">
+              <Button onPress={logout} variant="outline" className="justify-start w-full rounded-xl">
+                <LogOut size={16} className="text-muted-foreground" strokeWidth={2} />
+                <Text className="font-medium">{t('settings.logout')}</Text>
+              </Button>
+            </CardContent>
+          </Card>
         </View>
       </ScrollView>
     </SafeAreaView>

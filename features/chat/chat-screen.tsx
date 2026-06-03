@@ -7,6 +7,7 @@ import {
   type Option,
 } from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
+import { GlassView } from '@/components/ui/glass-view';
 import { ToolUIs } from '@/features/chat/tool-uis';
 import { MIMO_MODELS, useAppRuntime } from '@/hooks/use-app-runtime';
 import { t } from '@/lib/i18n';
@@ -28,7 +29,9 @@ import {
   useAui,
   useAuiState,
 } from '@assistant-ui/react-native';
+import { BlurView } from 'expo-blur';
 import { Stack } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import {
   ArrowDown,
   AlertTriangle,
@@ -71,40 +74,55 @@ function Sidebar({
   isLargeScreen: boolean;
   onClose: () => void;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
-    <View style={{ width }} className="h-full border-r border-border bg-secondary/30">
-      <ThreadListPrimitive.Root>
-        <View className="gap-3 px-3 pt-4 pb-3">
-          <View className="flex-row items-center justify-between px-1">
-            <Text className="text-sm font-semibold text-foreground">
-              {t('chat.history_title')}
-            </Text>
-            {!isLargeScreen && (
-              <Pressable hitSlop={8} onPress={onClose}>
-                <X size={18} className="text-muted-foreground" />
-              </Pressable>
-            )}
+    <BlurView
+      intensity={isDark ? 40 : 30}
+      tint={isDark ? 'dark' : 'light'}
+      style={{ width, overflow: 'hidden' }}
+    >
+      <View
+        style={{ width }}
+        className={cn(
+          'h-full border-r',
+          isDark ? 'bg-background/80 border-white/8' : 'bg-background/85 border-black/5'
+        )}
+      >
+        <ThreadListPrimitive.Root>
+          <View className="gap-4 px-4 pt-5 pb-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-bold text-foreground tracking-wide">
+                {t('chat.history_title')}
+              </Text>
+              {!isLargeScreen && (
+                <Pressable hitSlop={10} onPress={onClose} className="p-1">
+                  <X size={18} className="text-muted-foreground" />
+                </Pressable>
+              )}
+            </View>
+
+            <ThreadListPrimitive.New
+              style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
+              <View className="flex-row items-center justify-center h-10 gap-2 rounded-xl bg-primary shadow-sm shadow-primary/20">
+                <Plus size={15} color="white" strokeWidth={2.2} />
+                <Text className="text-xs font-semibold text-primary-foreground">
+                  {t('chat.new_chat')}
+                </Text>
+              </View>
+            </ThreadListPrimitive.New>
           </View>
 
-          <ThreadListPrimitive.New
-            style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-            <View className="flex-row items-center justify-center h-9 gap-2 rounded-lg bg-primary">
-              <Plus size={14} color="white" strokeWidth={2.4} />
-              <Text className="text-xs font-medium text-primary-foreground">
-                {t('chat.new_chat')}
-              </Text>
-            </View>
-          </ThreadListPrimitive.New>
-        </View>
+          <View className="mx-4 h-px bg-border/40" />
 
-        <View className="mx-3 h-px bg-border" />
-
-        <ThreadListPrimitive.Items
-          renderItem={() => <SidebarItem onSelected={isLargeScreen ? undefined : onClose} />}
-          contentContainerStyle={{ padding: 8, gap: 2 }}
-        />
-      </ThreadListPrimitive.Root>
-    </View>
+          <ThreadListPrimitive.Items
+            renderItem={() => <SidebarItem onSelected={isLargeScreen ? undefined : onClose} />}
+            contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 6, gap: 3 }}
+          />
+        </ThreadListPrimitive.Root>
+      </View>
+    </BlurView>
   );
 }
 
@@ -121,22 +139,22 @@ function SidebarItem({ onSelected }: { onSelected?: () => void }) {
         style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
         <View
           className={cn(
-            'flex-row items-center gap-2.5 rounded-lg px-2.5 py-2.5',
+            'flex-row items-center gap-3 rounded-xl px-3 py-3',
             isActive ? 'bg-accent' : 'active:bg-accent/50',
           )}>
           <MessageSquare
-            size={14}
-            className={isActive ? 'text-foreground' : 'text-muted-foreground'}
-            strokeWidth={2}
+            size={15}
+            className={isActive ? 'text-primary' : 'text-muted-foreground'}
+            strokeWidth={1.8}
           />
           <Text
-            className={cn('flex-1 text-sm', isActive ? 'font-medium text-foreground' : 'text-foreground')}
+            className={cn('flex-1 text-[14px]', isActive ? 'font-semibold text-foreground' : 'text-foreground/80')}
             numberOfLines={1}>
             {title || t('chat.untitled_thread')}
           </Text>
           <ThreadListItemPrimitive.Delete>
-            <View className="items-center justify-center w-6 h-6 rounded active:bg-destructive/10">
-              <Trash2 size={12} className="text-muted-foreground" strokeWidth={2} />
+            <View className="items-center justify-center w-7 h-7 rounded-lg active:bg-destructive/10">
+              <Trash2 size={13} className="text-muted-foreground/60" strokeWidth={1.8} />
             </View>
           </ThreadListItemPrimitive.Delete>
         </View>
@@ -156,32 +174,43 @@ function ChatHeader({
   onModelChange: (option: Option) => void;
   onMenuPress: () => void;
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
-    <View className="flex-row items-center justify-between px-2 py-2 bg-background">
-      <Pressable
-        hitSlop={8}
-        onPress={onMenuPress}
-        className="items-center justify-center w-10 h-10 rounded-xl active:bg-accent">
-        <Menu size={20} className="text-foreground" strokeWidth={1.8} />
-      </Pressable>
+    <BlurView
+      intensity={isDark ? 40 : 30}
+      tint={isDark ? 'dark' : 'light'}
+      style={{ borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+    >
+      <View className={cn('flex-row items-center justify-between px-5 py-3.5', isDark ? 'bg-background/60' : 'bg-background/70')}>
+        <Pressable
+          hitSlop={10}
+          onPress={onMenuPress}
+          className="items-center justify-center w-10 h-10 rounded-xl active:bg-accent"
+        >
+          <Menu size={20} className="text-foreground" strokeWidth={1.8} />
+        </Pressable>
 
-      <Select value={model} onValueChange={(v) => v && onModelChange(v)}>
-        <SelectTrigger size="sm" className="min-w-[140px] border-0 bg-transparent">
-          <SelectValue placeholder={t('chat.select_model')} />
-        </SelectTrigger>
-        <SelectContent side="bottom">
-          {MIMO_MODELS.map((m) => (
-            <SelectItem key={m.value} label={m.label} value={m.value} />
-          ))}
-        </SelectContent>
-      </Select>
+        <Select value={model} onValueChange={(v) => v && onModelChange(v)}>
+          <SelectTrigger size="sm" className="min-w-[140px] border-0 bg-transparent">
+            <SelectValue placeholder={t('chat.select_model')} />
+          </SelectTrigger>
+          <SelectContent side="bottom">
+            {MIMO_MODELS.map((m) => (
+              <SelectItem key={m.value} label={m.label} value={m.value} />
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Pressable
-        hitSlop={8}
-        className="items-center justify-center w-10 h-10 rounded-xl active:bg-accent">
-        <Pencil size={18} className="text-foreground" strokeWidth={1.8} />
-      </Pressable>
-    </View>
+        <Pressable
+          hitSlop={10}
+          className="items-center justify-center w-10 h-10 rounded-xl active:bg-accent"
+        >
+          <Pencil size={18} className="text-foreground" strokeWidth={1.8} />
+        </Pressable>
+      </View>
+    </BlurView>
   );
 }
 
@@ -204,29 +233,38 @@ function OfflineBanner() {
 }
 
 function WelcomeScreen() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
-    <View className="items-center w-full gap-6 px-5 py-20">
-      <View className="items-center justify-center w-14 h-14 rounded-full bg-foreground">
-        <Sparkles size={22} color="white" strokeWidth={2.2} />
+    <View className="items-center w-full gap-8 px-6 py-24">
+      <View className={cn(
+        'items-center justify-center w-20 h-20 rounded-3xl shadow-lg',
+        isDark ? 'bg-primary/20 shadow-primary/10' : 'bg-primary/10 shadow-primary/5'
+      )}>
+        <Sparkles size={32} className="text-primary" strokeWidth={1.8} />
       </View>
-      <View className="items-center gap-2">
-        <Text className="text-2xl font-semibold text-foreground">
+      <View className="items-center gap-3">
+        <Text className="text-[26px] font-bold text-foreground tracking-tight">
           {t('chat.start_title')}
         </Text>
-        <Text className="text-sm text-center text-muted-foreground leading-5">
+        <Text className="text-[15px] text-center text-muted-foreground leading-6 max-w-xs">
           {t('chat.start_subtitle')}
         </Text>
       </View>
-      <View className="w-full max-w-md gap-2.5 mt-3">
+      <View className="w-full max-w-md gap-3 mt-2">
         {getSuggestions().map((s) => (
           <ThreadPrimitive.Suggestion
             key={s.id}
             prompt={s.title}
             send
             style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-            <View className="px-4 py-3.5 border rounded-2xl border-border bg-background active:bg-accent/50">
-              <Text className="text-[15px] font-medium text-foreground">{s.title}</Text>
-              <Text className="text-xs text-muted-foreground mt-1">{s.subtitle}</Text>
+            <View className={cn(
+              'px-5 py-4 border rounded-2xl active:bg-accent/50',
+              isDark ? 'border-white/10 bg-white/5' : 'border-black/5 bg-white/80'
+            )}>
+              <Text className="text-[15px] font-semibold text-foreground">{s.title}</Text>
+              <Text className="text-xs text-muted-foreground mt-1.5 leading-4">{s.subtitle}</Text>
             </View>
           </ThreadPrimitive.Suggestion>
         ))}
@@ -245,10 +283,10 @@ function getSuggestions() {
 
 // ─── Message Part Renderers ─────────────────────────────────────────────────
 
-function TextPart({ text }: { text: string }) {
+const TextPart = React.memo(function TextPart({ text }: { text: string }) {
   if (!text) return null;
   return <Text selectable className="text-[15px] leading-7 text-foreground">{text}</Text>;
-}
+});
 
 function ReasoningPart({ text, status }: { text: string; status: { type: string } }) {
   const [expanded, setExpanded] = React.useState(false);
@@ -285,7 +323,7 @@ function ReasoningPart({ text, status }: { text: string; status: { type: string 
   );
 }
 
-function PulsingDot() {
+const PulsingDot = React.memo(function PulsingDot() {
   const opacity = React.useRef(new Animated.Value(0.3)).current;
 
   React.useEffect(() => {
@@ -304,9 +342,9 @@ function PulsingDot() {
       style={{ opacity, width: 6, height: 6, borderRadius: 3, backgroundColor: '#888' }}
     />
   );
-}
+});
 
-function ImagePart({ image }: { image: string }) {
+const ImagePart = React.memo(function ImagePart({ image }: { image: string }) {
   return (
     <Image
       source={{ uri: image }}
@@ -314,16 +352,16 @@ function ImagePart({ image }: { image: string }) {
       resizeMode="cover"
     />
   );
-}
+});
 
-function FilePart({ name }: { name?: string }) {
+const FilePart = React.memo(function FilePart({ name }: { name?: string }) {
   return (
     <View className="flex-row items-center gap-2 px-3 py-2 mt-1 rounded-lg bg-muted/40 border border-border">
       <FileText size={14} className="text-muted-foreground" strokeWidth={2} />
       <Text className="text-xs text-foreground" numberOfLines={1}>{name ?? 'file'}</Text>
     </View>
   );
-}
+});
 
 // ─── User Message ───────────────────────────────────────────────────────────
 
@@ -344,9 +382,9 @@ function UserMessage() {
   return (
     <>
       <ComposerPrimitive.If editing={false}>
-        <View className="items-end w-full py-1.5">
-          <View className="max-w-[80%] gap-1">
-            <View className="px-4 py-3 rounded-2xl bg-muted">
+        <View className="items-end w-full py-2">
+          <View className="max-w-[82%] gap-1.5">
+            <View className="px-4 py-3 rounded-2xl bg-muted/80 border border-border/30">
               <MessagePrimitive.Parts
                 components={{
                   Text: ({ text }) => (
@@ -356,11 +394,12 @@ function UserMessage() {
               />
               <MessagePrimitive.Attachments components={{ Attachment: UserAttachment }} />
             </View>
-            <View className="flex-row items-center justify-end gap-0.5">
+            <View className="flex-row items-center justify-end gap-1">
               <BranchPicker />
               <ActionBarPrimitive.Edit
-                style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
-                <View className="px-1.5 py-1 rounded active:bg-accent">
+                style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}
+              >
+                <View className="px-1.5 py-1 rounded-lg active:bg-accent">
                   <Pencil size={12} className="text-muted-foreground" strokeWidth={2} />
                 </View>
               </ActionBarPrimitive.Edit>
@@ -370,23 +409,23 @@ function UserMessage() {
       </ComposerPrimitive.If>
 
       <ComposerPrimitive.If editing>
-        <View className="items-end w-full py-1">
+        <View className="items-end w-full py-2">
           <View style={{ width: '90%' }}>
             <ComposerPrimitive.Root>
-              <View className="gap-2 p-3 border rounded-2xl border-border bg-muted/30">
+              <View className="gap-3 p-4 border rounded-2xl border-border/50 bg-muted/30">
                 <ComposerInput
                   autoFocus
-                  className="text-foreground min-h-[60px] w-full rounded-lg bg-background px-3 py-2 text-sm"
+                  className="text-foreground min-h-[60px] w-full rounded-xl bg-background px-4 py-3 text-[15px]"
                   placeholder={t('chat.message_short_placeholder')}
                 />
-                <View className="flex-row justify-end gap-2">
+                <View className="flex-row justify-end gap-2.5">
                   <ComposerPrimitive.Cancel>
-                    <View className="px-3 py-1.5 rounded-lg border border-border active:bg-accent">
+                    <View className="px-4 py-2 rounded-xl border border-border active:bg-accent">
                       <Text className="text-xs font-medium text-foreground">{t('chat.actions.cancel')}</Text>
                     </View>
                   </ComposerPrimitive.Cancel>
                   <ComposerPrimitive.Send>
-                    <View className="px-3 py-1.5 rounded-lg bg-primary active:opacity-85">
+                    <View className="px-4 py-2 rounded-xl bg-primary active:opacity-85">
                       <Text className="text-xs font-medium text-primary-foreground">{t('chat.actions.save')}</Text>
                     </View>
                   </ComposerPrimitive.Send>
@@ -402,7 +441,7 @@ function UserMessage() {
 
 // ─── Assistant Message ──────────────────────────────────────────────────────
 
-function LoadingIndicator() {
+const LoadingIndicator = React.memo(function LoadingIndicator() {
   const dot1 = React.useRef(new Animated.Value(0.2)).current;
   const dot2 = React.useRef(new Animated.Value(0.2)).current;
   const dot3 = React.useRef(new Animated.Value(0.2)).current;
@@ -439,12 +478,12 @@ function LoadingIndicator() {
       ))}
     </View>
   );
-}
+});
 
 function AssistantMessage() {
   return (
-    <View className="w-full py-2">
-      <View className="pr-8">
+    <View className="w-full py-2.5">
+      <View className="pr-10">
         <MessagePrimitive.Parts
           components={{
             Text: ({ text }) => <TextPart text={text} />,
@@ -455,17 +494,20 @@ function AssistantMessage() {
           }}
         />
         <ErrorPrimitive.Root
-          className="mt-2 flex-row items-start gap-2 rounded-lg border px-3 py-2.5"
-          style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.2)' }}>
-          <AlertTriangle size={14} color="#ef4444" strokeWidth={2} style={{ marginTop: 2 }} />
-          <View className="flex-1 gap-1.5">
+          className="mt-3 flex-row items-start gap-2.5 rounded-xl border px-4 py-3"
+          style={{ backgroundColor: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.15)' }}
+        >
+          <AlertTriangle size={15} color="#ef4444" strokeWidth={2} style={{ marginTop: 2 }} />
+          <View className="flex-1 gap-2">
             <ErrorPrimitive.Message className="text-sm leading-5" style={{ color: '#ef4444' }} />
             <ActionBarPrimitive.Reload
-              style={({ pressed }: any) => ({ opacity: pressed ? 0.7 : 1 })}>
+              style={({ pressed }: any) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
               <View
-                className="self-start flex-row items-center gap-1 px-2.5 py-1 rounded-md"
-                style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
-                <RefreshCw size={11} color="#ef4444" strokeWidth={2.2} />
+                className="self-start flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                style={{ backgroundColor: 'rgba(239,68,68,0.08)' }}
+              >
+                <RefreshCw size={12} color="#ef4444" strokeWidth={2} />
                 <Text className="text-xs font-medium" style={{ color: '#ef4444' }}>
                   {t('chat.actions.retry')}
                 </Text>
@@ -483,13 +525,14 @@ function AssistantMessage() {
 
 function AssistantActions() {
   return (
-    <View className="flex-row items-center gap-1 mt-2 pt-1">
+    <View className="flex-row items-center gap-1.5 mt-2.5 pt-1">
       <ActionBarPrimitive.Copy
-        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}
+      >
         {({ isCopied }) => (
-          <View className="p-1.5 rounded active:bg-accent">
+          <View className="p-2 rounded-lg active:bg-accent">
             <CopyIcon
-              size={13}
+              size={14}
               className={isCopied ? 'text-foreground' : 'text-muted-foreground'}
               strokeWidth={2}
             />
@@ -498,26 +541,29 @@ function AssistantActions() {
       </ActionBarPrimitive.Copy>
 
       <ActionBarPrimitive.Reload
-        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
-        <View className="p-1.5 rounded active:bg-accent">
-          <RefreshCw size={13} className="text-muted-foreground" strokeWidth={2} />
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}
+      >
+        <View className="p-2 rounded-lg active:bg-accent">
+          <RefreshCw size={14} className="text-muted-foreground" strokeWidth={2} />
         </View>
       </ActionBarPrimitive.Reload>
 
       <ActionBarPrimitive.FeedbackPositive
-        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}
+      >
         {({ isSubmitted }) => (
-          <View className={cn('p-1.5 rounded active:bg-accent', isSubmitted && 'bg-accent')}>
-            <ThumbsUp size={13} className={isSubmitted ? 'text-foreground' : 'text-muted-foreground'} strokeWidth={2} />
+          <View className={cn('p-2 rounded-lg active:bg-accent', isSubmitted && 'bg-accent')}>
+            <ThumbsUp size={14} className={isSubmitted ? 'text-foreground' : 'text-muted-foreground'} strokeWidth={2} />
           </View>
         )}
       </ActionBarPrimitive.FeedbackPositive>
 
       <ActionBarPrimitive.FeedbackNegative
-        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}>
+        style={({ pressed }: any) => ({ opacity: pressed ? 0.5 : 1 })}
+      >
         {({ isSubmitted }) => (
-          <View className={cn('p-1.5 rounded active:bg-accent', isSubmitted && 'bg-accent')}>
-            <ThumbsDown size={13} className={isSubmitted ? 'text-foreground' : 'text-muted-foreground'} strokeWidth={2} />
+          <View className={cn('p-2 rounded-lg active:bg-accent', isSubmitted && 'bg-accent')}>
+            <ThumbsDown size={14} className={isSubmitted ? 'text-foreground' : 'text-muted-foreground'} strokeWidth={2} />
           </View>
         )}
       </ActionBarPrimitive.FeedbackNegative>
@@ -659,57 +705,80 @@ function Composer() {
   const insets = useSafeAreaInsets();
   const isRunning = useAuiState((s) => s.thread.isRunning);
   const [isFocused, setIsFocused] = React.useState(false);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
-    <View
-      className="px-3 pt-2 bg-background"
-      style={{ paddingBottom: Math.max(insets.bottom, 8) }}>
-      <ComposerPrimitive.Root>
-        <View className="gap-2">
-          <ComposerPrimitive.Attachments
-            components={{ Attachment: ComposerAttachmentChip }}
-          />
-          <View className="flex-row items-end gap-2">
-            <ComposerPrimitive.AddAttachment
-              style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}>
-              <View className="items-center justify-center w-9 h-9 rounded-full border border-border active:bg-accent">
-                <Plus size={18} className="text-muted-foreground" strokeWidth={2} />
-              </View>
-            </ComposerPrimitive.AddAttachment>
+    <BlurView
+      intensity={isDark ? 40 : 30}
+      tint={isDark ? 'dark' : 'light'}
+      style={{ borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+    >
+      <View
+        className={cn('px-4 pt-3', isDark ? 'bg-background/60' : 'bg-background/70')}
+        style={{ paddingBottom: Math.max(insets.bottom, 10) }}
+      >
+        <ComposerPrimitive.Root>
+          <View className="gap-3">
+            <ComposerPrimitive.Attachments
+              components={{ Attachment: ComposerAttachmentChip }}
+            />
+            <View className="flex-row items-end gap-3">
+              <ComposerPrimitive.AddAttachment
+                style={({ pressed }: any) => ({ opacity: pressed ? 0.6 : 1 })}
+              >
+                <View className={cn(
+                  'items-center justify-center w-10 h-10 rounded-full border active:bg-accent',
+                  isDark ? 'border-white/12' : 'border-black/8'
+                )}>
+                  <Plus size={18} className="text-muted-foreground" strokeWidth={2} />
+                </View>
+              </ComposerPrimitive.AddAttachment>
 
-            <View
-              className={cn(
-                'flex-1 flex-row items-end rounded-3xl px-4 py-1',
-                isFocused
-                  ? 'border border-border bg-background'
-                  : 'bg-muted/40',
-              )}>
-              <ComposerInput
-                placeholder={t('chat.message_placeholder')}
-                className="text-foreground flex-1 min-h-[36px] max-h-[120px] text-[15px] py-1.5"
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-              />
-              {isRunning ? (
-                <ComposerPrimitive.Cancel
-                  style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-                  <View className="items-center justify-center w-8 h-8 mb-0.5 rounded-full bg-foreground">
-                    <Square size={12} color="white" strokeWidth={2.4} fill="white" />
-                  </View>
-                </ComposerPrimitive.Cancel>
-              ) : (
-                <ComposerPrimitive.Send
-                  style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-                  <View className="items-center justify-center w-8 h-8 mb-0.5 rounded-full bg-foreground">
-                    <Send size={14} color="white" strokeWidth={2.4} />
-                  </View>
-                </ComposerPrimitive.Send>
-              )}
+              <View
+                className={cn(
+                  'flex-1 flex-row items-end rounded-2xl px-4 py-2',
+                  isFocused
+                    ? isDark
+                      ? 'border border-white/12 bg-background/80'
+                      : 'border border-black/8 bg-background'
+                    : isDark
+                      ? 'bg-white/6 border border-white/5'
+                      : 'bg-black/4 border border-transparent',
+                )}
+              >
+                <ComposerInput
+                  placeholder={t('chat.message_placeholder')}
+                  className="text-foreground flex-1 min-h-[38px] max-h-[120px] text-[15px] py-2"
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                />
+                {isRunning ? (
+                  <ComposerPrimitive.Cancel
+                    style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}
+                  >
+                    <View className={cn(
+                      'items-center justify-center w-9 h-9 mb-0.5 rounded-full',
+                      isDark ? 'bg-white/90' : 'bg-foreground'
+                    )}>
+                      <Square size={13} color={isDark ? '#000' : '#fff'} strokeWidth={2.2} fill={isDark ? '#000' : '#fff'} />
+                    </View>
+                  </ComposerPrimitive.Cancel>
+                ) : (
+                  <ComposerPrimitive.Send
+                    style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}
+                  >
+                    <View className="items-center justify-center w-9 h-9 mb-0.5 rounded-full bg-primary shadow-sm shadow-primary/20">
+                      <Send size={15} color="white" strokeWidth={2.2} />
+                    </View>
+                  </ComposerPrimitive.Send>
+                )}
+              </View>
             </View>
           </View>
-        </View>
-      </ComposerPrimitive.Root>
-    </View>
+        </ComposerPrimitive.Root>
+      </View>
+    </BlurView>
   );
 }
 
@@ -735,6 +804,8 @@ function RunningFooter() {
 function ChatThread() {
   const isRunning = useAuiState((s) => s.thread.isRunning);
   const { flatListRef, showScrollButton, scrollToBottom, scrollProps } = useAutoScroll(isRunning);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <ThreadPrimitive.Root style={{ flex: 1 }}>
@@ -744,7 +815,7 @@ function ChatThread() {
           UserMessage,
           AssistantMessage,
         }}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 16, gap: 10 }}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
         {...scrollProps}
@@ -758,9 +829,13 @@ function ChatThread() {
       {showScrollButton && (
         <Pressable
           onPress={scrollToBottom}
-          className="absolute items-center justify-center bg-foreground rounded-full shadow-md"
-          style={{ width: 36, height: 36, alignSelf: 'center', bottom: 12, left: '50%', marginLeft: -18, elevation: 4 }}>
-          <ArrowDown size={18} color="white" strokeWidth={2.2} />
+          className={cn(
+            'absolute items-center justify-center rounded-full shadow-lg',
+            isDark ? 'bg-white/90' : 'bg-foreground'
+          )}
+          style={{ width: 38, height: 38, alignSelf: 'center', bottom: 14, left: '50%', marginLeft: -19, elevation: 6 }}
+        >
+          <ArrowDown size={18} color={isDark ? '#000' : '#fff'} strokeWidth={2} />
         </Pressable>
       )}
     </ThreadPrimitive.Root>
@@ -824,7 +899,7 @@ function ChatScreenInner({
               isLargeScreen={false}
               onClose={() => setDrawerOpen(false)}
             />
-            <Pressable className="flex-1 bg-black/40" onPress={() => setDrawerOpen(false)} />
+            <Pressable className="flex-1 bg-black/50 backdrop-blur-sm" onPress={() => setDrawerOpen(false)} />
           </View>
         )}
       </View>

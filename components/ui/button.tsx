@@ -1,7 +1,8 @@
 import { TextClassContext } from '@/components/ui/text';
+import { GlassView } from '@/components/ui/glass-view';
 import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Platform, Pressable } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
 const buttonVariants = cva(
   cn(
@@ -14,11 +15,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: cn(
-          'bg-primary active:bg-primary/90 shadow-sm shadow-black/5',
+          'bg-primary active:bg-primary/90 shadow-sm shadow-primary/20',
           Platform.select({ web: 'hover:bg-primary/90' })
         ),
         destructive: cn(
-          'bg-destructive active:bg-destructive/90 dark:bg-destructive/60 shadow-sm shadow-black/5',
+          'bg-destructive active:bg-destructive/90 dark:bg-destructive/60 shadow-sm shadow-destructive/20',
           Platform.select({
             web: 'hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
           })
@@ -36,6 +37,10 @@ const buttonVariants = cva(
         ghost: cn(
           'active:bg-accent dark:active:bg-accent/50',
           Platform.select({ web: 'hover:bg-accent dark:hover:bg-accent/50' })
+        ),
+        glass: cn(
+          'border-border/50 bg-background/50 active:bg-background/70 border backdrop-blur-md',
+          Platform.select({ web: 'hover:bg-background/70' })
         ),
         link: '',
       },
@@ -69,6 +74,7 @@ const buttonTextVariants = cva(
         ),
         secondary: 'text-secondary-foreground',
         ghost: 'group-active:text-accent-foreground',
+        glass: 'text-foreground',
         link: cn(
           'text-primary group-active:underline',
           Platform.select({ web: 'underline-offset-4 hover:underline group-hover:underline' })

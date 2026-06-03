@@ -1,10 +1,17 @@
 import { StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useColorScheme } from 'nativewind';
 
 export function AuthGradientHeader() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
     <LinearGradient
-      colors={['rgba(232,213,245,0.6)', 'rgba(240,224,247,0.3)']}
+      colors={isDark
+        ? ['rgba(109,40,217,0.2)', 'rgba(30,27,75,0.1)']
+        : ['rgba(139,92,246,0.2)', 'rgba(167,139,250,0.1)']
+      }
       style={StyleSheet.absoluteFill}
     />
   );

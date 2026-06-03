@@ -2,12 +2,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { t } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
 import { Link, Stack } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { ArrowRight, CalendarDays, Heart, MessageCircle, Sparkles } from 'lucide-react-native';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function IndexScreen() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   const quickLinks = [
     {
       href: '/chat',
@@ -31,81 +36,91 @@ export default function IndexScreen() {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
-      <ScrollView className="flex-1 bg-background">
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         <Stack.Screen options={{ title: t('main.title'), headerTransparent: false }} />
-        <View className="w-full max-w-5xl gap-4 px-4 pt-4 mx-auto pb-7">
-          <Card className="py-0 overflow-hidden border-0 shadow-sm bg-primary shadow-black/5">
-            <CardContent className="px-5 py-6">
-              <View className="gap-5">
-                <View className="self-start px-3 py-1 border rounded-full border-primary-foreground/20 bg-primary-foreground/10">
-                  <Text className="text-xs font-medium uppercase tracking-[1.2px] text-primary-foreground/80">
+        <View className="w-full max-w-5xl mx-auto px-5 pt-6 gap-8">
+          {/* ─── Hero Section ─── */}
+          <View className="overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-xl shadow-primary/20">
+            <View className="px-6 py-8 gap-6">
+              <View className="gap-4">
+                <View className="self-start px-3.5 py-1.5 rounded-full bg-white/15 border border-white/20">
+                  <Text className="text-xs font-semibold uppercase tracking-[1.5px] text-white/90">
                     {t('main.eyebrow')}
                   </Text>
                 </View>
                 <View className="gap-2">
-                  <Text className="text-3xl font-semibold tracking-tight text-primary-foreground">
+                  <Text className="text-[28px] font-bold tracking-tight text-white leading-tight">
                     {t('main.hero_title')}
                   </Text>
-                  <Text className="max-w-2xl leading-6 text-primary-foreground/80">
+                  <Text className="text-[15px] leading-6 text-white/80 max-w-lg">
                     {t('main.hero_subtitle')}
                   </Text>
                 </View>
-                <View className="flex-row flex-wrap gap-3">
-                  <Link href="/chat" asChild>
-                    <Button variant="secondary">
-                      <Sparkles size={16} color="currentColor" strokeWidth={2.3} />
-                      <Text>{t('main.start_chatting')}</Text>
-                    </Button>
-                  </Link>
-                  <Link href="/chat" asChild>
-                    <Button variant="outline" className="border-primary-foreground/20 bg-primary-foreground/10">
-                      <Text className="text-primary-foreground">{t('main.open_auth')}</Text>
-                    </Button>
-                  </Link>
-                </View>
               </View>
-            </CardContent>
-          </Card>
 
-          <View className="flex-row flex-wrap gap-4">
-            <Card className="min-w-[160px] flex-1 py-0">
-              <CardContent className="gap-1 px-5 py-5">
-                <Text className="text-sm text-muted-foreground">{t('main.active_spaces')}</Text>
-                <Text className="text-3xl font-semibold tracking-tight">4</Text>
-                <Text className="text-sm text-muted-foreground">
+              <View className="flex-row flex-wrap gap-3">
+                <Link href="/chat" asChild>
+                  <Button variant="secondary" className="rounded-xl">
+                    <Sparkles size={16} className="text-secondary-foreground" strokeWidth={2} />
+                    <Text className="font-medium">{t('main.start_chatting')}</Text>
+                  </Button>
+                </Link>
+                <Link href="/chat" asChild>
+                  <Button variant="glass" className="rounded-xl border-white/20">
+                    <Text className="text-white font-medium">{t('main.open_auth')}</Text>
+                  </Button>
+                </Link>
+              </View>
+            </View>
+          </View>
+
+          {/* ─── Stats Cards ─── */}
+          <View className="flex-row gap-4">
+            <Card className="flex-1 py-0 border-border/60">
+              <CardContent className="gap-1.5 px-5 py-5">
+                <Text className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('main.active_spaces')}</Text>
+                <Text className="text-3xl font-bold tracking-tight text-foreground">4</Text>
+                <Text className="text-xs text-muted-foreground mt-0.5">
                   {t('main.active_spaces_detail')}
                 </Text>
               </CardContent>
             </Card>
-            <Card className="min-w-[160px] flex-1 py-0">
-              <CardContent className="gap-1 px-5 py-5">
-                <Text className="text-sm text-muted-foreground">{t('main.primary_intent')}</Text>
-                <Text className="text-2xl font-semibold tracking-tight">{t('main.primary_intent_value')}</Text>
-                <Text className="text-sm text-muted-foreground">
+            <Card className="flex-1 py-0 border-border/60">
+              <CardContent className="gap-1.5 px-5 py-5">
+                <Text className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('main.primary_intent')}</Text>
+                <Text className="text-2xl font-bold tracking-tight text-foreground">{t('main.primary_intent_value')}</Text>
+                <Text className="text-xs text-muted-foreground mt-0.5">
                   {t('main.primary_intent_detail')}
                 </Text>
               </CardContent>
             </Card>
           </View>
 
+          {/* ─── Quick Links ─── */}
           <View className="gap-4">
             {quickLinks.map((item) => {
               const Icon = item.icon;
-
               return (
                 <Link key={item.href} href={item.href as never} asChild>
-                  <Card className="w-full py-0 border-0 shadow-none">
-                    <CardHeader className="flex-row items-center justify-between px-5 pt-5 pb-2">
-                      <View className="flex-row items-center gap-3">
-                        <View className="items-center justify-center h-11 w-11 rounded-2xl bg-primary/10">
-                          <Icon size={20} color="currentColor" strokeWidth={2} />
+                  <Card variant="ghost" className="w-full py-0 border border-border/60">
+                    <CardHeader className="flex-row items-center justify-between px-5 py-5">
+                      <View className="flex-row items-center gap-4">
+                        <View className={cn(
+                          'items-center justify-center h-12 w-12 rounded-2xl',
+                          isDark ? 'bg-primary/15' : 'bg-primary/8'
+                        )}>
+                          <Icon size={20} className="text-primary" strokeWidth={1.8} />
                         </View>
                         <View className="gap-1">
-                          <CardTitle>{item.title}</CardTitle>
-                          <CardDescription>{item.description}</CardDescription>
+                          <CardTitle className="text-[15px]">{item.title}</CardTitle>
+                          <CardDescription className="text-[13px]">{item.description}</CardDescription>
                         </View>
                       </View>
-                      <ArrowRight size={18} color="currentColor" strokeWidth={2} />
+                      <ArrowRight size={18} className="text-muted-foreground/60" strokeWidth={2} />
                     </CardHeader>
                   </Card>
                 </Link>
@@ -115,6 +130,5 @@ export default function IndexScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-
   );
 }
