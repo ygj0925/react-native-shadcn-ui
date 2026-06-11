@@ -1,7 +1,16 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Write",
+      "Edit",
+      "Read"
+    ]
+  },
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true,
     "ui-ux-pro-max@ui-ux-pro-max-skill": true,
-    "expo@expo-plugins": true
+    "expo@expo-plugins": true,
+    "code-review@claude-plugins-official": true
   }
 }
