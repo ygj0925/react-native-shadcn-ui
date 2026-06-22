@@ -61,7 +61,16 @@
           "calendarPermission": "Allow calendar access to sync and manage scheduled events."
         }
       ],
-      "expo-font"
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./node_modules/@expo-google-fonts/noto-sans-sc/400Regular/NotoSansSC_400Regular.ttf",
+            "./node_modules/@expo-google-fonts/noto-sans-sc/500Medium/NotoSansSC_500Medium.ttf",
+            "./node_modules/@expo-google-fonts/noto-sans-sc/700Bold/NotoSansSC_700Bold.ttf"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

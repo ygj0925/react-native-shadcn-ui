@@ -11,21 +11,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as SplashScreen from 'expo-splash-screen';
-import { useFonts } from 'expo-font';
-import {
-  NotoSansSC_400Regular,
-  NotoSansSC_500Medium,
-  NotoSansSC_700Bold,
-} from '@expo-google-fonts/noto-sans-sc';
-import { useEffect } from 'react';
 
 SplashScreen.preventAutoHideAsync();
-// Set the animation options. This is optional.
 SplashScreen.setOptions({
   duration: 500,
   fade: true,
 });
-
 
 export {
   ErrorBoundary,
@@ -34,19 +25,9 @@ export {
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
-  const [fontsLoaded] = useFonts({
-    NotoSansSC_400Regular,
-    NotoSansSC_500Medium,
-    NotoSansSC_700Bold,
-  });
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) return null;
+  // Fonts are loaded at build time via expo-font config plugin in app.json
+  // Hide splash screen on first render
+  SplashScreen.hideAsync();
 
   return (
     <KeyboardProvider statusBarTranslucent navigationBarTranslucent preserveEdgeToEdge>

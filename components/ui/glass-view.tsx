@@ -79,6 +79,7 @@ export function GlassCard({
         {
           overflow: 'hidden',
           borderRadius: 16,
+          borderCurve: 'continuous',
         },
         style,
       ]}

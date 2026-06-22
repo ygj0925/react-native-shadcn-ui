@@ -121,20 +121,35 @@ function sortSchedules(items: ScheduleItem[]) {
   });
 }
 
+// Hoisted Intl formatters — expensive to create, reused across calls
+const monthFormatterEN = new Intl.DateTimeFormat('en-US', { month: 'long' });
+const yearFormatterEN = new Intl.DateTimeFormat('en-US', { year: 'numeric' });
+const dateLabelFormatterZH = new Intl.DateTimeFormat('zh-CN', {
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long',
+});
+const syncLabelFormatterZH = new Intl.DateTimeFormat('zh-CN', {
+  month: 'numeric',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const timeLabelFormatterZH = new Intl.DateTimeFormat('zh-CN', {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 function formatSelectedMonth(date: string) {
-  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(`${date}T00:00:00`));
+  return monthFormatterEN.format(new Date(`${date}T00:00:00`));
 }
 
 function formatSelectedYear(date: string) {
-  return new Intl.DateTimeFormat('en-US', { year: 'numeric' }).format(new Date(`${date}T00:00:00`));
+  return yearFormatterEN.format(new Date(`${date}T00:00:00`));
 }
 
 function formatDateLabel(date: string) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long',
-  }).format(new Date(`${date}T00:00:00`));
+  return dateLabelFormatterZH.format(new Date(`${date}T00:00:00`));
 }
 
 function formatSyncLabel(value?: string | null) {
@@ -142,19 +157,11 @@ function formatSyncLabel(value?: string | null) {
     return t('about.not_synced');
   }
 
-  return new Intl.DateTimeFormat('zh-CN', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
+  return syncLabelFormatterZH.format(new Date(value));
 }
 
 function formatTimeLabel(dateValue: string) {
-  return new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(dateValue));
+  return timeLabelFormatterZH.format(new Date(dateValue));
 }
 
 function normalizeTimeValue(value: string, fallback: string) {
@@ -874,7 +881,7 @@ export default function AboutScreen() {
                     textDayHeaderFontSize: 13,
                     textDayFontWeight: '500',
                   }}
-                  style={{ borderRadius: 28 }}
+                  style={{ borderRadius: 28, borderCurve: 'continuous' }}
                 />
 
                 <View className="mt-4 flex-row flex-wrap gap-3 rounded-2xl bg-accent px-4 py-3">

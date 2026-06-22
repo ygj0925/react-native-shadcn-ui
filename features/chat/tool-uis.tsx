@@ -8,52 +8,14 @@ import {
   type Option,
 } from '@/components/ui/select';
 import { Text } from '@/components/ui/text';
+import { cn } from '@/lib/utils';
 import { Check, ChevronRight, ListChecks, MousePointerClick } from 'lucide-react-native';
 import { useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
-
-const COLORS = {
-  surface: '#ffffff',
-  canvas: '#f0f0f3',
-  borderLavender: '#e0e1e6',
-  inputBorder: '#d9d9e0',
-  nearBlack: '#1c2024',
-  slate: '#60646c',
-  silver: '#b0b4ba',
-  black: '#000000',
-  white: '#ffffff',
-  midSlate: '#555860',
-};
-
-const whisperShadow =
-  Platform.OS === 'web'
-    ? ({
-        boxShadow:
-          'rgba(0,0,0,0.08) 0px 3px 6px, rgba(0,0,0,0.07) 0px 2px 4px',
-      } as any)
-    : {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.08,
-        shadowRadius: 6,
-        elevation: 2,
-      };
+import { Pressable, View } from 'react-native';
 
 function ToolCard({ children }: { children: React.ReactNode }) {
   return (
-    <View
-      style={[
-        {
-          marginHorizontal: 12,
-          marginVertical: 6,
-          backgroundColor: COLORS.surface,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: COLORS.borderLavender,
-          padding: 14,
-        },
-        whisperShadow,
-      ]}>
+    <View className="mx-3 my-1.5 rounded-xl border border-border bg-card p-3.5 shadow-sm">
       {children}
     </View>
   );
@@ -69,40 +31,15 @@ function ToolHeader({
   title: string;
 }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-      <View
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: 9999,
-          backgroundColor: COLORS.canvas,
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderWidth: 1,
-          borderColor: COLORS.borderLavender,
-        }}>
+    <View className="flex-row items-center gap-2 mb-3">
+      <View className="h-6 w-6 items-center justify-center rounded-full bg-muted border border-border">
         {icon}
       </View>
-      <Text
-        style={{
-          fontSize: 10,
-          fontWeight: '600',
-          color: COLORS.silver,
-          letterSpacing: 0.5,
-          textTransform: 'uppercase',
-        }}>
+      <Text className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground">
         {eyebrow}
       </Text>
-      <View style={{ width: 1, height: 10, backgroundColor: COLORS.borderLavender }} />
-      <Text
-        style={{
-          flex: 1,
-          fontSize: 13,
-          fontWeight: '600',
-          color: COLORS.nearBlack,
-          letterSpacing: -0.1,
-        }}
-        numberOfLines={1}>
+      <View className="w-px h-2.5 bg-border" />
+      <Text className="flex-1 text-[13px] font-semibold text-foreground tracking-tight" numberOfLines={1}>
         {title}
       </Text>
     </View>
@@ -126,29 +63,20 @@ function PillButton({
       onPress={onPress}
       disabled={disabled}
       hitSlop={8}
-      style={({ pressed }) => ({
-        flex: 1,
-        height: 30,
-        borderRadius: 9999,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 14,
-        backgroundColor: isPrimary
+      className={cn(
+        'flex-1 h-[30px] rounded-full items-center justify-center px-3.5',
+        isPrimary
           ? disabled
-            ? COLORS.silver
-            : COLORS.black
-          : COLORS.white,
-        borderWidth: isPrimary ? 0 : 1,
-        borderColor: COLORS.inputBorder,
-        opacity: pressed ? 0.85 : 1,
-      })}>
+            ? 'bg-muted-foreground/40'
+            : 'bg-foreground'
+          : 'bg-background border border-input',
+        'active:opacity-80'
+      )}>
       <Text
-        style={{
-          fontSize: 12,
-          fontWeight: '600',
-          color: isPrimary ? COLORS.white : COLORS.nearBlack,
-          letterSpacing: -0.1,
-        }}>
+        className={cn(
+          'text-xs font-semibold tracking-tight',
+          isPrimary ? 'text-primary-foreground' : 'text-foreground'
+        )}>
         {label}
       </Text>
     </Pressable>
@@ -157,32 +85,11 @@ function PillButton({
 
 function ResultBanner({ label }: { label: string }) {
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 9999,
-        backgroundColor: COLORS.canvas,
-        borderWidth: 1,
-        borderColor: COLORS.borderLavender,
-      }}>
-      <View
-        style={{
-          width: 16,
-          height: 16,
-          borderRadius: 9999,
-          backgroundColor: COLORS.black,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <Check size={9} color={COLORS.white} strokeWidth={3.2} />
+    <View className="flex-row items-center gap-2 py-1.5 px-2.5 rounded-full bg-muted border border-border">
+      <View className="h-4 w-4 items-center justify-center rounded-full bg-foreground">
+        <Check size={9} color="hsl(var(--primary-foreground))" strokeWidth={3.2} />
       </View>
-      <Text
-        style={{ flex: 1, fontSize: 12, fontWeight: '500', color: COLORS.nearBlack }}
-        numberOfLines={1}>
+      <Text className="flex-1 text-xs font-medium text-foreground" numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -208,7 +115,7 @@ export const SelectToolUI = makeAssistantToolUI<SelectArgs, SelectResult>({
       return (
         <ToolCard>
           <ToolHeader
-            icon={<MousePointerClick size={12} color={COLORS.nearBlack} strokeWidth={2.2} />}
+            icon={<MousePointerClick size={12} className="text-foreground" strokeWidth={2.2} />}
             eyebrow="单选"
             title={args.title}
           />
@@ -233,21 +140,14 @@ function SelectToolInput({
   return (
     <ToolCard>
       <ToolHeader
-        icon={<MousePointerClick size={12} color={COLORS.nearBlack} strokeWidth={2.2} />}
+        icon={<MousePointerClick size={12} className="text-foreground" strokeWidth={2.2} />}
         eyebrow="单选"
         title={args.title}
       />
 
-      <View style={{ marginBottom: 12 }}>
+      <View className="mb-3">
         <Select value={selected} onValueChange={setSelected}>
-          <SelectTrigger
-            style={{
-              borderRadius: 9999,
-              borderColor: COLORS.inputBorder,
-              backgroundColor: COLORS.white,
-              height: 32,
-              paddingHorizontal: 12,
-            }}>
+          <SelectTrigger className="rounded-full border-input bg-background h-8 px-3">
             <SelectValue placeholder="请选择..." />
           </SelectTrigger>
           <SelectContent side="bottom">
@@ -287,7 +187,7 @@ export const ConfirmToolUI = makeAssistantToolUI<ConfirmArgs, ConfirmResult>({
       return (
         <ToolCard>
           <ToolHeader
-            icon={<ChevronRight size={12} color={COLORS.nearBlack} strokeWidth={2.6} />}
+            icon={<ChevronRight size={12} className="text-foreground" strokeWidth={2.6} />}
             eyebrow="确认"
             title={args.title}
           />
@@ -299,22 +199,16 @@ export const ConfirmToolUI = makeAssistantToolUI<ConfirmArgs, ConfirmResult>({
     return (
       <ToolCard>
         <ToolHeader
-          icon={<ChevronRight size={12} color={COLORS.nearBlack} strokeWidth={2.6} />}
+          icon={<ChevronRight size={12} className="text-foreground" strokeWidth={2.6} />}
           eyebrow="确认"
           title={args.title}
         />
 
-        <Text
-          style={{
-            fontSize: 12,
-            lineHeight: 18,
-            color: COLORS.slate,
-            marginBottom: 14,
-          }}>
+        <Text className="text-xs leading-[18px] text-muted-foreground mb-3.5">
           {args.message}
         </Text>
 
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View className="flex-row gap-2">
           <PillButton
             label="取消"
             variant="outline"
@@ -348,7 +242,7 @@ export const MultiSelectToolUI = makeAssistantToolUI<MultiSelectArgs, MultiSelec
       return (
         <ToolCard>
           <ToolHeader
-            icon={<ListChecks size={12} color={COLORS.nearBlack} strokeWidth={2.2} />}
+            icon={<ListChecks size={12} className="text-foreground" strokeWidth={2.2} />}
             eyebrow="多选"
             title={args.title}
           />
@@ -382,12 +276,12 @@ function MultiSelectToolInput({
   return (
     <ToolCard>
       <ToolHeader
-        icon={<ListChecks size={12} color={COLORS.nearBlack} strokeWidth={2.2} />}
+        icon={<ListChecks size={12} className="text-foreground" strokeWidth={2.2} />}
         eyebrow="多选"
         title={args.title}
       />
 
-      <View style={{ gap: 4, marginBottom: 12 }}>
+      <View className="gap-1 mb-3">
         {(args.options ?? []).map((opt) => {
           const checked = selected.has(opt.value);
           return (
@@ -395,38 +289,24 @@ function MultiSelectToolInput({
               key={opt.value}
               onPress={() => toggle(opt.value)}
               hitSlop={4}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-                paddingVertical: 6,
-                paddingHorizontal: 10,
-                borderRadius: 8,
-                backgroundColor: checked ? COLORS.canvas : COLORS.white,
-                borderWidth: 1,
-                borderColor: checked ? COLORS.nearBlack : COLORS.borderLavender,
-                opacity: pressed ? 0.85 : 1,
-              })}>
+              className={cn(
+                'flex-row items-center gap-2 py-1.5 px-2.5 rounded-lg border active:opacity-80',
+                checked ? 'bg-muted border-foreground' : 'bg-background border-border'
+              )}>
               <View
-                style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: 4,
-                  backgroundColor: checked ? COLORS.black : COLORS.white,
-                  borderWidth: 1.2,
-                  borderColor: checked ? COLORS.black : COLORS.inputBorder,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                {checked ? <Check size={9} color={COLORS.white} strokeWidth={3.2} /> : null}
+                className={cn(
+                  'h-3.5 w-3.5 items-center justify-center rounded border',
+                  checked ? 'bg-foreground border-foreground' : 'bg-background border-input'
+                )}>
+                {checked ? (
+                  <Check size={9} color="hsl(var(--primary-foreground))" strokeWidth={3.2} />
+                ) : null}
               </View>
               <Text
-                style={{
-                  flex: 1,
-                  fontSize: 12,
-                  fontWeight: checked ? '600' : '500',
-                  color: COLORS.nearBlack,
-                }}>
+                className={cn(
+                  'flex-1 text-xs text-foreground',
+                  checked ? 'font-semibold' : 'font-medium'
+                )}>
                 {opt.label}
               </Text>
             </Pressable>

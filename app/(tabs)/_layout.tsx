@@ -14,9 +14,18 @@ import { Slot, Tabs, usePathname, useRouter } from 'expo-router';
 import { Menu, X } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import ReanimatedAnimated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import ReanimatedAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolate,
+  Easing as ReaEasing,
+  Extrapolation,
+  type SharedValue,
+} from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 type NavName = 'index' | 'about' | 'home' | 'love' | 'my';
@@ -197,22 +206,22 @@ function AnimatedTabItem({
 
   React.useEffect(() => {
     if (focused) {
-      scale.value = 0.85;
-      scale.value = withSpring(1.08, {
+      scale.set(0.85);
+      scale.set(withSpring(1.08, {
         damping: 12,
         stiffness: 300,
         mass: 0.4,
-      });
+      }));
     } else {
-      scale.value = withSpring(1, {
+      scale.set(withSpring(1, {
         damping: 15,
         stiffness: 250,
-      });
+      }));
     }
   }, [focused]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.get() }],
   }));
 
   return (
@@ -320,7 +329,7 @@ function LargeScreenShell({ tint, navItems }: { tint: (typeof THEME)['light']; n
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
-  const progress = React.useRef(new Animated.Value(1)).current;
+  const sidebarProgress = useSharedValue(1);
   const currentPath = pathname === '/index' ? '/' : pathname;
   const pageTitles = React.useMemo(
     () => navItems.reduce((acc, item) => {
@@ -333,28 +342,21 @@ function LargeScreenShell({ tint, navItems }: { tint: (typeof THEME)['light']; n
   const sidebarWidth = Math.min(Math.max(width * 0.22, 220), 260);
 
   React.useEffect(() => {
-    Animated.timing(progress, {
-      toValue: sidebarVisible ? 1 : 0,
-      duration: 240,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-  }, [progress, sidebarVisible]);
+    sidebarProgress.set(
+      withTiming(sidebarVisible ? 1 : 0, {
+        duration: 240,
+        easing: ReaEasing.out(ReaEasing.cubic),
+      })
+    );
+  }, [sidebarVisible]);
 
-  const animatedSidebarWidth = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, sidebarWidth],
-  });
-
-  const animatedSidebarOpacity = progress.interpolate({
-    inputRange: [0, 0.55, 1],
-    outputRange: [0, 0.65, 1],
-  });
-
-  const animatedSidebarTranslate = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-18, 0],
-  });
+  const animatedSidebarStyle = useAnimatedStyle(() => ({
+    width: interpolate(sidebarProgress.get(), [0, 1], [0, sidebarWidth], Extrapolation.CLAMP),
+    opacity: interpolate(sidebarProgress.get(), [0, 0.55, 1], [0, 0.65, 1], Extrapolation.CLAMP),
+    transform: [
+      { translateX: interpolate(sidebarProgress.get(), [0, 1], [-18, 0], Extrapolation.CLAMP) },
+    ],
+  }));
 
   const navigate = React.useCallback(
     (href: string) => {
@@ -369,16 +371,10 @@ function LargeScreenShell({ tint, navItems }: { tint: (typeof THEME)['light']; n
 
   return (
     <View className="flex-row flex-1 bg-background">
-      <Animated.View
-        style={{ width: animatedSidebarWidth, overflow: 'hidden' }}
+      <ReanimatedAnimated.View
+        style={[{ overflow: 'hidden', height: '100%' }, animatedSidebarStyle]}
         pointerEvents={sidebarVisible ? 'auto' : 'none'}>
-        <Animated.View
-          style={{
-            width: sidebarWidth,
-            flex: 1,
-            opacity: animatedSidebarOpacity,
-            transform: [{ translateX: animatedSidebarTranslate }],
-          }}>
+        <View style={{ width: sidebarWidth, flex: 1 }}>
           <SidebarContent
             currentPath={currentPath}
             tint={tint}
@@ -387,8 +383,8 @@ function LargeScreenShell({ tint, navItems }: { tint: (typeof THEME)['light']; n
             largeScreen
             navItems={navItems}
           />
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </ReanimatedAnimated.View>
 
       <View className="flex-1 bg-background">
         <View

@@ -2,7 +2,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { t } from '@/lib/i18n';
 import { useColorScheme } from 'nativewind';
-import { Alert, Image, Platform, View } from 'react-native';
+import { Alert, Platform, View } from 'react-native';
+import { Image } from 'expo-image';
 
 const SOCIAL_CONNECTION_STRATEGIES = [
   {

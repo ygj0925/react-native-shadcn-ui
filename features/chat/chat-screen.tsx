@@ -57,7 +57,16 @@ import {
   X,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { Animated, Image, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withRepeat,
+  Easing,
+} from 'react-native-reanimated';
+import { Image } from 'expo-image';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -181,7 +190,7 @@ function ChatHeader({
     <BlurView
       intensity={isDark ? 40 : 30}
       tint={isDark ? 'dark' : 'light'}
-      style={{ borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+      className="border-b border-border/40"
     >
       <View className={cn('flex-row items-center justify-between px-5 py-3.5', isDark ? 'bg-background/60' : 'bg-background/70')}>
         <Pressable
@@ -221,11 +230,9 @@ function OfflineBanner() {
   if (isConnected !== false) return null;
 
   return (
-    <View
-      className="flex-row items-center justify-center gap-2 px-4 py-2"
-      style={{ backgroundColor: 'rgba(239,68,68,0.08)' }}>
-      <WifiOff size={14} color="#ef4444" strokeWidth={2} />
-      <Text className="text-xs font-medium" style={{ color: '#ef4444' }}>
+    <View className="flex-row items-center justify-center gap-2 px-4 py-2 bg-destructive/10">
+      <WifiOff size={14} className="text-destructive" strokeWidth={2} />
+      <Text className="text-xs font-medium text-destructive">
         {t('chat.offline_notice')}
       </Text>
     </View>
@@ -324,22 +331,25 @@ function ReasoningPart({ text, status }: { text: string; status: { type: string 
 }
 
 const PulsingDot = React.memo(function PulsingDot() {
-  const opacity = React.useRef(new Animated.Value(0.3)).current;
+  const opacity = useSharedValue(0.3);
 
   React.useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.3, duration: 600, useNativeDriver: true }),
-      ]),
+    opacity.set(
+      withRepeat(
+        withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+        -1, // infinite
+        true, // reverse
+      )
     );
-    anim.start();
-    return () => anim.stop();
-  }, [opacity]);
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+  }));
 
   return (
     <Animated.View
-      style={{ opacity, width: 6, height: 6, borderRadius: 3, backgroundColor: '#888' }}
+      style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#888' }, animatedStyle]}
     />
   );
 });
@@ -349,7 +359,8 @@ const ImagePart = React.memo(function ImagePart({ image }: { image: string }) {
     <Image
       source={{ uri: image }}
       style={{ width: 220, height: 160, borderRadius: 10, marginTop: 6 }}
-      resizeMode="cover"
+      contentFit="cover"
+      transition={200}
     />
   );
 });
@@ -441,41 +452,39 @@ function UserMessage() {
 
 // ─── Assistant Message ──────────────────────────────────────────────────────
 
-const LoadingIndicator = React.memo(function LoadingIndicator() {
-  const dot1 = React.useRef(new Animated.Value(0.2)).current;
-  const dot2 = React.useRef(new Animated.Value(0.2)).current;
-  const dot3 = React.useRef(new Animated.Value(0.2)).current;
+function PulsingLoadingDot({ delay }: { delay: number }) {
+  const opacity = useSharedValue(0.2);
 
   React.useEffect(() => {
-    const animate = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.timing(dot, { toValue: 0.2, duration: 400, useNativeDriver: true }),
-        ]),
-      );
-    const a1 = animate(dot1, 0);
-    const a2 = animate(dot2, 200);
-    const a3 = animate(dot3, 400);
-    a1.start(); a2.start(); a3.start();
-    return () => { a1.stop(); a2.stop(); a3.stop(); };
-  }, [dot1, dot2, dot3]);
+    opacity.set(
+      withDelay(
+        delay,
+        withRepeat(
+          withTiming(1, { duration: 400, easing: Easing.inOut(Easing.ease) }),
+          -1,
+          true,
+        )
+      )
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+  }));
 
   return (
+    <Animated.View
+      style={[{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#999' }, animatedStyle]}
+    />
+  );
+}
+
+const LoadingIndicator = React.memo(function LoadingIndicator() {
+  return (
     <View className="flex-row items-center gap-1.5 py-3">
-      {[dot1, dot2, dot3].map((dot, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            opacity: dot,
-            width: 7,
-            height: 7,
-            borderRadius: 4,
-            backgroundColor: '#999',
-          }}
-        />
-      ))}
+      <PulsingLoadingDot delay={0} />
+      <PulsingLoadingDot delay={200} />
+      <PulsingLoadingDot delay={400} />
     </View>
   );
 });
@@ -494,21 +503,17 @@ function AssistantMessage() {
           }}
         />
         <ErrorPrimitive.Root
-          className="mt-3 flex-row items-start gap-2.5 rounded-xl border px-4 py-3"
-          style={{ backgroundColor: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.15)' }}
+          className="mt-3 flex-row items-start gap-2.5 rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3"
         >
-          <AlertTriangle size={15} color="#ef4444" strokeWidth={2} style={{ marginTop: 2 }} />
+          <AlertTriangle size={15} className="text-destructive mt-0.5" strokeWidth={2} />
           <View className="flex-1 gap-2">
-            <ErrorPrimitive.Message className="text-sm leading-5" style={{ color: '#ef4444' }} />
+            <ErrorPrimitive.Message className="text-sm leading-5 text-destructive" />
             <ActionBarPrimitive.Reload
               style={({ pressed }: any) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              <View
-                className="self-start flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg"
-                style={{ backgroundColor: 'rgba(239,68,68,0.08)' }}
-              >
-                <RefreshCw size={12} color="#ef4444" strokeWidth={2} />
-                <Text className="text-xs font-medium" style={{ color: '#ef4444' }}>
+              <View className="self-start flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10">
+                <RefreshCw size={12} className="text-destructive" strokeWidth={2} />
+                <Text className="text-xs font-medium text-destructive">
                   {t('chat.actions.retry')}
                 </Text>
               </View>
@@ -712,7 +717,7 @@ function Composer() {
     <BlurView
       intensity={isDark ? 40 : 30}
       tint={isDark ? 'dark' : 'light'}
-      style={{ borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+      className="border-t border-border/40"
     >
       <View
         className={cn('px-4 pt-3', isDark ? 'bg-background/60' : 'bg-background/70')}
@@ -833,7 +838,7 @@ function ChatThread() {
             'absolute items-center justify-center rounded-full shadow-lg',
             isDark ? 'bg-white/90' : 'bg-foreground'
           )}
-          style={{ width: 38, height: 38, alignSelf: 'center', bottom: 14, left: '50%', marginLeft: -19, elevation: 6 }}
+          style={{ width: 38, height: 38, alignSelf: 'center', bottom: 14, left: '50%', marginLeft: -19, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}
         >
           <ArrowDown size={18} color={isDark ? '#000' : '#fff'} strokeWidth={2} />
         </Pressable>
