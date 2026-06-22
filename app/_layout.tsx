@@ -11,6 +11,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/lib/store/auth';
+import { onAuthStateChange } from '@/lib/supabase';
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({
@@ -24,6 +27,25 @@ export {
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
+  const initAuth = useAuthStore((s) => s.initAuth);
+  const setUser = useAuthStore((s) => s.setUser);
+  const refreshProfile = useAuthStore((s) => s.refreshProfile);
+
+  // Initialize auth and listen for changes
+  useEffect(() => {
+    initAuth();
+
+    const { data: { subscription } } = onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user);
+        refreshProfile();
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Fonts are loaded at build time via expo-font config plugin in app.json
   // Hide splash screen on first render

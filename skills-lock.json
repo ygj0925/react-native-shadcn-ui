@@ -54,6 +54,12 @@
       "sourceType": "github",
       "skillPath": "assistant-ui/skills/update/SKILL.md",
       "computedHash": "909af92da3892c434ade1a2bfdd3ebb8689f2681bcd3bf90c46e182e458d5b8a"
+    },
+    "vercel-react-native-skills": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-native-skills/SKILL.md",
+      "computedHash": "41d24eafa7c3d82e270439808f7cfbc4d51aeb2d14f2809a2267c16275784d06"
     }
   }
 }

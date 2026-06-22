@@ -1,20 +1,22 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Project: MindFlow (心流) — AI 驱动的全能生活管家
+  Tech stack: Expo SDK 54, React Native 0.81, NativeWind 4, Zustand, Supabase, Reanimated
+  Language: TypeScript
+  Routing: Expo Router v6 (file-based)
+  UI: shadcn/ui (new-york style) + NativeWind (Tailwind CSS)
+  State: Zustand + MMKV (local) + Supabase (remote)
+  AI: Mimo (default) + OpenAI/Claude (optional)
+  Revenue: RevenueCat subscriptions
+  Conventions: Conventional commits, Chinese UI text
+  Domain: Personal productivity SaaS app
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Keep proposals under 1000 words
+    - Always include "不在范围内" and "风险" sections
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Each task should be independently testable
+    - Group tasks by week within each phase

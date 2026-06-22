@@ -28,7 +28,7 @@ import ReanimatedAnimated, {
 } from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
-type NavName = 'index' | 'about' | 'home' | 'love' | 'my';
+type NavName = 'index' | 'about' | 'notes' | 'habits' | 'my';
 
 type NavItem = {
   name: NavName;
@@ -65,27 +65,27 @@ function getNavItems(): NavItem[] {
         ),
     },
     {
-      name: 'home',
-      title: t('nav.workspace'),
-      href: '/home',
-      description: t('nav.workspace_desc'),
+      name: 'notes',
+      title: '笔记',
+      href: '/notes',
+      description: '记录想法和灵感',
       icon: (focused, color, size = 22) =>
         focused ? (
-          <MaterialCommunityIcons name="creation" size={size} color={color} />
+          <Ionicons name="document-text" size={size} color={color} />
         ) : (
-          <MaterialCommunityIcons name="creation-outline" size={size} color={color} />
+          <Ionicons name="document-text-outline" size={size} color={color} />
         ),
     },
     {
-      name: 'love',
-      title: t('nav.favorites'),
-      href: '/love',
-      description: t('nav.favorites_desc'),
+      name: 'habits',
+      title: '习惯',
+      href: '/habits',
+      description: '追踪日常习惯',
       icon: (focused, color, size = 22) =>
         focused ? (
-          <Ionicons name="heart" size={size} color={color} />
+          <Ionicons name="flame" size={size} color={color} />
         ) : (
-          <Ionicons name="heart-outline" size={size} color={color} />
+          <Ionicons name="flame-outline" size={size} color={color} />
         ),
     },
     {
