@@ -42,14 +42,14 @@ function getNavItems(): NavItem[] {
   return [
     {
       name: 'index',
-      title: t('nav.chats'),
+      title: '今日',
       href: '/',
-      description: t('nav.chats_desc'),
+      description: '今日概览与快捷入口',
       icon: (focused, color, size = 22) =>
         focused ? (
-          <Ionicons name="chatbubbles" size={size} color={color} />
+          <Ionicons name="sunny" size={size} color={color} />
         ) : (
-          <Ionicons name="chatbubbles-outline" size={size} color={color} />
+          <Ionicons name="sunny-outline" size={size} color={color} />
         ),
     },
     {

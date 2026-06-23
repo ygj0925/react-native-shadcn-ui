@@ -9,6 +9,8 @@ import { Plus, Search, X } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
+import { OfflineBanner } from '@/components/features/shared/offline-banner';
 
 export default function NotesScreen() {
   const router = useRouter();
@@ -24,17 +26,22 @@ export default function NotesScreen() {
   } = useNotes();
 
   const [showSearch, setShowSearch] = React.useState(false);
+  const { checkAndConsume, PaywallComponent } = useFeatureGate('unlimited_notes');
 
   const handlePress = (id: string) => {
     router.push(`/note/${id}` as any);
   };
 
   const handleCreate = () => {
+    if (!checkAndConsume({ title: '笔记数量已达上限', description: '升级到 Pro 创建无限笔记。' })) {
+      return;
+    }
     router.push('/note/new' as any);
   };
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-background">
+      <OfflineBanner />
       {/* Header */}
       <View className="px-4 pt-2 pb-3 gap-3">
         <View className="flex-row items-center justify-between">
@@ -105,6 +112,8 @@ export default function NotesScreen() {
       >
         <Plus size={24} color={isDark ? '#000' : '#fff'} strokeWidth={2.5} />
       </Pressable>
+
+      <PaywallComponent compact />
     </SafeAreaView>
   );
 }

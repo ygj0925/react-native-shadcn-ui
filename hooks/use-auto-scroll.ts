@@ -86,10 +86,14 @@ export function useAutoScroll(isRunning: boolean) {
   }, []);
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     if (!isRunning && prevIsRunningRef.current && !userScrolledAwayRef.current) {
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 150);
+      timeoutId = setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 150);
     }
     prevIsRunningRef.current = isRunning;
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [isRunning]);
 
   const scrollToBottom = useCallback(() => {

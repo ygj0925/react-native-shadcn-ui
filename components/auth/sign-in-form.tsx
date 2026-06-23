@@ -6,19 +6,20 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { t } from '@/lib/i18n';
+import { useAuthStore } from '@/lib/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import { Alert, Pressable, type TextInput, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod/v4';
-import { login } from '@/api/services/auth'
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 const schema = z.object({
-  username: z
+  email: z
     .string()
-    .min(1, t('auth.ad_account_required')),
+    .min(1, t('auth.email'))
+    .email(t('auth.email')),
   password: z
     .string()
     .min(1, t('auth.password_required')),
@@ -29,6 +30,7 @@ type FormValues = z.infer<typeof schema>;
 export function SignInForm() {
   const router = useRouter();
   const passwordInputRef = React.useRef<TextInput>(null);
+  const signIn = useAuthStore((s) => s.signIn);
 
   const {
     control,
@@ -37,7 +39,7 @@ export function SignInForm() {
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
     mode: 'onBlur',
@@ -49,11 +51,12 @@ export function SignInForm() {
   async function onSubmit(values: FormValues) {
     try {
       setLoading(true);
-      const data = await login(values);
-      console.log('====================================');
-      console.log(data, 'data');
-      console.log('====================================');
-      // router.replace('/(tabs)');
+      const { error } = await signIn(values.email, values.password);
+      if (error) {
+        Alert.alert(t('auth.login_failed'), error);
+        return;
+      }
+      router.replace('/(tabs)');
     } catch (e: any) {
       Alert.alert(t('auth.login_failed'), e.message ?? t('auth.login_failed_desc'));
     } finally {
@@ -71,25 +74,26 @@ export function SignInForm() {
       </View>
       <View className="gap-5">
         <View className="gap-2">
-          <Label htmlFor="username">{t('auth.ad_account')}</Label>
+          <Label htmlFor="email">{t('auth.email')}</Label>
           <Controller
             control={control}
-            name="username"
+            name="email"
             render={({ field: { onChange, onBlur, value } }) => (
               <Input
-                placeholder={t('auth.ad_account_placeholder')}
+                placeholder={t('auth.email_placeholder')}
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
                 onSubmitEditing={() => passwordInputRef.current?.focus()}
                 returnKeyType="next"
                 autoCapitalize="none"
-                autoComplete="username"
+                autoComplete="email"
+                keyboardType="email-address"
               />
             )}
           />
-          {errors.username && (
-            <Text className="text-sm text-destructive">{errors.username.message}</Text>
+          {errors.email && (
+            <Text className="text-sm text-destructive">{errors.email.message}</Text>
           )}
         </View>
 

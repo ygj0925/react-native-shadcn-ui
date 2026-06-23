@@ -26,6 +26,13 @@ export function NoteEditor({ note, onSave, onDelete }: NoteEditorProps) {
   const [category, setCategory] = React.useState<Exclude<NoteCategory, 'all'>>(note?.category ?? 'personal');
   const [tagsInput, setTagsInput] = React.useState(note?.tags.join(', ') ?? '');
 
+  React.useEffect(() => {
+    if (note) {
+      setCategory(note.category);
+      setTagsInput(note.tags.join(', '));
+    }
+  }, [note?.category, note?.tags.join(', ')]);
+
   // Auto-save on blur or unmount
   const saveRef = React.useRef({ title, content, category, tagsInput });
   saveRef.current = { title, content, category, tagsInput };

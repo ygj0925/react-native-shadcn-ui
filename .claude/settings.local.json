@@ -35,7 +35,14 @@
       "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30)",
       "PowerShell(Remove-Item *)",
       "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 15)",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "Bash(npx openspec *)",
+      "PowerShell(Get-ChildItem \"D:\\\\project\\\\react-native-shadcn-ui\\\\node_modules\\\\ai\\\\dist\" -Filter \"index.mjs\" | Select-Object FullName, @{N='SizeKB';E={[math]::Round\\($_.Length/1024,1\\)}})",
+      "PowerShell(node test-babel-plugin.js)",
+      "Bash(python -c \"import json,sys;d=json.load\\(sys.stdin\\);print\\(d['expo']['web']\\)\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\(0,'utf8'\\)\\);console.log\\(JSON.stringify\\(d.expo.web\\)\\)\")",
+      "Bash(npm uninstall *)",
+      "Bash(node *)"
     ]
   }
 }

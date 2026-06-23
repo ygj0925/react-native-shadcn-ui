@@ -12,8 +12,16 @@
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
-      "**/*"
+      "assets/**/*",
+      "node_modules/@expo-google-fonts/**/*"
     ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5bcca772-e4c6-4648-9853-a26ba6cdfa02",
+      "checkAutomatically": "ON_LOAD"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "y",
@@ -70,7 +78,8 @@
             "./node_modules/@expo-google-fonts/noto-sans-sc/700Bold/NotoSansSC_700Bold.ttf"
           ]
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true

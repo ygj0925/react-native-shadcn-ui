@@ -3,6 +3,7 @@ import type { Note } from '@/lib/store/notes';
 import { NoteCard } from './note-card';
 import { View } from 'react-native';
 import { FileText } from 'lucide-react-native';
+import { FlashList } from '@shopify/flash-list';
 
 type NoteListProps = {
   notes: Note[];
@@ -22,15 +23,15 @@ export function NoteList({ notes, onPress, onLongPress }: NoteListProps) {
   }
 
   return (
-    <View className="gap-2 px-4">
-      {notes.map((note) => (
-        <NoteCard
-          key={note.id}
-          note={note}
-          onPress={onPress}
-          onLongPress={onLongPress}
-        />
-      ))}
+    <View className="flex-1 px-4">
+      <FlashList
+        data={notes}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <NoteCard note={item} onPress={onPress} onLongPress={onLongPress} />
+        )}
+        contentContainerStyle={{ paddingVertical: 8 }}
+      />
     </View>
   );
 }

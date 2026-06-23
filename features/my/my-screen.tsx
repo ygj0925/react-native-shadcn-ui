@@ -16,6 +16,7 @@ import {
   Mail,
   Palette,
   RefreshCw,
+  Settings,
   Shield,
   SquarePlus,
   UserRoundCog,
@@ -27,6 +28,7 @@ import * as React from 'react';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useSubscriptionStore } from '@/lib/store/subscription';
 
 type Item = {
   id: string;
@@ -35,6 +37,7 @@ type Item = {
   value?: string;
   withChevron?: boolean;
   withToggle?: boolean;
+  onPress?: () => void;
 };
 
 type Section = {
@@ -43,13 +46,15 @@ type Section = {
   items: Item[];
 };
 
-function getSections(): Section[] {
+function getSections(tier: string, router: ReturnType<typeof useRouter>): Section[] {
+  const tierLabel = tier === 'pro' ? 'MindFlow Pro' : tier === 'team' ? 'MindFlow Team' : '免费版';
   return [
     {
       title: t('settings.account.title'),
       items: [
+        { id: 'settings', label: '设置', icon: Settings, value: '全部设置', withChevron: true, onPress: () => router.push('/settings' as any) },
         { id: 'email', label: t('settings.account.email'), icon: Mail, value: 'rey@gmail.com' },
-        { id: 'subscription', label: t('settings.account.subscription'), icon: SquarePlus, value: 'ChatGPT Plus' },
+        { id: 'subscription', label: t('settings.account.subscription'), icon: SquarePlus, value: tierLabel, withChevron: true, onPress: () => router.push('/settings/subscription' as any) },
         { id: 'restore', label: t('settings.account.restore_purchases'), icon: RefreshCw },
         { id: 'data', label: t('settings.account.data_controls'), icon: Shield, withChevron: true },
         { id: 'archive', label: t('settings.account.archived_chats'), icon: Archive, withChevron: true },
@@ -100,7 +105,7 @@ function SettingsRow({
   const isDark = colorScheme === 'dark';
 
   return (
-    <Pressable className="flex-row items-center px-5 py-3.5 active:bg-accent/50">
+    <Pressable onPress={item.onPress} className="flex-row items-center px-5 py-3.5 active:bg-accent/50">
       <View className={cn(
         'items-center justify-center w-9 h-9 mr-4 rounded-xl',
         isDark ? 'bg-white/8' : 'bg-black/4'
@@ -143,7 +148,8 @@ export default function MyScreen() {
   const [hapticsEnabled, setHapticsEnabled] = React.useState(true);
   const isCompact = width < 390;
   const router = useRouter();
-  const sections = getSections();
+  const tier = useSubscriptionStore((s) => s.tier);
+  const sections = getSections(tier, router);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 

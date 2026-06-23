@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { getItem, setItem, removeItem } from '@/lib/storage';
+import { queueNoteOperation } from '@/lib/sync/notes';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -46,10 +47,12 @@ type NotesState = {
   notes: Note[];
   searchQuery: string;
   activeCategory: NoteCategory;
+  lastSyncAt: string | null;
 
   // Actions
   setSearchQuery: (query: string) => void;
   setActiveCategory: (category: NoteCategory) => void;
+  setLastSyncAt: (at: string | null) => void;
 
   // CRUD
   createNote: (input?: NoteInput) => Note;
@@ -58,6 +61,9 @@ type NotesState = {
   togglePin: (id: string) => void;
   archiveNote: (id: string) => void;
   unarchiveNote: (id: string) => void;
+
+  // Sync
+  mergeRemoteNotes: (remoteNotes: Note[]) => void;
 
   // Selectors
   getNoteById: (id: string) => Note | undefined;
@@ -79,9 +85,11 @@ export const useNotesStore = create<NotesState>()(
       notes: [],
       searchQuery: '',
       activeCategory: 'all',
+      lastSyncAt: null,
 
       setSearchQuery: (query) => set({ searchQuery: query }),
       setActiveCategory: (category) => set({ activeCategory: category }),
+      setLastSyncAt: (lastSyncAt) => set({ lastSyncAt }),
 
       createNote: (input) => {
         const note: Note = {
@@ -98,57 +106,91 @@ export const useNotesStore = create<NotesState>()(
         };
 
         set((state) => ({ notes: [note, ...state.notes] }));
+        queueNoteOperation(note, 'insert');
         return note;
       },
 
       updateNote: (id, input) => {
+        let updated: Note | null = null;
         set((state) => ({
-          notes: state.notes.map((note) =>
-            note.id === id
-              ? {
-                  ...note,
-                  ...input,
-                  updatedAt: now(),
-                }
-              : note
-          ),
+          notes: state.notes.map((note) => {
+            if (note.id !== id) return note;
+            updated = { ...note, ...input, updatedAt: now() };
+            return updated;
+          }),
         }));
+        if (updated) queueNoteOperation(updated, 'update');
       },
 
       deleteNote: (id) => {
+        const note = get().getNoteById(id);
         set((state) => ({
-          notes: state.notes.filter((note) => note.id !== id),
+          notes: state.notes.filter((n) => n.id !== id),
         }));
+        if (note) queueNoteOperation(note, 'delete');
       },
 
       togglePin: (id) => {
+        let updated: Note | null = null;
         set((state) => ({
-          notes: state.notes.map((note) =>
-            note.id === id
-              ? { ...note, isPinned: !note.isPinned, updatedAt: now() }
-              : note
-          ),
+          notes: state.notes.map((note) => {
+            if (note.id !== id) return note;
+            updated = { ...note, isPinned: !note.isPinned, updatedAt: now() };
+            return updated;
+          }),
         }));
+        if (updated) queueNoteOperation(updated, 'update');
       },
 
       archiveNote: (id) => {
+        let updated: Note | null = null;
         set((state) => ({
-          notes: state.notes.map((note) =>
-            note.id === id
-              ? { ...note, isArchived: true, category: 'archive', updatedAt: now() }
-              : note
-          ),
+          notes: state.notes.map((note) => {
+            if (note.id !== id) return note;
+            updated = { ...note, isArchived: true, category: 'archive', updatedAt: now() };
+            return updated;
+          }),
         }));
+        if (updated) queueNoteOperation(updated, 'update');
       },
 
       unarchiveNote: (id) => {
+        let updated: Note | null = null;
         set((state) => ({
-          notes: state.notes.map((note) =>
-            note.id === id
-              ? { ...note, isArchived: false, category: 'personal', updatedAt: now() }
-              : note
-          ),
+          notes: state.notes.map((note) => {
+            if (note.id !== id) return note;
+            updated = { ...note, isArchived: false, category: 'personal', updatedAt: now() };
+            return updated;
+          }),
         }));
+        if (updated) queueNoteOperation(updated, 'update');
+      },
+
+      mergeRemoteNotes: (remoteNotes) => {
+        set((state) => {
+          const localById = new Map(state.notes.map((n) => [n.id, n]));
+          let maxUpdatedAt = state.lastSyncAt ?? '1970-01-01T00:00:00.000Z';
+
+          for (const remote of remoteNotes) {
+            if (remote.updatedAt > maxUpdatedAt) maxUpdatedAt = remote.updatedAt;
+            const local = localById.get(remote.id);
+            if (!local) {
+              localById.set(remote.id, remote);
+              continue;
+            }
+            // Last-write-wins: keep the note with the later updatedAt
+            if (new Date(remote.updatedAt) >= new Date(local.updatedAt)) {
+              localById.set(remote.id, remote);
+            }
+          }
+
+          return {
+            notes: Array.from(localById.values()).sort((a, b) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            ),
+            lastSyncAt: maxUpdatedAt,
+          };
+        });
       },
 
       getNoteById: (id) => {

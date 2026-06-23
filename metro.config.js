@@ -39,6 +39,24 @@ const mimoTpProxy = createProxyMiddleware({
   pathRewrite: { '^/mimo-tp': '/v1' },
 });
 
+const openaiBaseURL = process.env.EXPO_PUBLIC_OPENAI_BASE_URL || 'https://api.openai.com';
+const openaiProxy = createProxyMiddleware({
+  target: openaiBaseURL,
+  changeOrigin: true,
+  secure: true,
+  pathRewrite: { '^/openai-api': '/v1' },
+});
+
+const claudeBaseURL = process.env.EXPO_PUBLIC_CLAUDE_BASE_URL || '';
+const claudeProxy = claudeBaseURL
+  ? createProxyMiddleware({
+      target: claudeBaseURL,
+      changeOrigin: true,
+      secure: true,
+      pathRewrite: { '^/claude-api': '/v1' },
+    })
+  : null;
+
 config.server = {
   ...config.server,
   enhanceMiddleware: (middleware) => {
@@ -48,6 +66,12 @@ config.server = {
       }
       if (req.url && req.url.startsWith('/mimo-tp')) {
         return mimoTpProxy(req, res, next);
+      }
+      if (req.url && req.url.startsWith('/openai-api')) {
+        return openaiProxy(req, res, next);
+      }
+      if (claudeProxy && req.url && req.url.startsWith('/claude-api')) {
+        return claudeProxy(req, res, next);
       }
       if (req.url && req.url.startsWith('/' + API_PREFIX)) {
         return apiProxy(req, res, next);

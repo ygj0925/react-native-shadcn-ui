@@ -28,6 +28,7 @@ type AuthState = {
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
   initAuth: () => Promise<void>;
 
@@ -114,6 +115,33 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           isAuthenticated: false,
         });
+      },
+
+      deleteAccount: async () => {
+        const { user } = get();
+        if (!user) return { error: '未登录' };
+
+        try {
+          // Best-effort server-side deletion via RPC. Add a `delete_user(uid uuid)`
+          // Postgres function or Edge Function for production GDPR compliance.
+          const { error } = await supabase.rpc('delete_user', { uid: user.id });
+
+          if (error) {
+            console.warn('[Auth] delete_user RPC failed:', error.message);
+          }
+
+          await supabase.auth.signOut();
+          set({
+            user: null,
+            profile: null,
+            token: null,
+            isAuthenticated: false,
+          });
+
+          return { error: null };
+        } catch (e: any) {
+          return { error: e.message ?? '删除账户失败' };
+        }
       },
 
       refreshProfile: async () => {

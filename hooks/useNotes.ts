@@ -1,5 +1,6 @@
 import { useNotesStore, type NoteCategory, type NoteInput } from '@/lib/store/notes';
-import { useCallback, useMemo } from 'react';
+import { useSubscriptionStore } from '@/lib/store/subscription';
+import { useCallback, useEffect, useMemo } from 'react';
 
 export function useNotes() {
   const notes = useNotesStore((s) => s.notes);
@@ -19,6 +20,11 @@ export function useNotes() {
 
   const filteredNotes = useMemo(() => getFilteredNotes(), [notes, searchQuery, activeCategory]);
   const notesCount = useMemo(() => getNotesCount(), [notes]);
+  const setNoteCount = useSubscriptionStore((s) => s.setNoteCount);
+
+  useEffect(() => {
+    setNoteCount(notes.length);
+  }, [notes.length, setNoteCount]);
 
   const handleCreate = useCallback(
     (input?: NoteInput) => {

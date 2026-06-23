@@ -22,6 +22,8 @@ export class ChatErrorBoundary extends React.Component<Props, State> {
     return null;
   }
 
+  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
   componentDidCatch(error: Error) {
     if (!error.message?.includes('MessageRepository')) {
       throw error;
@@ -41,10 +43,17 @@ export class ChatErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    setTimeout(() => {
+    this.retryTimeoutId = setTimeout(() => {
+      this.retryTimeoutId = null;
       this.setState({ hasError: false, retryCount: nextCount });
       this.props.onReset();
     }, RETRY_COOLDOWN_MS);
+  }
+
+  componentWillUnmount() {
+    if (this.retryTimeoutId) {
+      clearTimeout(this.retryTimeoutId);
+    }
   }
 
   private handleManualRetry = () => {

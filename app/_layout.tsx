@@ -14,6 +14,16 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store/auth';
 import { onAuthStateChange } from '@/lib/supabase';
+import { useDataSync } from '@/hooks/useDataSync';
+import * as Sentry from '@sentry/react-native';
+
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (SENTRY_DSN && !__DEV__) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    debug: false,
+  });
+}
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({
@@ -28,12 +38,19 @@ export {
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
   const initAuth = useAuthStore((s) => s.initAuth);
+  const isLoading = useAuthStore((s) => s.isLoading);
   const setUser = useAuthStore((s) => s.setUser);
   const refreshProfile = useAuthStore((s) => s.refreshProfile);
 
+  useDataSync();
+
   // Initialize auth and listen for changes
   useEffect(() => {
-    initAuth();
+    let mounted = true;
+
+    initAuth().then(() => {
+      if (mounted) SplashScreen.hideAsync();
+    });
 
     const { data: { subscription } } = onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
@@ -44,12 +61,17 @@ export default function RootLayout() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Fonts are loaded at build time via expo-font config plugin in app.json
-  // Hide splash screen on first render
-  SplashScreen.hideAsync();
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
 
   return (
     <KeyboardProvider statusBarTranslucent navigationBarTranslucent preserveEdgeToEdge>

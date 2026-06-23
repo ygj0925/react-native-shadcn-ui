@@ -6,22 +6,39 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { t } from '@/lib/i18n';
+import { useAuthStore } from '@/lib/store/auth';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
-import { TextInput, View } from 'react-native';
+import { Alert, TextInput, View } from 'react-native';
 
 export function SignUpForm() {
   const passwordInputRef = React.useRef<TextInput>(null);
   const router = useRouter();
+  const signUp = useAuthStore((s) => s.signUp);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
   function onEmailSubmitEditing() {
     passwordInputRef.current?.focus();
   }
 
-  function onSubmit() {
-    router.push('/login');
+  async function onSubmit() {
+    if (!email.trim() || !password.trim()) return;
+
+    try {
+      setLoading(true);
+      const { error } = await signUp(email.trim(), password.trim());
+      if (error) {
+        Alert.alert(t('auth.register'), error);
+        return;
+      }
+      router.replace('/(tabs)');
+    } catch (e: any) {
+      Alert.alert(t('auth.register'), e.message ?? t('auth.login_failed_desc'));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -68,8 +85,8 @@ export function SignUpForm() {
             <Button
               className="w-full h-11"
               onPress={onSubmit}
-              disabled={!email.trim() || !password.trim()}>
-              <Text>{t('auth.continue')}</Text>
+              disabled={loading || !email.trim() || !password.trim()}>
+              <Text>{loading ? t('auth.signing_in') : t('auth.continue')}</Text>
             </Button>
           </View>
           <Text className="text-sm text-center">

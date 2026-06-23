@@ -9,10 +9,14 @@ import {
 import { Text } from '@/components/ui/text';
 import { GlassView } from '@/components/ui/glass-view';
 import { ToolUIs } from '@/features/chat/tool-uis';
-import { MIMO_MODELS, useAppRuntime } from '@/hooks/use-app-runtime';
+import { ToolResultCard } from '@/components/features/ai/tool-result-card';
+import { useAppRuntime } from '@/hooks/use-app-runtime';
+import { AI_MODELS, DEFAULT_MODEL } from '@/lib/ai/engine';
+import { useSettingsStore } from '@/lib/store/settings';
 import { t } from '@/lib/i18n';
 import { ChatErrorBoundary } from '@/components/chat-error-boundary';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
+import { useChatPersistence } from '@/hooks/use-chat-persistence';
 import { useNetworkStatus } from '@/hooks/use-network-status';
 import { cn } from '@/lib/utils';
 import {
@@ -29,6 +33,7 @@ import {
   useAui,
   useAuiState,
 } from '@assistant-ui/react-native';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
 import { BlurView } from 'expo-blur';
 import { Stack } from 'expo-router';
 import { useColorScheme } from 'nativewind';
@@ -206,7 +211,7 @@ function ChatHeader({
             <SelectValue placeholder={t('chat.select_model')} />
           </SelectTrigger>
           <SelectContent side="bottom">
-            {MIMO_MODELS.map((m) => (
+            {AI_MODELS.map((m) => (
               <SelectItem key={m.value} label={m.label} value={m.value} />
             ))}
           </SelectContent>
@@ -239,6 +244,33 @@ function OfflineBanner() {
   );
 }
 
+function SuggestionCard({ title, subtitle }: { title: string; subtitle: string }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const aui = useAui();
+  const { checkAndConsume } = useFeatureGate('ai_chat');
+
+  const handlePress = () => {
+    if (!checkAndConsume({ title: 'AI 对话次数已达上限', description: '升级到 Pro 获得无限 AI 对话。' })) {
+      return;
+    }
+    aui.composer().setText(title);
+    aui.composer().send();
+  };
+
+  return (
+    <Pressable onPress={handlePress} style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
+      <View className={cn(
+        'px-5 py-4 border rounded-2xl active:bg-accent/50',
+        isDark ? 'border-white/10 bg-white/5' : 'border-black/5 bg-white/80'
+      )}>
+        <Text className="text-[15px] font-semibold text-foreground">{title}</Text>
+        <Text className="text-xs text-muted-foreground mt-1.5 leading-4">{subtitle}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 function WelcomeScreen() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -261,19 +293,7 @@ function WelcomeScreen() {
       </View>
       <View className="w-full max-w-md gap-3 mt-2">
         {getSuggestions().map((s) => (
-          <ThreadPrimitive.Suggestion
-            key={s.id}
-            prompt={s.title}
-            send
-            style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}>
-            <View className={cn(
-              'px-5 py-4 border rounded-2xl active:bg-accent/50',
-              isDark ? 'border-white/10 bg-white/5' : 'border-black/5 bg-white/80'
-            )}>
-              <Text className="text-[15px] font-semibold text-foreground">{s.title}</Text>
-              <Text className="text-xs text-muted-foreground mt-1.5 leading-4">{s.subtitle}</Text>
-            </View>
-          </ThreadPrimitive.Suggestion>
+          <SuggestionCard key={s.id} title={s.title} subtitle={s.subtitle} />
         ))}
       </View>
     </View>
@@ -500,6 +520,7 @@ function AssistantMessage() {
             Image: ({ image }) => <ImagePart image={image} />,
             File: ({ filename }) => <FilePart name={filename} />,
             Empty: LoadingIndicator,
+            tools: { Fallback: ToolResultCard },
           }}
         />
         <ErrorPrimitive.Root
@@ -706,6 +727,27 @@ function ComposerInput({
 
 // ─── Composer ───────────────────────────────────────────────────────────────
 
+function SendButton() {
+  const aui = useAui();
+  const { checkAndConsume } = useFeatureGate('ai_chat');
+
+  const handlePress = () => {
+    if (!checkAndConsume({ title: 'AI 对话次数已达上限', description: '升级到 Pro 获得无限 AI 对话。' })) {
+      return;
+    }
+    aui.composer().send();
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      hitSlop={8}
+      className="items-center justify-center w-9 h-9 mb-0.5 rounded-full bg-primary shadow-sm shadow-primary/20 active:opacity-85">
+      <Send size={15} color="white" strokeWidth={2.2} />
+    </Pressable>
+  );
+}
+
 function Composer() {
   const insets = useSafeAreaInsets();
   const isRunning = useAuiState((s) => s.thread.isRunning);
@@ -770,13 +812,7 @@ function Composer() {
                     </View>
                   </ComposerPrimitive.Cancel>
                 ) : (
-                  <ComposerPrimitive.Send
-                    style={({ pressed }: any) => ({ opacity: pressed ? 0.85 : 1 })}
-                  >
-                    <View className="items-center justify-center w-9 h-9 mb-0.5 rounded-full bg-primary shadow-sm shadow-primary/20">
-                      <Send size={15} color="white" strokeWidth={2.2} />
-                    </View>
-                  </ComposerPrimitive.Send>
+                  <SendButton />
                 )}
               </View>
             </View>
@@ -856,6 +892,8 @@ function ChatScreenInner({
   model: Option;
   onModelChange: (option: Option) => void;
 }) {
+  useChatPersistence(model?.value ?? DEFAULT_MODEL);
+
   const { width } = useWindowDimensions();
   const isLargeScreen = width >= 768;
   const sidebarWidth = isLargeScreen
@@ -864,6 +902,7 @@ function ChatScreenInner({
 
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [sidebarVisible, setSidebarVisible] = React.useState(true);
+  const { PaywallComponent } = useFeatureGate('ai_chat');
 
   React.useEffect(() => {
     if (!isLargeScreen) {
@@ -907,6 +946,8 @@ function ChatScreenInner({
             <Pressable className="flex-1 bg-black/50 backdrop-blur-sm" onPress={() => setDrawerOpen(false)} />
           </View>
         )}
+
+        <PaywallComponent compact />
       </View>
     </SafeAreaView>
   );
@@ -924,11 +965,23 @@ export default function ChatScreen() {
 }
 
 function ChatScreenRoot() {
-  const [model, setModel] = React.useState<Option>({
-    label: 'MiMo-V2.5-Pro',
-    value: 'mimo-v2.5-pro',
+  const persistedModel = useSettingsStore((s) => s.aiModel);
+  const [model, setModel] = React.useState<Option>(() => {
+    const found = AI_MODELS.find((m) => m.value === persistedModel);
+    return {
+      label: found?.label ?? AI_MODELS[0].label,
+      value: found?.value ?? AI_MODELS[0].value,
+    };
   });
-  const runtime = useAppRuntime(model?.value ?? 'mimo-v2.5-pro');
+
+  React.useEffect(() => {
+    const found = AI_MODELS.find((m) => m.value === persistedModel);
+    if (found && found.value !== model?.value) {
+      setModel({ label: found.label, value: found.value });
+    }
+  }, [persistedModel, model?.value]);
+
+  const runtime = useAppRuntime(model?.value ?? DEFAULT_MODEL);
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
