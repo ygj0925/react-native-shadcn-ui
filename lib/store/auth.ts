@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { getItem, setItem, removeItem } from '@/lib/storage';
 import { supabase, type Profile } from '@/lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 type TokenInfo = {
   accessToken: string;
@@ -13,14 +14,14 @@ type AuthState = {
   token: TokenInfo | null;
 
   // Supabase auth state
-  user: any | null;
+  user: User | null;
   profile: Profile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
   setToken: (token: TokenInfo) => void;
-  setUser: (user: any) => void;
+  setUser: (user: User | null) => void;
   setProfile: (profile: Profile | null) => void;
   setLoading: (loading: boolean) => void;
 
