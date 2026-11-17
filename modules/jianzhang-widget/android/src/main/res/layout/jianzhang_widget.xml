@@ -1,0 +1,5 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/jianzhang_root" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="18dp" android:orientation="vertical" android:background="@drawable/jianzhang_widget_background">
+ <TextView android:id="@+id/jianzhang_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="简账" android:textColor="#242A26" android:textSize="14sp"/>
+ <TextView android:id="@+id/jianzhang_amount" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="打开简账更新" android:textColor="#242A26" android:textSize="26sp" android:textStyle="bold"/>
+ <TextView android:id="@+id/jianzhang_add" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="＋ 记一笔" android:textColor="#242A26" android:textSize="14sp"/>
+</LinearLayout>

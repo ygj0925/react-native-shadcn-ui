@@ -13,9 +13,12 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store/auth';
-import { onAuthStateChange } from '@/lib/supabase';
+import { onAuthStateChange, isSupabaseConfigured } from '@/lib/supabase';
 import { useDataSync } from '@/hooks/useDataSync';
 import * as Sentry from '@sentry/react-native';
+import { BookkeepingNotifications } from '@/features/bookkeeping/native-tools';
+import { BookkeepingAutoSync } from '@/features/bookkeeping/auto-sync';
+import { BookkeepingWidgets } from '@/features/bookkeeping/widgets';
 
 const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 if (SENTRY_DSN && !__DEV__) {
@@ -47,6 +50,11 @@ export default function RootLayout() {
   // Initialize auth and listen for changes
   useEffect(() => {
     let mounted = true;
+    if (!isSupabaseConfigured) {
+      useAuthStore.getState().setLoading(false);
+      SplashScreen.hideAsync();
+      return;
+    }
 
     initAuth().then(() => {
       if (mounted) SplashScreen.hideAsync();
@@ -86,6 +94,9 @@ export default function RootLayout() {
             <Stack.Screen name="chat" />
           </Stack>
           <PortalHost />
+          <BookkeepingNotifications />
+          <BookkeepingAutoSync />
+          <BookkeepingWidgets />
         </SafeAreaProvider>
       </ThemeProvider>
     </KeyboardProvider>

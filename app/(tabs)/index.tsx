@@ -106,6 +106,11 @@ export default function DashboardScreen() {
 
           <GreetingCard userName={userName} stats={stats} />
 
+          <Pressable accessibilityRole="button" onPress={() => router.push('/bookkeeping' as never)} className="rounded-2xl bg-amber-100 px-5 py-5 gap-2">
+            <Text className="text-xl font-bold text-stone-900">简账 · 好好生活，心中有数</Text>
+            <Text className="text-sm text-stone-700">记一笔、看收支、管预算与资产。全部免费 →</Text>
+          </Pressable>
+
           <AIQuickInput onSend={handleAISend} />
 
           <View className="flex-row gap-4">

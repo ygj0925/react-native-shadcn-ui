@@ -1,0 +1,15 @@
+# 示例配置，不会被前端或后端自动加载。先在开发环境验证后再合并到服务配置。
+guardfind:
+  accounting:
+    retention:
+      enabled: false # 审核后启用，仅清理已正式注销(status=4)或已物理删除账号的数据
+      cron: "0 0 4 * * *" # 冷静期(status=3)数据保留
+    scheduling:
+      enabled: false # 审核后设为 true，后台每分钟补齐周期账单
+      delay-ms: 60000
+    ai:
+      enabled: false # 审核供应商与隐私告知后再开启
+      api-base: ${ACCOUNTING_AI_BASE:} # OpenAI 兼容 HTTPS 根地址，包含 /v1
+      api-key: ${ACCOUNTING_AI_KEY:} # 仅服务端环境变量，禁止使用 EXPO_PUBLIC_*
+      vision-model: ${ACCOUNTING_VISION_MODEL:}
+      transcription-model: ${ACCOUNTING_TRANSCRIPTION_MODEL:}

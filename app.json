@@ -79,7 +79,24 @@
           ]
         }
       ],
-      "@sentry/react-native"
+      "@sentry/react-native",
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "允许简账使用 Face ID 解锁你的账本。"
+        }
+      ],
+      "expo-notifications",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "允许简账录制你主动输入的记账语音。",
+          "recordAudioAndroid": true,
+          "enableBackgroundRecording": false
+        }
+      ],
+      "./plugins/with-bookkeeping-widgets"
     ],
     "experiments": {
       "typedRoutes": true
